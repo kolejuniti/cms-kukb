@@ -116,44 +116,6 @@ class FinanceController extends Controller
                 ['tblstudentclaimpackage.intake_id', $request->session]
             ]);
 
-        }elseif($request->program != 0 && $request->semester != 0)
-        {
-
-            $datas = DB::table('tblstudentclaimpackage')->where([
-                ['tblstudentclaimpackage.program_id', $request->program],
-                ['tblstudentclaimpackage.semester_id', $request->semester]
-            ]);
-
-        }elseif($request->session != 0 && $request->semester != 0)
-        {
-
-            $datas = DB::table('tblstudentclaimpackage')->where([
-                ['tblstudentclaimpackage.intake_id', $request->session],
-                ['tblstudentclaimpackage.semester_id', $request->semester]
-            ]);
-
-        }elseif($request->program != 0)
-        {
-
-            $datas = DB::table('tblstudentclaimpackage')->where([
-                ['tblstudentclaimpackage.program_id', $request->program]
-            ]);
-              
-        }elseif($request->session != 0)
-        {
-
-            $datas = DB::table('tblstudentclaimpackage')->where([
-                ['tblstudentclaimpackage.intake_id', $request->session]
-            ]);
-
-
-        }elseif($request->semester != 0)
-        {
-
-            $datas = DB::table('tblstudentclaimpackage')->where([
-                ['tblstudentclaimpackage.semester_id', $request->semester]
-            ]);
-
         }
 
         $data = $datas->join('tblprogramme', 'tblstudentclaimpackage.program_id', 'tblprogramme.id')
