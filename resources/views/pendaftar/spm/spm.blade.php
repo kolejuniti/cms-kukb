@@ -158,7 +158,7 @@
                                             <select class="form-select" id="subject" name="subject[]" required>
                                             <option value="" selected disabled>-</option>
                                             @foreach ($data['subject'] as $sub)
-                                                <option value="{{ $sub->id }}" {{ ($sub->id == 2) ? 'selected' : 'disabled' }}>{{$sub->name }}</option> 
+                                                <option value="{{ $sub->id }}" {{ ($sub->id == 3) ? 'selected' : 'disabled' }}>{{$sub->name }}</option> 
                                             @endforeach
                                             </select>
                                         </div>
@@ -212,7 +212,7 @@
                                             <select class="form-select" id="subject" name="subject[]" required>
                                             <option value="" selected disabled>-</option>
                                             @foreach ($data['subject'] as $sub)
-                                                <option value="{{ $sub->id }}" {{ ($sub->id == 6) ? 'selected' : 'disabled' }}>{{$sub->name }}</option> 
+                                                <option value="{{ $sub->id }}" {{ ($sub->id == 2) ? 'selected' : 'disabled' }}>{{$sub->name }}</option> 
                                             @endforeach
                                             </select>
                                         </div>
