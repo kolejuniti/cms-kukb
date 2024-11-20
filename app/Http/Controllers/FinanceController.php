@@ -116,11 +116,36 @@ class FinanceController extends Controller
                 ['tblstudentclaimpackage.intake_id', $request->session]
             ]);
 
-        }else{
+        }elseif($request->program != 0 && $request->semester != 0)
+        {
 
-            $datas = [];
+            $datas = '';
+
+        }elseif($request->session != 0 && $request->semester != 0)
+        {
+
+            $datas = '';
+
+        }elseif($request->program != 0)
+        {
+
+            $datas = '';
+              
+        }elseif($request->session != 0)
+        {
+
+            $datas = '';
+
+
+        }elseif($request->semester != 0)
+        {
+
+            $datas = '';
 
         }
+
+        if($datas != '')
+        {
 
         $data = $datas->join('tblprogramme', 'tblstudentclaimpackage.program_id', 'tblprogramme.id')
                       ->join('sessions', 'tblstudentclaimpackage.intake_id', 'sessions.SessionID')
@@ -128,6 +153,12 @@ class FinanceController extends Controller
                       ->join('tblstudentclaim', 'tblstudentclaimpackage.claim_id', 'tblstudentclaim.id')
                       ->select('tblstudentclaimpackage.*','tblprogramme.progname','sessions.SessionName','semester.semester_name','tblstudentclaim.name')
                       ->get();
+
+        }else{
+
+            $data = [];
+
+        }
 
         return view('finance.getClaim', compact('data'));
         
