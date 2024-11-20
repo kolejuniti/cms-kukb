@@ -116,6 +116,10 @@ class FinanceController extends Controller
                 ['tblstudentclaimpackage.intake_id', $request->session]
             ]);
 
+        }else{
+
+            $datas = [];
+
         }
 
         $data = $datas->join('tblprogramme', 'tblstudentclaimpackage.program_id', 'tblprogramme.id')
