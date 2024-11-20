@@ -348,7 +348,6 @@
 				{{-- <li>
 					<a href="/yuran-pengajian" class=""><i data-feather="shopping-bag"></i><span>Payment</span></a>
 				</li> --}}
-				
 				<li>
 					<a href="{{ asset('storage/finals_schedule/Jadual Pengawasan Peperiksaan Akhir UNITI Kemasukan Julai 20242025-I.pdf') }}" target="_blank"><i data-feather="layout"></i><span>Finals Schedule</span></a>
 				</li> 
