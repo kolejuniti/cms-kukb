@@ -46,7 +46,7 @@
             <div class="card card-primary">
               <!-- /.card-header -->
               @php 
-              $required = ['1','2','3','4','5','6','7'];
+              $required = ['1','2','3','4','5','6','7','8','9'];
               @endphp
               <!-- form start -->
               <form action="/pendaftar/spm/{{ request()->ic }}/store" method="POST">
@@ -150,7 +150,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            {{-- <div class="col-md-12">
                                 <div class="row">
                                     <div class="col-md-5">
                                         <div class="form-group">
@@ -176,7 +176,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
                             <div class="col-md-12">
                                 <div class="row">
                                     <div class="col-md-5">
@@ -204,7 +204,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-12">
+                            {{-- <div class="col-md-12">
                                 <div class="row">
                                     <div class="col-md-5">
                                         <div class="form-group">
@@ -230,7 +230,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
                             @php
                                 $count = 3;
                             @endphp
