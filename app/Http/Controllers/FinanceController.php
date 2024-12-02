@@ -491,7 +491,7 @@ class FinanceController extends Controller
                     if($total > $main->amount)
                     {
 
-                        return ["message" => "Add cannot exceed initial payment value!"+ " total " + $total + "/ main " + $main->amount];
+                        return ["message" => "Add cannot exceed initial payment value!"];
 
                     }else{
 
@@ -1727,7 +1727,7 @@ class FinanceController extends Controller
                     if($total > $main->amount)
                     {
 
-                        return ["message" => "Add cannot exceed initial payment value!" . " total " . $total . "/ main " . $main->amount];
+                        return ["message" => "Add cannot exceed initial payment value!"];
 
                     }else{
 
