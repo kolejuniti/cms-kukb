@@ -87,11 +87,12 @@
                   <div class="col-12 d-flex">
                      <img src="{{ asset('assets/images/logo/Kolej-UNITI.png')}}" alt="" height="50">
                      <address>
-                        <strong>KOLEJ UNITI</strong><br>
-                        PERSIARAN UNITI VILLAGE, TANJUNG AGAS<br>
-                        71250, PORT DICKSON, NEGERI SEMBILAN.<br>
-                        <abbr title="Phone">Tel:</abbr> 06-649 0350 | <abbr title="Phone">Fax:</abbr> 06-661 0509<br>
-                        http://www.uniti.edu.my | <abbr title="Email">Email:</abbr> info@uniti.edu.my
+                        <strong>KOLEJ UNITI KOTA BHARU</strong><br>
+                        Kampung Kijang, Lot 1911<br>
+                        Jalan Pantai Cahaya Bulan, 15350<br>
+                        Kota Bharu, Kelantan.<br>
+                        <abbr title="Phone">Tel:</abbr> 09-774 7449/09-774 7450/09-774 5451 | <abbr title="Phone">Fax:</abbr> 09-774 3006<br>
+                        http://www.unitikotabharu.edu.my | <abbr title="Email">Email:</abbr> info@kukb.edu.my
                      </address>
                   </div>
                </div>
