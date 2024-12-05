@@ -85,7 +85,7 @@
                      <img src="{{ asset('assets/images/logo/Kolej-UNITI.png')}}" alt="" height="50">
                      <address>
                         <strong>KOLEJ UNITI KOTA BHARU</strong><br>
-                        Kampung Kijang, Lot 1911<br>
+                        Kampus Kijang, Lot 1911<br>
                         Jalan Pantai Cahaya Bulan, 15350<br>
                         Kota Bharu, Kelantan.<br>
                         <abbr title="Phone">Tel:</abbr> 09-774 7449/09-774 7450/09-774 5451 | <abbr title="Phone">Fax:</abbr> 09-774 3006<br>
