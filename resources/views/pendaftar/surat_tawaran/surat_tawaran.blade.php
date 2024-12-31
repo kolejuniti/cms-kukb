@@ -81,6 +81,10 @@ use Carbon\Carbon;
         @endphp
         <br>
         <br>
+        <br>
+        <br>
+        <br>
+        <br>
         <p>Ruj. Kami: UNITI/KUSB/{{ date('Y') }}/{{ $data['student']->ic }}</p>
         <p class="mt-2">{{ $formattedDate }}</p>
         <p class="mt-2">{{ strtoupper($data['student']->name) }}</p>
