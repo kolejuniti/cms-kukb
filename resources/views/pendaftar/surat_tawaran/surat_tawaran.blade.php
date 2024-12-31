@@ -46,7 +46,7 @@ use Carbon\Carbon;
             
         }
         body {
-                background-image: url('{{ asset("assets/images/letter_head/letter_head.jpg") }}');
+                background-image: url('{{ asset("assets/images/letter_head/letter_head2.jpg") }}');
                 background-size: cover; /* Cover the entire page */
                 background-position: center; /* Center the background image */
                 background-repeat: no-repeat; /* Do not repeat the image */
