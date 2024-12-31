@@ -575,6 +575,12 @@
                             <input type="date" class="form-control" id="dol" name="dol">
                           </div>
                         </div>
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label class="form-label" for="dos">Date of Study</label>
+                            <input type="date" class="form-control" id="dos" name="dos">
+                          </div>
+                        </div>
                       </div>
                       <div class="row">
                         <div class="col-md-6">
