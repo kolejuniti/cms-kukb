@@ -92,9 +92,9 @@ use Carbon\Carbon;
         @if($data['address']->address1 != null)<p>{{ strtoupper($data['address']->address1) }}</p>@endif
         @if($data['address']->address2 != null)<p>{{ strtoupper($data['address']->address2) }}</p>@endif
         @if($data['address']->address3 != null)<p>{{ strtoupper($data['address']->address3) }}</p>@endif
-        <p>{{ $data['address']->postcode }}</p>
-        <p>{{ strtoupper($data['address']->city) }}, {{ strtoupper($data['address']->state) }}</p>
-        <p>{{ strtoupper($data['address']->country) }}</p>
+        <p>{{ $data['address']->postcode }} {{ strtoupper($data['address']->city) }}, </p>
+        <p>{{ strtoupper($data['address']->state) }}</p>
+        {{-- <p>{{ strtoupper($data['address']->country) }}</p> --}}
         <p>Saudara/Saudari,</p>
         <p class="mt-1"><b>TAWARAN KEMASUKAN KE PROGRAM AKADEMIK KOLEJ UNITI KOTA BHARU SESI {{ $data['student']->intake }}</b></p>
         <p class="mt-1"><b>TAHNIAH</b> dan <b>SUKACITA</b> di maklumkan, saudara/saudari di tawarkan untuk mengikuti pengajian program {{ $data['student']->progname }} di KOLEJ UNITI KOTA BHARU.</p>
@@ -159,7 +159,7 @@ use Carbon\Carbon;
         </div>
         <p class="mt-1 mb-1">Sekian, terima kasih.</p>
         <p>Yang benar,</p>
-        <img src="{{ asset('storage/signature/signature1.png') }}" alt="Image" width="30%" height="7%">
+        <img src="{{ asset('storage/signature/signature1.png') }}" alt="Image" width="20%" height="7%">
 
         <p><b>SERI BANUN BINTI BAHTIAR</b><br>
         KETUA EKSEKUTIF<br>
