@@ -86,7 +86,7 @@ use Carbon\Carbon;
         <br>
         <br>
         <br>
-        <p>Ruj. Kami: UNITI/KUSB/{{ date('Y') }}/{{ $data['student']->ic }}</p>
+        <p>Ruj. Kami: KJ/KUKB/{{ date('Y') }}/{{ $data['student']->ic }}</p>
         <p class="mt-2">{{ $formattedDate }}</p>
         <p class="mt-2">{{ strtoupper($data['student']->name) }}</p>
         @if($data['address']->address1 != null)<p>{{ strtoupper($data['address']->address1) }}</p>@endif
@@ -95,31 +95,41 @@ use Carbon\Carbon;
         <p>{{ $data['address']->postcode }}</p>
         <p>{{ strtoupper($data['address']->city) }}, {{ strtoupper($data['address']->state) }}</p>
         <p>{{ strtoupper($data['address']->country) }}</p>
-        <h2 class="col-3 mt-1"><b>MAKLUMAT PENDAFTARAN</b></h2>
-        <div class="col-5 mb-1 mt-1">
-            <div style="border: 1px solid black; padding: 10px;">
-            <p>Tarikh : {{ Carbon::createFromFormat('Y-m-d', $data['student']->date_offer)->format('d/m/Y') }}</p>
-            <p>Masa : 9.00 Pagi - 3.00 Petang</p>
-            <p>Tempat : PEJABAT PENTADBIRAN KOLEJ UNITI</p>
-            </div>
-        </div>
         <p>Saudara/Saudari,</p>
-        <p class="mt-1"><b>TAWARAN KEMASUKAN KE KOLEJ UNITI (NEGERI SEMBILAN) BAGI SESI {{ $data['student']->intake }}</b></p>
-        <p class="mt-1"><b>TAHNIAH</b> dan <b>SUKACITA</b> di maklumkan, saudara/saudari di tawarkan untuk mengikuti program berikut :</p>
-        <div class="col-12 mb-1 mt-1">  
+        <p class="mt-1"><b>TAWARAN KEMASUKAN KE PROGRAM AKADEMIK KOLEJ UNITI KOTA BHARU SESI {{ $data['student']->intake }}</b></p>
+        <p class="mt-1"><b>TAHNIAH</b> dan <b>SUKACITA</b> di maklumkan, saudara/saudari di tawarkan untuk mengikuti pengajian program {{ $data['student']->progname }} di KOLEJ UNITI KOTA BHARU.</p>
+        {{-- <div class="col-12 mb-1 mt-1">  
             <div style="border: 0px solid white; padding: 5px;">
             <p>Program &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>{{ $data['student']->progname }} (SEPENUH MASA)</b></p>
             <p>Tempoh Pengajian &nbsp;&nbsp;: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>3 Tahun</b></p>   
             </div> 
+        </div> --}}
+        <p class="mt-1"><b> Untuk pengetahuan saudara/saudari, program yang diikuti adalah program akademik yang dikendalikan oleh KOLEJ UNITI
+            KOTA BHARU, Kampus Kijang, Lot 1911, Jalan Pantai Cahaya Bulan, 15350, Kota Bharu, Kelantan. Setelah memenuhi
+            semua keperluan, saudara/saudari akan DIANUGERAHKAN DIPLOMA OLEH KOLEJ UNITI KOTA BHARU.</b></p>
+        <p class="mt-1"><b>Berikut merupakan perincian berkenaan dengan maklumat pendaftaran :</b></p>
+        <div class="col-5 mb-1 mt-1">
+            <div style="border: 1px solid black; padding: 10px;">
+            <p>Nama IPT : Kolej UNITI Kota Bharu</p>
+            <p>Mod Pengajian : Sepenuh Masa</p>
+            <p>Peringkat Pengajian : Diploma</p>
+            <p>Program : {{ $data['student']->progname }}</p>
+            <p>Tempoh Program : 3 Tahun</p>
+            <p>Tarikh Pendaftaran : {{ Carbon::createFromFormat('Y-m-d', $data['student']->date_offer)->format('d/m/Y') }}</p>
+            <p>Masa : 9.00 Pagi - 3.00 Petang</p>
+            <p>Tarikh  Mula Pengajian : {{ Carbon::createFromFormat('Y-m-d', $data['student']->date_study)->format('d/m/Y') }}</p>
+            </div>
         </div>
-        <p class="mt-1">Untuk pengetahuan saudara/saudari, program yang diikuti adalah program akademik yang dikendalikan oleh <b>KOLEJ UNITI di PERSIARAN UNITI VILLAGE, TANJUNG AGAS, 71250 PORT DICKSON, NEGERI SEMBILAN DARUL KHUSUS.</b> Setelah memenuhi semua keperluan, saudara/saudari akan <b>DIANUGERAHKAN DIPLOMA OLEH KOLEJ UNITI ATAU UiTM DAN UTM.</b></p>
         <p class="mt-3">Tawaran ini adalah sah untuk tujuan di atas sahaja.</p>
         <ol class="mt-2">
-            <li>Memenuhi syarat kemasukan ke program yang dipohon dan maklumat-maklumat yang diberikan adalah benar. Sekiranya terdapat pemalsuan maklumat dalam borang permohonan dan dokumen yang berkaitan, pihak Kolej UNITI berhak menarik balik tawaran ini atau saudara/i diberhentikan daripada pengajian pada bila-bila masa.</li>
+            <li>Memenuhi syarat kemasukan ke program yang dipohon dan maklumat-maklumat yang diberikan adalah benar. Sekiranya terdapat pemalsuan maklumat dalam borang permohonan dan dokumen yang berkaitan, pihak Kolej UNITI Kota Bharu berhak menarik balik tawaran ini atau saudara/i diberhentikan daripada pengajian pada bila-bila masa.</li>
             <li>Menjelaskan yuran seperti yang dilampirkan.</li>
         </ol>
         <p>Jika saudara/i menerima tawaran ini, sila :</p>
         <ol class="mt-2" type="a">
+            <li>Kembalikan Borang Jawapan Penerimaan tawaran kemasukan ke KOLEJ UNITI KOTA BHARU kepada Penolong Pendaftar Kemasukan
+                dan Rekod Pelajar.</li>
+            <li>Sila pastikan saudara/saudari mempunyai aplikasi myPTPTN untuk proses permohonan pinjaman PTPTN.</li>
             <li>Hadir untuk mendaftarkan diri mengikuti maklumat di atas.</li>
         </ol>
         <p>Semasa mendaftar saudara/i dikehendaki membawa dokumen asal dan salinan yang <b>DISAHKAN</b> seperti berikut :</p>
@@ -128,21 +138,20 @@ use Carbon\Carbon;
                 <div class="col-md-6">
                     <div class="form-group">
                         <ul>
-                            <li>Surat Tawaran</li>
-                            <li>4 keping gambar ukuran pasport</li>
-                            <li>Salinan Kad Pengenalan pemohon dan penjaga/ibubapa (1 salinan)</li>
-                            <li>Salinan Sijil Kelahiran pemohon dan penjaga/ibubapa (1 salinan)</li>
-                            <li>Slip gaji penjaga/ibubapa terkini (1 salinan)</li>
+                            <li>Surat Tawaran (2 salinan)</li>
+                            <li>Salinan Kad Pengenalan pemohon dan penjaga/ibubapa (2 salinan)</li>
+                            <li>2 keping gambar ukuran pasport</li>
+                            <li>Slip gaji penjaga/ibubapa terkini</li>
                         </ul>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
                         <ul>
-                            <li>Salinan Slip peperiksaan yang berkenaan (1 salinan)</li>
-                            <li>Salinan Sijil Berhenti Sekolah (1 salinan)</li>
-                            <li>Salinan Sijil Kurikulum - 3 Terbaik (1 salinan)</li>
-                            <li>Buku Pendaftaran Pelajar</li>
+                            <li>Salinan Sijil Kelahiran pemohon dan penjaga/ibubapa (2 salinan)</li>
+                            <li>Salinan Slip peperiksaan yang berkenaan (2 salinan)</li>
+                            <li>Borang J (ibubapa)</li>
+                            <li>Laporan kesihatan</li>
                         </ul>
                     </div>
                 </div>
@@ -152,13 +161,11 @@ use Carbon\Carbon;
         <p>Yang benar,</p>
         <img src="{{ asset('storage/signature/signature1.png') }}" alt="Image" width="7%" height="7%">
 
-        <p><b>AMIR HAMZAH BIN MD. ISA</b><br>
+        <p><b>SERI BANUN BINTI BAHTIAR</b><br>
         KETUA EKSEKUTIF<br>
-        <b>KOLEJ UNITI</b></p>
-        <p class="mt-2">* Pihak Kolej berhak menarik balik tawaran ini di atas apa-apa jua alasan dari semasa ke semasa</p>
-        <p>* Universiti Teknologi MARA (UiTM) tidak bertanggungjawab menyerap pelajar program usahasama sekiranya Kolej UNITI menghadapi masalah untuk mengendalikan program.</p>
-        <p>* Kos perkhidmatan UiTM RM300.00 tidak akan dikembalikan setelah pelajar mendaftar di Kolej (program UiTM sahaja)</p>
-        <p>* Tawaran ini terbatal serta-merta jika anda berstatus bukan Melayu/Bumiputra dan tidak memiliki kelayakan minima seperti yang telah ditetapkan oleh pihak UiTM</p>
+        <b> KOLEJ UNITI KOTA BHARU</b></p>
+        <p class="mt-2">* Pihak Kolej UNITI Kota Bharu berhak menarik balik tawaran ini di atas apa-apa jua alasan dari semasa ke semasa</p>
+        <p>* Dokumen ini dicetak oleh komputer dan tidak perlu tandatangan.</p>
     </body>
 </html>
 
