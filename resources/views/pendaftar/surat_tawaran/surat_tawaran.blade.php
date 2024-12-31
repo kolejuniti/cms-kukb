@@ -97,7 +97,7 @@ use Carbon\Carbon;
         {{-- <p>{{ strtoupper($data['address']->country) }}</p> --}}
         <p>Saudara/Saudari,</p>
         <p class="mt-1"><b>TAWARAN KEMASUKAN KE PROGRAM AKADEMIK KOLEJ UNITI KOTA BHARU SESI {{ $data['student']->intake }}</b></p>
-        <p class="mt-1"><b>TAHNIAH</b> dan <b>SUKACITA</b> di maklumkan, saudara/saudari di tawarkan untuk mengikuti pengajian program {{ $data['student']->progname }} di KOLEJ UNITI KOTA BHARU.</p>
+        <p class="mt-1"><b>TAHNIAH</b> dan <b>SUKACITA</b> di maklumkan, saudara/saudari di tawarkan untuk mengikuti pengajian program <b>{{ $data['student']->progname }}</b> di KOLEJ UNITI KOTA BHARU.</p>
         {{-- <div class="col-12 mb-1 mt-1">  
             <div style="border: 0px solid white; padding: 5px;">
             <p>Program &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>{{ $data['student']->progname }} (SEPENUH MASA)</b></p>
