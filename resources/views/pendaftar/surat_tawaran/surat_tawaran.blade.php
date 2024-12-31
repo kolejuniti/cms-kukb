@@ -159,7 +159,7 @@ use Carbon\Carbon;
         </div>
         <p class="mt-1 mb-1">Sekian, terima kasih.</p>
         <p>Yang benar,</p>
-        <img src="{{ asset('storage/signature/signature1.png') }}" alt="Image" width="40%" height="7%">
+        <img src="{{ asset('storage/signature/signature1.png') }}" alt="Image" width="30%" height="7%">
 
         <p><b>SERI BANUN BINTI BAHTIAR</b><br>
         KETUA EKSEKUTIF<br>
