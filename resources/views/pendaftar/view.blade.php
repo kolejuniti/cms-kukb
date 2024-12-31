@@ -485,6 +485,12 @@
                         </div>
                         <div class="col-md-6">
                           <div class="form-group">
+                            <label class="form-label" for="dol">Date of Offer Letter <p style="color:red; display:inline-block;">*</p></label>
+                            <input type="date" class="form-control" id="dol" name="dol" value="{{ $student->date_offer }}" readonly>
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="form-group">
                             <label class="form-label" for="dos">Date of Study <p style="color:red; display:inline-block;">*</p></label>
                             <input type="date" class="form-control" id="dos" name="dos" value="{{ $student->date_study }}" readonly>
                           </div>
