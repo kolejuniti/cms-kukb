@@ -117,7 +117,7 @@ use Carbon\Carbon;
             <p>Tempoh Program : 3 Tahun</p>
             <p>Tarikh Pendaftaran : {{ Carbon::createFromFormat('Y-m-d', $data['student']->date_offer)->format('d/m/Y') }}</p>
             <p>Masa : 9.00 Pagi - 3.00 Petang</p>
-            <p>Tarikh  Mula Pengajian : {{ Carbon::createFromFormat('Y-m-d', $data['student']->date_study)->format('d/m/Y') }}</p>
+            <p>Tarikh  Mula Pengajian : {{ ($data['student']->date_study) ? Carbon::createFromFormat('Y-m-d', $data['student']->date_study)->format('d/m/Y') : '' }}</p>
             </div>
         </div>
         <p class="mt-3">Tawaran ini adalah sah untuk tujuan di atas sahaja.</p>
