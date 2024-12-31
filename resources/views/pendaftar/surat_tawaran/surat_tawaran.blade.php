@@ -110,14 +110,14 @@ use Carbon\Carbon;
         <p class="mt-1"><b>Berikut merupakan perincian berkenaan dengan maklumat pendaftaran :</b></p>
         <div class="col-5 mb-1 mt-1">
             <div style="border: 1px solid black; padding: 10px;">
-            <p>Nama IPT : Kolej UNITI Kota Bharu</p>
-            <p>Mod Pengajian : Sepenuh Masa</p>
-            <p>Peringkat Pengajian : Diploma</p>
-            <p>Program : {{ $data['student']->progname }}</p>
-            <p>Tempoh Program : 3 Tahun</p>
-            <p>Tarikh Pendaftaran : {{ Carbon::createFromFormat('Y-m-d', $data['student']->date_offer)->format('d/m/Y') }}</p>
-            <p>Masa : 9.00 Pagi - 3.00 Petang</p>
-            <p>Tarikh  Mula Pengajian : {{ ($data['student']->date_study) ? Carbon::createFromFormat('Y-m-d', $data['student']->date_study)->format('d/m/Y') : '' }}</p>
+            <p><b>Nama IPT : Kolej UNITI Kota Bharu</b></p>
+            <p><b>Mod Pengajian : Sepenuh Masa</b></p>
+            <p><b>Peringkat Pengajian : Diploma</b></p>
+            <p><b>Program : {{ $data['student']->progname }}</b></p>
+            <p><b>Tempoh Program : 3 Tahun</b></p>
+            <p><b>Tarikh Pendaftaran : {{ Carbon::createFromFormat('Y-m-d', $data['student']->date_offer)->format('d/m/Y') }}</b></p>
+            <p><b>Masa : 9.00 Pagi - 3.00 Petang</b></p>
+            <p><b>Tarikh  Mula Pengajian : {{ ($data['student']->date_study) ? Carbon::createFromFormat('Y-m-d', $data['student']->date_study)->format('d/m/Y') : '' }}</b></p>
             </div>
         </div>
         <p class="mt-3">Tawaran ini adalah sah untuk tujuan di atas sahaja.</p>
