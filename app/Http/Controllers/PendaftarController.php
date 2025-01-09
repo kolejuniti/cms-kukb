@@ -2456,6 +2456,28 @@ class PendaftarController extends Controller
                                     ['students.campus_id', 1]
                                     ])->get());
 
+            $data['ms9'][$key] = count(DB::table('students')
+                                    ->join('tblstudent_personal', 'students.ic', 'tblstudent_personal.student_ic')
+                                    ->where([
+                                    ['students.program', $prg->id],
+                                    ['students.semester', 9],
+                                    ['students.status', 2],
+                                    ['students.student_status', 2],
+                                    ['tblstudent_personal.sex_id', 1],
+                                    ['students.campus_id', 1]
+                                    ])->get());
+
+            $data['fs9'][$key] = count(DB::table('students')
+                                    ->join('tblstudent_personal', 'students.ic', 'tblstudent_personal.student_ic')
+                                    ->where([
+                                    ['students.program', $prg->id],
+                                    ['students.semester', 9],
+                                    ['students.status', 2],
+                                    ['students.student_status', 2],
+                                    ['tblstudent_personal.sex_id', 2],
+                                    ['students.campus_id', 1]
+                                    ])->get());
+
             $data['industry'][$key] = count(DB::table('students')
                                     ->where([
                                     ['students.program', $prg->id],
