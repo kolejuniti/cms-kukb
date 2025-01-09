@@ -54,7 +54,7 @@
                           <th style="text-align: center; border: 1px solid black;" colspan="2">6</th>
                           <th style="text-align: center; border: 1px solid black;" colspan="2">2</th>
                           <th style="text-align: center; border: 1px solid black;" colspan="2">0</th>
-                          <th style="text-align: center; border: 1px solid black;" colspan="9"> </th>
+                          <th style="text-align: center; border: 1px solid black;" colspan="11"> </th>
                         </tr>
                         <tr>
                           <th style="text-align: center; width: 1%; border: 1px solid black;" rowspan="2">
