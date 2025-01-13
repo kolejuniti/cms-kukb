@@ -1342,7 +1342,7 @@ class AR_Controller extends Controller
 
                     }
 
-                    if(!isset($request->withheld))
+                    if($request->withheld != 1)
                     {
 
                         DB::table('students')->where('no_matric', $request->no_matric)->update([
