@@ -147,7 +147,7 @@ function confirm()
             headers: {'X-CSRF-TOKEN':  $('meta[name="csrf-token"]').attr('content')},
             url      : "{{ url('AR/semester/updatesemester') }}",
             method   : 'POST',
-            data 	 : {session: session, no_matric: no_matric},
+            data 	 : {session: session, no_matric: no_matric, withheld: withheld},
             error:function(err){
                 alert("Error");
                 console.log(err);
