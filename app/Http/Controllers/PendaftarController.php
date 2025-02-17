@@ -290,12 +290,6 @@ class PendaftarController extends Controller
             </td>
             <td>
             '. $student->qualification .'
-            </td>
-            <td>
-            '. $student->race .'
-            </td>
-            <td>
-            '. $student->religion .'
             </td>';
             
 
