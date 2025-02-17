@@ -176,6 +176,10 @@ Route::get('/AR/session', [App\Http\Controllers\AR_Controller::class, 'sessionLi
 Route::post('/AR/session/create', [App\Http\Controllers\AR_Controller::class, 'createSession']);
 Route::post('/AR/session/update', [App\Http\Controllers\AR_Controller::class, 'updateSession']);
 Route::delete('/AR/session/delete', [App\Http\Controllers\AR_Controller::class, 'deleteDelete'])->name('pendaftar_akademik.session.delete');
+Route::get('/AR/batch', [App\Http\Controllers\AR_Controller::class, 'batchList'])->name('pendaftar_akademik.batch');
+Route::post('/AR/batch/create', [App\Http\Controllers\AR_Controller::class, 'createBatch']);
+Route::post('/AR/batch/update', [App\Http\Controllers\AR_Controller::class, 'updateBatch']);
+Route::delete('/AR/batch/delete', [App\Http\Controllers\AR_Controller::class, 'deleteBatch'])->name('pendaftar_akademik.batch.delete');
 Route::get('/AR/schedule/lecturer', [App\Http\Controllers\AR_Controller::class, 'scheduleIndex'])->name('pendaftar_akademik.schedule.lecturer');
 Route::get('/AR/schedule/student', [App\Http\Controllers\AR_Controller::class, 'scheduleIndex'])->name('pendaftar_akademik.schedule.student');
 Route::get('/AR/schedule/lecture', [App\Http\Controllers\AR_Controller::class, 'scheduleIndex'])->name('pendaftar_akademik.schedule.lecture');

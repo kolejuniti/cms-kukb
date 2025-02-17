@@ -886,13 +886,31 @@ class AR_Controller extends Controller
 
         }else{
 
-            DB::table('sessions')->insert([
+            $id = DB::table('sessions')->insertGetId([
                 'SessionName' => $name,
                 'Start' => $data['start'],
                 'End' => $data['end'],
                 'Year' => $data['year'],
                 'Status' => 'ACTIVE'
             ]);
+
+            $newId = $id - 1;
+
+            $oldStructure = DB::table('subjek_structure')->where('intake_id', $newId)->get();
+
+            foreach($oldStructure as $os)
+            {
+
+                DB::table('subjek_structure')->insert([
+                    'courseID' => $os->courseID,
+                    'structure' => $os->structure,
+                    'intake_id' => $id,
+                    'program_id' => $os->program_id,
+                    'semester_id' => $os->semester_id
+                ]);
+
+            }
+
         }
 
         return redirect(route('pendaftar_akademik.session'));
@@ -931,6 +949,71 @@ class AR_Controller extends Controller
     {
 
         DB::table('sessions')->where('SessionID', $request->id)->delete();
+
+        return true;
+
+    }
+
+    public function batchList()
+    {
+        $data = [
+            'batch' => DB::table('tblbatch')->get(),
+            'year' => DB::table('tblyear')->get()
+        ];
+
+        return view('pendaftar_akademik.batch', compact('data'));
+
+    }
+
+    public function createBatch(Request $request)
+    {
+        $data = $request->validate([
+            'name' => ['required'],
+            'start' => ['required'],
+            'end' => ['required']
+        ]);
+
+        if(isset($request->idS))
+        {
+
+            DB::table('tblbatch')->where('BatchID', $request->idS)->update([
+                'BatchName' => $data['name'],
+                'Start' => $data['start'],
+                'End' => $data['end'],
+                'Status' => $request->status
+                
+            ]);
+
+        }else{
+
+            DB::table('tblbatch')->insertGetId([
+                'BatchName' => $data['name'],
+                'Start' => $data['start'],
+                'End' => $data['end'],
+                'Status' => 'ACTIVE'
+            ]);
+
+        }
+
+        return redirect(route('pendaftar_akademik.batch'));
+
+    }
+    public function updateBatch(Request $request)
+    {
+
+        $data = [
+            'course' => DB::table('tblbatch')->where('BatchID', $request->id)->first(),
+            'year' => DB::table('tblyear')->get()
+        ];
+
+        return view('pendaftar_akademik.getBatch', compact('data'))->with('id', $request->id);
+
+    }
+
+    public function deleteBatch(Request $request)
+    {
+
+        DB::table('tblbatch')->where('BatchID', $request->id)->delete();
 
         return true;
 
@@ -4526,6 +4609,7 @@ class AR_Controller extends Controller
                             ['student_transcript.semester', $datas->semester]
                         ])
                         ->select('student_transcript.*', 'students.name', 'students.ic','students.no_matric', 'transcript_status.status_name AS status')
+                        ->orderBy('students.name')
                         ->get();
 
                 $data['course'] = DB::table('student_subjek')
@@ -4537,7 +4621,12 @@ class AR_Controller extends Controller
                                     ['student_subjek.semesterid', $datas->semester]
                                   ])
                                   ->groupBy('subjek.sub_id')
+                                  ->orderBy('subjek.course_code')
                                   ->get();
+
+                $data['program'] = DB::table('tblprogramme')->where('id', $datas->program)->first();
+                $data['session'] = DB::table('sessions')->where('SessionID', $datas->session)->first();
+                $data['semester'] = $datas->semester;
 
                 $data['status'] = DB::table('transcript_status')->get();
 
@@ -4587,6 +4676,7 @@ class AR_Controller extends Controller
                                         ['student_transcript.semester', $datas->semester]
                                     ])
                                     ->select('student_transcript.*', 'students.name', 'transcript_status.status_name AS status')
+                                    ->orderBy('students.name')
                                     ->get();
 
                     return response()->json(['data' => $data]);
@@ -4664,6 +4754,7 @@ class AR_Controller extends Controller
             'lecturer' => DB::table('users')
                           ->whereIn('usrtype', ['LCT', 'PL', 'AO'])
                           ->get(),
+            'intake' => DB::table('sessions')->orderBy('SessionID', 'DESC')->get()
         ];
 
         return view('pendaftar_akademik.student.assessment.studentAssessment', compact('data'));
@@ -4688,6 +4779,8 @@ class AR_Controller extends Controller
                        ->first();
 
             $data['type'] = $request->assessment;
+
+            $data['intake'] = $request->intake;
 
             //return response()->json($subject);
 
@@ -4853,6 +4946,33 @@ class AR_Controller extends Controller
                 
             }
 
+            if($request->assessment == 'final')
+            {
+
+                $data['assessment'] = DB::table('tblclassfinal')
+                ->join('users', 'tblclassfinal.addby', 'users.ic')
+                ->join('tblclassfinalstatus', 'tblclassfinal.status', 'tblclassfinalstatus.id')
+                ->where([
+                    ['tblclassfinal.classid', $subject->id],
+                    ['tblclassfinal.sessionid', $subject->session_id],
+                    ['tblclassfinal.addby', $subject->user_ic],
+                    ['tblclassfinal.status', '!=', 3]
+                ])
+                ->select('tblclassfinal.*', 'users.name AS addby', 'tblclassfinalstatus.statusname')->get();
+
+                foreach($data['assessment'] as $dt)
+                {
+                    $data['group'][] = DB::table('tblclassfinal_group')
+                            ->join('user_subjek', 'tblclassfinal_group.groupid', 'user_subjek.id')
+                            ->where('tblclassfinal_group.finalid', $dt->id)->get();
+
+                    $data['chapter'][] = DB::table('tblclassfinal_chapter')
+                            ->join('material_dir', 'tblclassfinal_chapter.chapterid', 'material_dir.DrID')
+                            ->where('tblclassfinal_chapter.finalid', $dt->id)->get();
+                }
+                
+            }
+
             return view('pendaftar_akademik.student.assessment.getStudentAssessment', compact('data'));
 
         }else{
@@ -4869,6 +4989,8 @@ class AR_Controller extends Controller
         $data['type'] = request()->type;
 
         $data['id'] = request()->id;
+
+        $data['intake'] = request()->intake;
 
         if(request()->type == 'quiz')
         {
@@ -4887,6 +5009,9 @@ class AR_Controller extends Controller
                     })
                     ->join('tblclassquiz', 'tblclassquiz_group.quizid', 'tblclassquiz.id')
                     ->join('students', 'student_subjek.student_ic', 'students.ic')
+                    ->when(request()->intake != '', function($query){
+                        return $query->where('students.intake', request()->intake);
+                    })
                     ->select('student_subjek.*', 'tblclassquiz.id AS clssid', 'tblclassquiz.total_mark', 'students.no_matric', 'students.name')
                     ->where([
                         ['tblclassquiz.id', request()->id]
@@ -4932,6 +5057,9 @@ class AR_Controller extends Controller
                     })
                     ->join('tblclasstest', 'tblclasstest_group.testid', 'tblclasstest.id')
                     ->join('students', 'student_subjek.student_ic', 'students.ic')
+                    ->when(request()->intake != '', function($query){
+                        return $query->where('students.intake', request()->intake);
+                    })
                     ->select('student_subjek.*', 'tblclasstest.id AS clssid', 'tblclasstest.total_mark', 'students.no_matric', 'students.name')
                     ->where([
                         ['tblclasstest.id', request()->id]
@@ -4977,6 +5105,9 @@ class AR_Controller extends Controller
                     })
                     ->join('tblclassassign', 'tblclassassign_group.assignid', 'tblclassassign.id')
                     ->join('students', 'student_subjek.student_ic', 'students.ic')
+                    ->when(request()->intake != '', function($query){
+                        return $query->where('students.intake', request()->intake);
+                    })
                     ->select('student_subjek.*', 'tblclassassign.id AS clssid', 'tblclassassign.total_mark', 'students.no_matric', 'students.name')
                     ->where([
                         ['tblclassassign.id', request()->id]
@@ -5022,6 +5153,9 @@ class AR_Controller extends Controller
                     })
                     ->join('tblclassmidterm', 'tblclassmidterm_group.midtermid', 'tblclassmidterm.id')
                     ->join('students', 'student_subjek.student_ic', 'students.ic')
+                    ->when(request()->intake != '', function($query){
+                        return $query->where('students.intake', request()->intake);
+                    })
                     ->select('student_subjek.*', 'tblclassmidterm.id AS clssid', 'tblclassmidterm.total_mark', 'students.no_matric', 'students.name')
                     ->where([
                         ['tblclassmidterm.id', request()->id]
@@ -5067,6 +5201,9 @@ class AR_Controller extends Controller
                     })
                     ->join('tblclassother', 'tblclassother_group.otherid', 'tblclassother.id')
                     ->join('students', 'student_subjek.student_ic', 'students.ic')
+                    ->when(request()->intake != '', function($query){
+                        return $query->where('students.intake', request()->intake);
+                    })
                     ->select('student_subjek.*', 'tblclassother.id AS clssid', 'tblclassother.total_mark', 'students.no_matric', 'students.name')
                     ->where([
                         ['tblclassother.id', request()->id]
@@ -5112,6 +5249,9 @@ class AR_Controller extends Controller
                     })
                     ->join('tblclassextra', 'tblclassextra_group.extraid', 'tblclassextra.id')
                     ->join('students', 'student_subjek.student_ic', 'students.ic')
+                    ->when(request()->intake != '', function($query){
+                        return $query->where('students.intake', request()->intake);
+                    })
                     ->select('student_subjek.*', 'tblclassextra.id AS clssid', 'tblclassextra.total_mark', 'students.no_matric', 'students.name')
                     ->where([
                         ['tblclassextra.id', request()->id]
@@ -5132,6 +5272,56 @@ class AR_Controller extends Controller
                 $data['status'][] = DB::table('tblclassstudentextra')
                 ->where([
                     ['extraid', $qz->clssid],
+                    ['userid', $qz->student_ic]
+                ])->first();
+            }
+
+            return view('pendaftar_akademik.student.assessment.assessmentStatus', compact('data'));
+
+        }
+
+        if(request()->type == 'final')
+        {
+
+            $data['group'] = DB::table('user_subjek')
+                    ->join('tblclassfinal_group', 'user_subjek.id', 'tblclassfinal_group.groupid')
+                    ->join('tblclassfinal', 'tblclassfinal_group.finalid', 'tblclassfinal.id')
+                    ->where([
+                        ['tblclassfinal.id', request()->id]
+                    ])->get();
+
+            $data['assessment'] = DB::table('student_subjek')
+                    ->join('tblclassfinal_group', function($join){
+                        $join->on('student_subjek.group_id', 'tblclassfinal_group.groupid');
+                        $join->on('student_subjek.group_name', 'tblclassfinal_group.groupname');
+                    })
+                    ->join('tblclassfinal', 'tblclassfinal_group.finalid', 'tblclassfinal.id')
+                    ->join('students', 'student_subjek.student_ic', 'students.ic')
+                    ->when(request()->intake != '', function($query){
+                        return $query->where('students.intake', request()->intake);
+                    })
+                    ->select('student_subjek.*', 'tblclassfinal.id AS clssid', 'tblclassfinal.total_mark', 'students.no_matric', 'students.name')
+                    ->where([
+                        ['tblclassfinal.id', request()->id]
+                    ])
+                    ->whereNotIn('students.status', [4,5,6,7,16])->orderBy('students.name')
+                    ->get();
+
+            foreach($data['assessment'] as $qz)
+            {
+
+                if(!DB::table('tblclassstudentfinal')->where([['finalid', $qz->clssid],['userid', $qz->student_ic]])->exists()){
+
+                    DB::table('tblclassstudentfinal')->insert([
+                        'finalid' => $qz->clssid,
+                        'userid' => $qz->student_ic
+                    ]);
+    
+                }
+
+                $data['status'][] = DB::table('tblclassstudentfinal')
+                ->where([
+                    ['finalid', $qz->clssid],
                     ['userid', $qz->student_ic]
                 ])->first();
             }
@@ -5363,6 +5553,43 @@ class AR_Controller extends Controller
             }
 
             DB::table('tblclassstudentextra')->upsert($upsert, ['userid', 'extraid']);
+
+        }
+
+        if($request->type == 'final')
+        {
+
+            $marks = json_decode($request->marks);
+
+            $ics = json_decode($request->ics);
+
+            $assessmentid = json_decode($request->assessmentid);
+
+            $limitpercen = DB::table('tblclassfinal')->where('id', $assessmentid)->first();
+
+            foreach($marks as $key => $mrk)
+            {
+
+                if($mrk > $limitpercen->total_mark)
+                {
+                    return ["message"=>"Field Error", "id" => $ics];
+                }
+
+            }
+
+        
+            $upsert = [];
+            foreach($marks as $key => $mrk){
+                array_push($upsert, [
+                'userid' => $ics[$key],
+                'finalid' => $assessmentid,
+                'submittime' => date("Y-m-d H:i:s"),
+                'final_mark' => $mrk,
+                'status' => 1
+                ]);
+            }
+
+            DB::table('tblclassstudentfinal')->upsert($upsert, ['userid', 'finalid']);
 
         }
 
@@ -5628,5 +5855,63 @@ class AR_Controller extends Controller
     //     dd($data['group']);
 
     // }
+
+    public function resultOverall()
+    {
+        $data = [
+            'program' => DB::table('tblprogramme')->get(),
+            'session' => DB::table('sessions')->get(),
+            'semester' => DB::table('semester')->get(),
+            'period' => DB::table('tblresult_period')->first(),
+            'program_data' => DB::table('tblresult_program')->get(),
+            'session_data' => DB::table('tblresult_session')->get(),
+            'semester_data' => DB::table('tblresult_semester')->get()
+        ];
+
+        return view('pendaftar_akademik.student.result_overall.resultOverall', compact('data'));
+
+    }
+
+    public function resultOverallSubmit(Request $request)
+    {
+
+        $data = json_decode($request->submitData);
+
+        DB::table('tblresult_period')->upsert([
+            'id' => 1,
+            'Start' => $data->from,
+            'END' => $data->to
+        ],['id']);
+
+        DB::table('tblresult_program')->truncate();
+
+        DB::table('tblresult_session')->truncate();
+
+        DB::table('tblresult_semester')->truncate();
+
+        foreach($data->program as $prg)
+        {
+            DB::table('tblresult_program')->insert([
+                'program_id' => $prg
+            ]);
+        }
+
+        foreach($data->session as $ses)
+        {
+            DB::table('tblresult_session')->insert([
+                'session_id' => $ses
+            ]);
+        }
+
+        foreach($data->semester as $sem)
+        {
+            DB::table('tblresult_semester')->insert([
+                'semester_id' => $sem
+            ]);
+        }
+
+        return response()->json(['success' => 'Data has been updated successfully!']);
+
+    }
 
 }

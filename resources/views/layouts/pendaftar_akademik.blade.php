@@ -160,6 +160,24 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+.count-circle {
+	background-color: red;      /* Red background */
+	color: white;               /* White text */
+	border-radius: 50%;         /* Makes the element a circle */
+	padding: 5px 10px;          /* Padding to make the circle look good */
+	font-size: 12px;            /* Font size */
+	min-width: 24px;            /* Minimum width to keep a circular shape */
+	text-align: center;         /* Center the text */
+	line-height: 1;             /* Align the text vertically */
+	position: absolute;         /* Position to adjust its placement */
+	top: -5px;                  /* Adjust top positioning */
+	right: -10px;               /* Adjust right positioning */
+}
+
+li a {
+	position: relative; /* Parent positioning so the count is correctly placed */
+}
 </style>
 
 <div id="loading-spinner" class="spinner-overlay">
@@ -310,6 +328,9 @@
 				<li>
 					<a href="{{ route('pendaftar_akademik.session') }}" class="{{ (route('pendaftar_akademik.session') == Request::url()) ? 'active' : ''}}"><i data-feather="trello"></i><span>Session List</span></a>
 				</li>
+				<li>
+					<a href="{{ route('pendaftar_akademik.batch') }}" class="{{ (route('pendaftar_akademik.batch') == Request::url()) ? 'active' : ''}}"><i data-feather="aperture"></i><span>Batch List</span></a>
+				</li>
 				<li class="treeview">
 					<a href="#"><i data-feather="book-open"></i><span>Academic</span>
 						<span class="pull-right-container">
@@ -342,6 +363,8 @@
 						<li><a href="{{ route('pendaftar.student.status') }}" class="{{ (route('pendaftar.student.status') == Request::url()) ? 'active' : ''}}">Update Status</a></li>
 						<li><a href="{{ route('finance.statement') }}" class="{{ (route('finance.statement') == Request::url()) ? 'active' : ''}}">Student Account Statement</a></li>
 						<li><a href="{{ route('treasurer.payment.debit') }}" class="{{ (route('treasurer.payment.debit') == Request::url()) ? 'active' : ''}}">Debit Note</a></li>
+						<li><a href="{{ route('finance.student.blockList') }}" class="{{ (route('finance.student.blockList') == Request::url()) ? 'active' : ''}}">Blocked List</a></li>
+						<li><a href="{{ route('all.student.announcements') }}" class="{{ (route('all.student.announcements') == Request::url()) ? 'active' : ''}}">Annoucement</a></li>
 					</ul>
 				</li>
 				<li class="treeview">
@@ -357,6 +380,7 @@
 						<li><a href="{{ route('pendaftar_akademik.resultReport') }}" class="{{ (route('pendaftar_akademik.resultReport') == Request::url()) ? 'active' : ''}}">Result Report</a></li>
 						<li><a href="{{ route('pendaftar_akademik.transcript') }}" class="{{ (route('pendaftar_akademik.transcript') == Request::url()) ? 'active' : ''}}">Transcript</a></li>
 						<li><a href="{{ route('pendaftar_akademik.miniTranscript') }}" class="{{ (route('pendaftar_akademik.miniTranscript') == Request::url()) ? 'active' : ''}}">Mini Transcript</a></li>
+						<li><a href="{{ route('pendaftar_akademik.resultOverall') }}" class="{{ (route('pendaftar_akademik.resultOverall') == Request::url()) ? 'active' : ''}}">Result Filter</a></li>
 					</ul>
 				</li>
 				<li class="treeview">
@@ -389,8 +413,43 @@
 					</ul>
 				</li>
 				<li>
-					<a href="/all/massage/user"><i data-feather="message-square"></i><span>Message</span></a>
-				</li> 
+					<a href="/all/massage/user">
+						<i data-feather="message-square"></i>
+						<span>Message</span> 
+						<span id="count" class="count-circle">0</span>
+					</a>
+				  </li>
+				  <script>
+					 $(document).ready(function() {
+						function fetchMessageCount() {
+							$.ajax({
+								url: '{{ route("all.massage.student.countMassageAdmin") }}',
+								type: 'GET',
+								success: function(response) {
+									if(response.count > 0) {
+
+										$('#count').text(response.count);
+										$('#count').show();
+
+									} else {
+
+										$('#count').hide();
+										
+									}
+								},
+								error: function() {
+									console.error('Failed to fetch message count');
+								}
+							});
+						}
+	
+						// Fetch the count every 30 seconds
+						setInterval(fetchMessageCount, 30000);
+	
+						// Initial fetch when page loads
+						fetchMessageCount();
+					});
+				  </script>
 				<li>
 					<a href="{{ route('posting.staff') }}" class="{{ (route('posting.staff') == Request::url()) ? 'active' : ''}}"><i data-feather="tv"></i><span>Posting</span></a>
 				</li> 
