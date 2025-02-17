@@ -419,7 +419,7 @@ li a {
 						<span id="count" class="count-circle">0</span>
 					</a>
 				  </li>
-				  <script>
+				  {{-- <script>
 					 $(document).ready(function() {
 						function fetchMessageCount() {
 							$.ajax({
@@ -449,7 +449,7 @@ li a {
 						// Initial fetch when page loads
 						fetchMessageCount();
 					});
-				  </script>
+				  </script> --}}
 				<li>
 					<a href="{{ route('posting.staff') }}" class="{{ (route('posting.staff') == Request::url()) ? 'active' : ''}}"><i data-feather="tv"></i><span>Posting</span></a>
 				</li> 
