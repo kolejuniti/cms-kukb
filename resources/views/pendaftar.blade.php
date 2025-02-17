@@ -102,6 +102,42 @@
             </div>        
           </div>
         </div>
+        <!-- End Filters Section -->
+
+        <!-- Legend Section (Bootstrap Card) -->
+        <div class="card mx-3 mb-3 border">
+          <div class="card-body">
+            <!-- You can uncomment this if you'd like a title -->
+            <!-- <h5 class="card-title">Legend</h5> -->
+
+            <p class="card-text mb-0">
+              <span class="d-inline-flex align-items-center me-4">
+                <!-- Modern Red Box for Student on Leave -->
+                <span class="d-inline-block me-2" 
+                      style="width: 20px; height: 20px; border-radius: 4px; 
+                            background-color: #f44336; 
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                </span>
+                Student on Leave
+              </span>
+
+              <span class="d-inline-flex align-items-center">
+                <!-- Modern White Box for Student on Campus -->
+                <span class="d-inline-block me-2" 
+                      style="width: 20px; height: 20px; border-radius: 4px; 
+                            background-color: #fff; 
+                            border: 1px solid #ced4da; 
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                </span>
+                Student on Campus
+              </span>
+            </p>
+          </div>
+        </div>
+        <!-- End Legend Section -->
+
+
+        <!-- Table Section -->
         <div class="card-body p-0">
           <table id="complex_header" class="table table-striped projects display dataTable">
             <thead>
