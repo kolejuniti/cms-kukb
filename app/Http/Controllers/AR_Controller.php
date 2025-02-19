@@ -1554,8 +1554,10 @@ class AR_Controller extends Controller
 
                 $student = DB::table('students')->where('ic', $ref_no->student_ic)->first();
 
+                $status = (in_array($student->program, [7, 8]) && in_array($student->semester, [6, 7, 8])) || (!in_array($student->program, [7, 8]) && in_array($student->semester, [7, 8])) ? 1 : 2;
+
                 DB::table('students')->where('ic', $student->ic)->update([
-                    'status' => 2,
+                    'status' => $status,
                     'campus_id' => 1
                 ]);
 
