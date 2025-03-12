@@ -148,7 +148,7 @@ class AR_Controller extends Controller
                 'course_name' => $data['name'],
                 'course_code' => $data['code'],
                 'course_credit' => $data['credit'],
-                'prerequisite_id' => $data['prerequisite'] ?? 999,
+                'prerequisite_id' => $data['prerequisite'] ?? 881,
                 'course_level_id' => $data['clid'],
                 'offer' => $data['offer']
             ]);
@@ -165,7 +165,7 @@ class AR_Controller extends Controller
                 'course_name' => $data['name'],
                 'course_code' => $data['code'],
                 'course_credit' => $data['credit'],
-                'prerequisite_id' => $data['prerequisite'] ?? 999,
+                'prerequisite_id' => $data['prerequisite'] ?? 881,
                 'course_level_id' => $data['clid'],
                 'offer' => $data['offer']
             ]);
@@ -638,7 +638,7 @@ class AR_Controller extends Controller
 
         $course = DB::table('subjek')->where('id', $request->id)->first();
 
-        if($course->prerequisite_id == 999)
+        if($course->prerequisite_id == 881)
         {
   
             DB::table('student_subjek')->insert([
@@ -1600,7 +1600,7 @@ class AR_Controller extends Controller
                         if($key->offer == 1)
                         {
 
-                            if($key->prerequisite_id == 999)
+                            if($key->prerequisite_id == 881)
                             {
 
                                 student::create([
@@ -3149,9 +3149,13 @@ class AR_Controller extends Controller
                 ->first();
         }
                        
+        $session = DB::table('sessions')
+                   ->where('Status', 'ACTIVE')
+                   ->pluck('SessionID')->toArray();
  
         if(DB::table('tblevents')
         ->where('lecture_id', $request->id)
+        ->whereIn('session_id', $session)
         ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
         ->where(function ($query) use ($startTimeOnly, $endTimeOnly) {
             $query->where(function ($query) use ($startTimeOnly) {
@@ -3197,9 +3201,7 @@ class AR_Controller extends Controller
         // ($endTimeOnly > $rehat1 && $endTimeOnly < $rehat2))
         // {
 
-        ->exists() || ($startTimeOnly <= $rehat1 && $endTimeOnly >= $rehat2) ||
-        ($startTimeOnly >= $rehat1 && $endTimeOnly <= $rehat2) ||
-        ($startTimeOnly <= $rehat1 && $endTimeOnly <= $rehat2 && $endTimeOnly > $rehat1))
+        ->exists())
         {
 
             Log::info('Overlap detected for event on:', [
@@ -3210,16 +3212,17 @@ class AR_Controller extends Controller
                 'overlapEnd' => $rehat2,
             ]);
 
-            return response()->json(['error' => 'Time selected is already occupied, please select another time!']);
+            return response()->json(['error' => 'Time selected is already occupied, please select another time! 1']);
 
         }else{
 
             if($dayOfWeek == 'Friday')
             {
 
-                if(($startTimeOnly <= $rehat3 && $endTimeOnly >= $rehat4) ||
-                ($startTimeOnly >= $rehat3 && $endTimeOnly <= $rehat4) ||
-                ($startTimeOnly <= $rehat3 && $endTimeOnly <= $rehat4 && $endTimeOnly > $rehat3))
+                if(($startTimeOnly <= $rehat3 && $endTimeOnly >= $rehat4) ||                 
+                ($startTimeOnly >= $rehat3 && $startTimeOnly < $rehat4) ||                 
+                ($endTimeOnly > $rehat3 && $endTimeOnly <= $rehat4) ||
+                ($startTimeOnly <= $rehat3 && $endTimeOnly > $rehat3 && $endTimeOnly <= $rehat4))
                 {
 
                     Log::info('Overlap detected for event on:', [
@@ -3230,8 +3233,27 @@ class AR_Controller extends Controller
                         'overlapEnd' => $rehat4,
                     ]);
         
-                    return response()->json(['error' => 'Time selected is already occupied, please select another time!']);
+                    return response()->json(['error' => 'Time selected is already occupied, please select another time! 4']);
 
+                }
+
+            }else{
+
+                if(($startTimeOnly <= $rehat1 && $endTimeOnly >= $rehat2) ||
+                ($startTimeOnly >= $rehat1 && $endTimeOnly <= $rehat2) ||
+                ($startTimeOnly <= $rehat1 && $endTimeOnly <= $rehat2 && $endTimeOnly > $rehat1) ||
+                ($startTimeOnly >= $rehat1 && $endTimeOnly >= $rehat2 && $startTimeOnly < $rehat2))
+                {
+
+                    Log::info('Overlap detected for event on:', [
+                        'dayOfWeek' => $dayOfWeek,
+                        'startTime' => $startTime->toDateTimeString(),
+                        'endTime' => $endTime->toDateTimeString(),
+                        'overlapStart' => $rehat3,
+                        'overlapEnd' => $rehat4,
+                    ]);
+        
+                    return response()->json(['error' => 'Time selected is already occupied, please select another time! 7']);
                 }
 
             }
@@ -3285,7 +3307,7 @@ class AR_Controller extends Controller
                                         ['tblevents.group_id', $request->groupId],
                                         ['tblevents.group_name', $request->groupName],
                                         ['tblevents.session_id', $request->session],
-                                        ['tbllecture.title', $request->groupType]
+                                        ['tblevents.title', $request->groupType]
                                     ])->get();
 
                     $totalCredit = 0;
@@ -3313,7 +3335,7 @@ class AR_Controller extends Controller
                                         ['group_name', $request->groupName]
                                     ])->pluck('student_ic'); 
 
-                        if(DB::table('tblevents')
+                        $conflictingStudents = DB::table('tblevents')
                         ->join('tbllecture', 'tblevents.lecture_id', 'tbllecture.id')
                         ->join('student_subjek', function($join){
                             $join->on('tblevents.group_id', 'student_subjek.group_id');
@@ -3338,11 +3360,18 @@ class AR_Controller extends Controller
                                       ->whereRaw('? >= TIME(end)', [$endTimeOnly]);
                             });
                         })
-                        ->exists()){
+                        ->select('students.no_matric')
+                        ->distinct()
+                        ->get();
+                        
+                        if($conflictingStudents->count() > 0){
 
-                            return response()->json(['error' => 'Students in this class is already booked with the same period in another room/class!']);
-
-                        }else{
+                            return response()->json([
+                                'error' => 'Students in this class are already booked with the same period in another room/class! 1',
+                                'conflicting_students' => $conflictingStudents
+                            ]);
+        
+                        } else {
 
                             if($startTimeOnly < $roomDetails->start || $endTimeOnly < $roomDetails->start || $startTimeOnly > $roomDetails->end || $endTimeOnly > $roomDetails->end)
                             {
@@ -3755,9 +3784,15 @@ class AR_Controller extends Controller
                 ->first();
         }
 
+        $session = DB::table('sessions')
+                   ->where('Status', 'ACTIVE')
+                   ->pluck('SessionID')->toArray();
+
         if(DB::table('tblevents')
-        ->where('user_ic', $event->user_ic)
+        // ->where('user_ic', $event->user_ic)
         ->where('id', '!=', $id)
+        ->where('lecture_id', $event->lecture_id)
+        ->whereIn('session_id', $session)
         ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
         ->where(function ($query) use ($startTimeOnly, $endTimeOnly) {
             $query->where(function ($query) use ($startTimeOnly) {
@@ -3782,37 +3817,21 @@ class AR_Controller extends Controller
                 $query->whereRaw('? < TIME(start)', [$startTimeOnly])
                       ->whereRaw('? > TIME(end)', [$endTimeOnly]);
             });
-            // $query->where(function ($query) use ($startTimeOnly) {
-            //     $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$startTimeOnly])
-            //           ->whereRaw('? != TIME(start)', [$startTimeOnly])
-            //           ->whereRaw('? != TIME(end)', [$startTimeOnly]);
-            // })
-            // ->orWhere(function ($query) use ($endTimeOnly) {
-            //     $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$endTimeOnly])
-            //           ->whereRaw('? != TIME(start)', [$endTimeOnly])
-            //           ->whereRaw('? != TIME(end)', [$endTimeOnly]);
-            // })
-            // ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
-            //     $query->whereRaw('? <= TIME(start)', [$startTimeOnly])
-            //           ->whereRaw('? >= TIME(end)', [$endTimeOnly]);
-            // });
         })
-        ->exists() || ($startTimeOnly <= $rehat1 && $endTimeOnly >= $rehat2) ||
-        ($startTimeOnly >= $rehat1 && $endTimeOnly <= $rehat2) ||
-        ($startTimeOnly <= $rehat1 && $endTimeOnly <= $rehat2 && $endTimeOnly > $rehat1) ||
-        ($startTimeOnly >= $rehat1 && $endTimeOnly >= $rehat2 && $startTimeOnly < $rehat2))
+        ->exists())
         {
 
-            return response()->json(['error' => 'Time selected is already occupied, please select another time!']);
+            return response()->json(['error' => 'Time selected is already occupied, please select another time! 3']);
 
         }else{
 
             if($dayOfWeek == 'Friday')
             {
 
-                if(($startTimeOnly <= $rehat3 && $endTimeOnly >= $rehat4) ||
-                ($startTimeOnly >= $rehat3 && $endTimeOnly <= $rehat4) ||
-                ($startTimeOnly <= $rehat3 && $endTimeOnly <= $rehat4 && $endTimeOnly > $rehat3))
+                if(($startTimeOnly <= $rehat3 && $endTimeOnly >= $rehat4) ||                 
+                ($startTimeOnly >= $rehat3 && $startTimeOnly < $rehat4) ||                 
+                ($endTimeOnly > $rehat3 && $endTimeOnly <= $rehat4) ||
+                ($startTimeOnly <= $rehat3 && $endTimeOnly > $rehat3 && $endTimeOnly <= $rehat4))
                 {
 
                     Log::info('Overlap detected for event on:', [
@@ -3823,8 +3842,27 @@ class AR_Controller extends Controller
                         'overlapEnd' => $rehat4,
                     ]);
         
-                    return response()->json(['error' => 'Time selected is already occupied, please select another time!']);
+                    return response()->json(['error' => 'Time selected is already occupied, please select another time! 4']);
 
+                }
+
+            }else{
+
+                if(($startTimeOnly <= $rehat1 && $endTimeOnly >= $rehat2) ||
+                ($startTimeOnly >= $rehat1 && $endTimeOnly <= $rehat2) ||
+                ($startTimeOnly <= $rehat1 && $endTimeOnly <= $rehat2 && $endTimeOnly > $rehat1) ||
+                ($startTimeOnly >= $rehat1 && $endTimeOnly >= $rehat2 && $startTimeOnly < $rehat2))
+                {
+
+                    Log::info('Overlap detected for event on:', [
+                        'dayOfWeek' => $dayOfWeek,
+                        'startTime' => $startTime->toDateTimeString(),
+                        'endTime' => $endTime->toDateTimeString(),
+                        'overlapStart' => $rehat3,
+                        'overlapEnd' => $rehat4,
+                    ]);
+        
+                    return response()->json(['error' => 'Time selected is already occupied, please select another time! 7']);
                 }
 
             }
@@ -3865,40 +3903,49 @@ class AR_Controller extends Controller
             }else{
 
                 $students = DB::table('student_subjek')
-                            ->where([
-                                ['group_id', $event->group_id],
-                                ['group_name', $event->group_name]
-                            ])->pluck('student_ic');
+                    ->where([
+                        ['group_id', $event->group_id],
+                        ['group_name', $event->group_name]
+                    ])->pluck('student_ic');
 
-                if(DB::table('tblevents')
-                ->join('student_subjek', function($join){
-                    $join->on('tblevents.group_id', 'student_subjek.group_id')
-                         ->on('tblevents.group_name', 'student_subjek.group_name');
-                })
-                ->where('tblevents.id', '!=', $id)
-                ->whereIn('student_subjek.student_ic', $students)
-                ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
-                ->where(function ($query) use ($startTimeOnly, $endTimeOnly) {
-                    $query->where(function ($query) use ($startTimeOnly) {
-                        $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$startTimeOnly])
-                                ->whereRaw('? != TIME(start)', [$startTimeOnly])
-                                ->whereRaw('? != TIME(end)', [$startTimeOnly]);
+                $conflictingStudents = DB::table('tblevents')
+                    ->join('student_subjek', function($join){
+                        $join->on('tblevents.group_id', 'student_subjek.group_id')
+                            ->on('tblevents.group_name', 'student_subjek.group_name');
                     })
-                    ->orWhere(function ($query) use ($endTimeOnly) {
-                        $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$endTimeOnly])
-                                ->whereRaw('? != TIME(start)', [$endTimeOnly])
-                                ->whereRaw('? != TIME(end)', [$endTimeOnly]);
+                    ->join('students', 'student_subjek.student_ic', 'students.ic')
+                    ->where('tblevents.id', '!=', $id)
+                    ->whereIn('session_id', $session)
+                    ->whereIn('student_subjek.student_ic', $students)
+                    ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
+                    ->where(function ($query) use ($startTimeOnly, $endTimeOnly) {
+                        $query->where(function ($query) use ($startTimeOnly) {
+                            $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$startTimeOnly])
+                                    ->whereRaw('? != TIME(start)', [$startTimeOnly])
+                                    ->whereRaw('? != TIME(end)', [$startTimeOnly]);
+                        })
+                        ->orWhere(function ($query) use ($endTimeOnly) {
+                            $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$endTimeOnly])
+                                    ->whereRaw('? != TIME(start)', [$endTimeOnly])
+                                    ->whereRaw('? != TIME(end)', [$endTimeOnly]);
+                        })
+                        ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
+                            $query->whereRaw('? <= TIME(start)', [$startTimeOnly])
+                                    ->whereRaw('? >= TIME(end)', [$endTimeOnly]);
+                        });
                     })
-                    ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
-                        $query->whereRaw('? <= TIME(start)', [$startTimeOnly])
-                                ->whereRaw('? >= TIME(end)', [$endTimeOnly]);
-                    });
-                })
-                ->exists()){
+                    ->select('students.no_matric')
+                    ->distinct()
+                    ->get();
 
-                    return response()->json(['error' => 'Students in this class is already booked with the same period in another room/class!']);
+                if($conflictingStudents->count() > 0){
 
-                }else{
+                    return response()->json([
+                        'error' => 'Students in this class are already booked with the same period in another room/class 2!',
+                        'conflicting_students' => $conflictingStudents
+                    ]);
+
+                } else {
             
                     $event = Tblevent::find($id);
 
@@ -3987,9 +4034,14 @@ class AR_Controller extends Controller
                 ->first();
         }
 
+        $session = DB::table('sessions')
+                   ->where('Status', 'ACTIVE')
+                   ->pluck('SessionID')->toArray();
+
         if(DB::table('tblevents')
-        ->where('lecture_id', $event->lecture_id)
         ->where('id', '!=', $id)
+        ->where('lecture_id', $event->lecture_id)
+        ->whereIn('session_id', $session)
         ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
         ->where(function ($query) use ($startTimeOnly, $endTimeOnly) {
             $query->where(function ($query) use ($startTimeOnly) {
@@ -4029,22 +4081,20 @@ class AR_Controller extends Controller
             //           ->whereRaw('? >= TIME(end)', [$endTimeOnly]);
             // });
         })
-        ->exists() || ($startTimeOnly <= $rehat1 && $endTimeOnly >= $rehat2) ||
-        ($startTimeOnly >= $rehat1 && $endTimeOnly <= $rehat2) ||
-        ($startTimeOnly <= $rehat1 && $endTimeOnly <= $rehat2 && $endTimeOnly > $rehat1) ||
-        ($startTimeOnly >= $rehat1 && $endTimeOnly >= $rehat2 && $startTimeOnly < $rehat2))
+        ->exists())
         {
 
-            return response()->json(['error' => 'Time selected is already occupied, please select another time!']);
+            return response()->json(['error' => 'Time selected is already occupied, please select another time! 5']);
 
         }else{
 
             if($dayOfWeek == 'Friday')
             {
 
-                if(($startTimeOnly <= $rehat3 && $endTimeOnly >= $rehat4) ||
-                ($startTimeOnly >= $rehat3 && $endTimeOnly <= $rehat4) ||
-                ($startTimeOnly <= $rehat3 && $endTimeOnly <= $rehat4 && $endTimeOnly > $rehat3))
+                if(($startTimeOnly <= $rehat3 && $endTimeOnly >= $rehat4) ||                 
+                ($startTimeOnly >= $rehat3 && $startTimeOnly < $rehat4) ||                 
+                ($endTimeOnly > $rehat3 && $endTimeOnly <= $rehat4) ||
+                ($startTimeOnly <= $rehat3 && $endTimeOnly > $rehat3 && $endTimeOnly <= $rehat4))
                 {
 
                     Log::info('Overlap detected for event on:', [
@@ -4055,8 +4105,27 @@ class AR_Controller extends Controller
                         'overlapEnd' => $rehat4,
                     ]);
         
-                    return response()->json(['error' => 'Time selected is already occupied, please select another time!']);
+                    return response()->json(['error' => 'Time selected is already occupied, please select another time! 4']);
 
+                }
+
+            }else{
+
+                if(($startTimeOnly <= $rehat1 && $endTimeOnly >= $rehat2) ||
+                ($startTimeOnly >= $rehat1 && $endTimeOnly <= $rehat2) ||
+                ($startTimeOnly <= $rehat1 && $endTimeOnly <= $rehat2 && $endTimeOnly > $rehat1) ||
+                ($startTimeOnly >= $rehat1 && $endTimeOnly >= $rehat2 && $startTimeOnly < $rehat2))
+                {
+
+                    Log::info('Overlap detected for event on:', [
+                        'dayOfWeek' => $dayOfWeek,
+                        'startTime' => $startTime->toDateTimeString(),
+                        'endTime' => $endTime->toDateTimeString(),
+                        'overlapStart' => $rehat3,
+                        'overlapEnd' => $rehat4,
+                    ]);
+        
+                    return response()->json(['error' => 'Time selected is already occupied, please select another time! 7']);
                 }
 
             }
@@ -4103,35 +4172,42 @@ class AR_Controller extends Controller
                                 ['group_name', $event->group_name]
                             ])->pluck('student_ic'); 
 
-                if(DB::table('tblevents')
-                ->join('tbllecture', 'tblevents.lecture_id', 'tbllecture.id')
-                ->join('student_subjek', function($join){
-                    $join->on('tblevents.group_id', 'student_subjek.group_id')
-                         ->on('tblevents.group_name', 'student_subjek.group_name');
-                })
-                ->where('tblevents.id', '!=', $id)
-                ->whereIn('student_subjek.student_ic', $students)
-                ->where('tbllecture.session_id', $roomDetails->session)
-                ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
-                ->where(function ($query) use ($startTimeOnly, $endTimeOnly) {
-                    $query->where(function ($query) use ($startTimeOnly) {
-                        $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$startTimeOnly])
-                                ->whereRaw('? != TIME(start)', [$startTimeOnly])
-                                ->whereRaw('? != TIME(end)', [$startTimeOnly]);
+                $conflictingStudents = DB::table('tblevents')
+                    ->join('student_subjek', function($join){
+                        $join->on('tblevents.group_id', 'student_subjek.group_id')
+                            ->on('tblevents.group_name', 'student_subjek.group_name');
                     })
-                    ->orWhere(function ($query) use ($endTimeOnly) {
-                        $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$endTimeOnly])
-                                ->whereRaw('? != TIME(start)', [$endTimeOnly])
-                                ->whereRaw('? != TIME(end)', [$endTimeOnly]);
+                    ->join('students', 'student_subjek.student_ic', 'students.ic')
+                    ->where('tblevents.id', '!=', $id)
+                    ->whereIn('session_id', $session)
+                    ->whereIn('student_subjek.student_ic', $students)
+                    ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
+                    ->where(function ($query) use ($startTimeOnly, $endTimeOnly) {
+                        $query->where(function ($query) use ($startTimeOnly) {
+                            $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$startTimeOnly])
+                                    ->whereRaw('? != TIME(start)', [$startTimeOnly])
+                                    ->whereRaw('? != TIME(end)', [$startTimeOnly]);
+                        })
+                        ->orWhere(function ($query) use ($endTimeOnly) {
+                            $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$endTimeOnly])
+                                    ->whereRaw('? != TIME(start)', [$endTimeOnly])
+                                    ->whereRaw('? != TIME(end)', [$endTimeOnly]);
+                        })
+                        ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
+                            $query->whereRaw('? <= TIME(start)', [$startTimeOnly])
+                                    ->whereRaw('? >= TIME(end)', [$endTimeOnly]);
+                        });
                     })
-                    ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
-                        $query->whereRaw('? <= TIME(start)', [$startTimeOnly])
-                                ->whereRaw('? >= TIME(end)', [$endTimeOnly]);
-                    });
-                })
-                ->exists()){
+                    ->select('students.no_matric')
+                    ->distinct()
+                    ->get();
 
-                    return response()->json(['error' => 'Students in this class is already booked with the same period in another room/class!']);
+                if($conflictingStudents->count() > 0){
+                    
+                    return response()->json([
+                        'error' => 'Students in this class are already booked with the same period in another room/class 3!',
+                        'conflicting_students' => $conflictingStudents
+                    ]);
 
                 }else{
 
