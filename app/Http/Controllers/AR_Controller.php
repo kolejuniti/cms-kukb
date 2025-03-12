@@ -148,7 +148,7 @@ class AR_Controller extends Controller
                 'course_name' => $data['name'],
                 'course_code' => $data['code'],
                 'course_credit' => $data['credit'],
-                'prerequisite_id' => $data['prerequisite'] ?? 881,
+                'prerequisite_id' => $data['prerequisite'] ?? 999,
                 'course_level_id' => $data['clid'],
                 'offer' => $data['offer']
             ]);
@@ -165,7 +165,7 @@ class AR_Controller extends Controller
                 'course_name' => $data['name'],
                 'course_code' => $data['code'],
                 'course_credit' => $data['credit'],
-                'prerequisite_id' => $data['prerequisite'] ?? 881,
+                'prerequisite_id' => $data['prerequisite'] ?? 999,
                 'course_level_id' => $data['clid'],
                 'offer' => $data['offer']
             ]);
@@ -638,7 +638,7 @@ class AR_Controller extends Controller
 
         $course = DB::table('subjek')->where('id', $request->id)->first();
 
-        if($course->prerequisite_id == 881)
+        if($course->prerequisite_id == 999)
         {
   
             DB::table('student_subjek')->insert([
@@ -1600,7 +1600,7 @@ class AR_Controller extends Controller
                         if($key->offer == 1)
                         {
 
-                            if($key->prerequisite_id == 881)
+                            if($key->prerequisite_id == 999)
                             {
 
                                 student::create([
