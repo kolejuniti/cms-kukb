@@ -1683,7 +1683,7 @@ class FinanceController extends Controller
                         'semester_id' => $stddetail->semester,
                         'amount' => $payment->total,
                         'process_status_id' => 1,
-                        'process_type_id' => 1,,
+                        'process_type_id' => 1,
                         'grad_status' => $payment->payment_option,
                         'add_staffID' => Auth::user()->ic,
                         'add_date' => date('Y-m-d'),
