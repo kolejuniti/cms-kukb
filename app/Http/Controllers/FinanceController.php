@@ -11924,13 +11924,21 @@ class FinanceController extends Controller
 
     }
 
+    // public function blockList()
+    // {
+
+    //     $data['block'] = DB::table('students')->where('block_status', 1)->get();
+
+    //     return view('finance.student.block_list.blockList', compact('data'));
+        
+    // }
+
     public function blockList()
     {
-
+        $data = []; // Initialize as empty array
         $data['block'] = DB::table('students')->where('block_status', 1)->get();
 
         return view('finance.student.block_list.blockList', compact('data'));
-        
     }
 
 }
