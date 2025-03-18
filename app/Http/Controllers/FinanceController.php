@@ -5785,6 +5785,306 @@ class FinanceController extends Controller
 
     }
 
+    // public function chargeReport()
+    // {
+
+    //     return view('finance.report.chargeReport');
+
+    // }
+
+    // public function getChargeReport(Request $request)
+    // {
+    //     $data['newStudent'] = [];
+    //     $data['newStudentTotal'] = [];
+    //     $data['newStudentTotals'] = [];
+
+    //     $data['oldStudent'] = [];
+    //     $data['oldStudentTotal'] = [];
+    //     $data['oldStudentTotals'] = [];
+
+    //     $data['debit'] = [];
+    //     $data['debitTotal'] = [];
+    //     $data['debitTotals'] = [];
+
+    //     $data['fine'] = [];
+    //     $data['fineTotal'] = [];
+
+        
+    //     $data['other'] = [];
+    //     $data['otherDetail'] = [];
+    //     $data['otherTotal'] = [];
+    //     $data['otherTotals'] = [];
+
+    //     $data['creditFee'] = [];
+    //     $data['creditFeeTotal'] = [];
+    //     $data['creditFeeTotals'] = [];
+
+    //     $data['creditFine'] = [];
+    //     $data['creditFineTotal'] = [];
+    //     $data['creditFineTotals'] = [];
+
+    //     $data['creditDiscount'] = [];
+    //     $data['creditDiscountTotal'] = [];
+    //     $data['creditDiscountTotals'] = [];
+
+    //     $charge = DB::table('tblclaim')
+    //               ->join('tblclaimdtl', 'tblclaim.id', 'tblclaimdtl.claim_id')
+    //               ->join('tblstudentclaim', 'tblclaimdtl.claim_package_id', 'tblstudentclaim.id')
+    //               ->join('students', 'tblclaim.student_ic', 'students.ic')
+    //               ->join('tblprogramme', 'students.program', 'tblprogramme.id')
+    //               ->groupBy('tblclaim.id', 'tblstudentclaim.groupid')
+    //               ->where('tblclaim.ref_no', '!=', null)
+    //               ->whereBetween('tblclaim.add_date', [$request->from, $request->to])
+    //               ->select('tblclaim.*', 
+    //                         DB::raw('SUM(tblclaimdtl.amount) AS amount'), 
+    //                         'students.name', 'students.program', 
+    //                         'students.no_matric', 
+    //                         'tblprogramme.progname', 
+    //                         'tblstudentclaim.groupid',
+    //                         'tblstudentclaim.name AS type')
+    //               ->orderBy('tblclaim.ref_no', 'desc')
+    //               ->get();
+
+        
+
+    //     $data['program'] = DB::table('tblprogramme')->orderBy('program_ID')->get();
+
+    //     $data['otherCharge'] = DB::table('tblstudentclaim')->where('groupid', 5)->get();
+
+    //     foreach($charge as $i => $crg)
+    //     {
+
+    //         if($crg->process_type_id == 2 && $crg->process_status_id == 2 && $crg->semester_id == 1)
+    //         {
+
+    //             $data['newStudent'][] = $crg;
+
+    //             //program
+
+    //             foreach($data['program'] as $key => $prg)
+    //             {
+    //                 foreach($data['newStudent'] as $keys => $dbt)
+    //                 {
+           
+    //                     if($dbt->program == $prg->id)
+    //                     {
+
+    //                         $data['newStudentTotal'][$key][$keys] =+  $dbt->amount;
+
+    //                     }else{
+
+    //                         $data['newStudentTotal'][$key][$keys] =+ 0;
+
+    //                     }
+
+    //                 }
+
+    //                 $data['newStudentTotals'][$key] =+ array_sum($data['newStudentTotal'][$key]);
+
+    //             }
+
+    //         }elseif($crg->process_type_id == 2 && $crg->process_status_id == 2 && $crg->semester_id >= 2)
+    //         {
+
+    //             $data['oldStudent'][] = $crg;
+
+    //             //program
+
+    //             foreach($data['program'] as $key => $prg)
+    //             {
+    //                 foreach($data['oldStudent'] as $keys => $dbt)
+    //                 {
+           
+    //                     if($dbt->program == $prg->id)
+    //                     {
+
+    //                         $data['oldStudentTotal'][$key][$keys] =+  $dbt->amount;
+
+    //                     }else{
+
+    //                         $data['oldStudentTotal'][$key][$keys] =+ 0;
+
+    //                     }
+
+    //                 }
+
+    //                 $data['oldStudentTotals'][$key] =+ array_sum($data['oldStudentTotal'][$key]);
+
+    //             }
+
+    //         }elseif($crg->process_type_id == 4 && $crg->process_status_id == 2 && $crg->groupid == 1)
+    //         {
+
+    //             $data['debit'][] = $crg;
+
+    //             //program
+
+    //             foreach($data['program'] as $key => $prg)
+    //             {
+    //                 foreach($data['debit'] as $keys => $dbt)
+    //                 {
+           
+    //                     if($dbt->program == $prg->id)
+    //                     {
+
+    //                         $data['debitTotal'][$key][$keys] =+  $dbt->amount;
+
+    //                     }else{
+
+    //                         $data['debitTotal'][$key][$keys] =+ 0;
+
+    //                     }
+
+    //                 }
+
+    //                 $data['debitTotals'][$key] =+ array_sum($data['debitTotal'][$key]);
+
+    //             }
+
+    //         }elseif($crg->process_type_id == 4 && $crg->process_status_id == 2 && $crg->groupid == 4)
+    //         {
+
+    //             $data['fine'][] = $crg;
+
+    //         }elseif($crg->process_type_id == 4 && $crg->process_status_id == 2 && $crg->groupid == 5)
+    //         {
+
+    //             //graduate
+
+    //             $data['other'][] = $crg;
+
+    //             $data['otherDetail'] = DB::table('tblclaimdtl')->where('claim_id', $crg->id)->get();
+
+    //             //program
+
+    //             foreach($data['otherCharge'] as $key => $chrgs)
+    //             {
+    //                 foreach($data['otherDetail'] as $keys => $dtl)
+    //                 {
+
+    //                     if($chrgs->id == $dtl->claim_package_id)
+    //                     {
+
+    //                         $data['otherTotal'][$key][$keys] =+  $dtl->amount;
+
+    //                     }else{
+
+    //                         $data['otherTotal'][$key][$keys] = null;
+
+    //                     }
+
+    //                 }
+
+    //                 $data['otherTotals'][$key] =+ array_sum($data['otherTotal'][$key]);
+
+    //             }
+
+    //         }elseif($crg->process_type_id == 5 && $crg->process_status_id == 2 && $crg->groupid == 1 && $crg->reduction_id < 6)
+    //         {
+
+    //             $data['creditFee'][] = $crg;
+
+    //             //program
+
+    //             foreach($data['program'] as $key => $prg)
+    //             {
+    //                 foreach($data['creditFee'] as $keys => $dbt)
+    //                 {
+           
+    //                     if($dbt->program == $prg->id)
+    //                     {
+
+    //                         $data['creditFeeTotal'][$key][$keys] =+  $dbt->amount;
+
+    //                     }else{
+
+    //                         $data['creditFeeTotal'][$key][$keys] =+ 0;
+
+    //                     }
+
+    //                 }
+
+    //                 $data['creditFeeTotals'][$key] =+ array_sum($data['creditFeeTotal'][$key]);
+
+    //             }
+
+    //         }elseif($crg->process_type_id == 5 && $crg->process_status_id == 2 && $crg->groupid != 1)
+    //         {
+
+    //             $data['creditFine'][] = $crg;
+
+    //             //program
+
+    //             foreach($data['program'] as $key => $prg)
+    //             {
+    //                 foreach($data['creditFine'] as $keys => $dbt)
+    //                 {
+           
+    //                     if($dbt->program == $prg->id)
+    //                     {
+
+    //                         $data['creditFineTotal'][$key][$keys] =+  $dbt->amount;
+
+    //                     }else{
+
+    //                         $data['creditFineTotal'][$key][$keys] =+ 0;
+
+    //                     }
+
+    //                 }
+
+    //                 $data['creditFineTotals'][$key] =+ array_sum($data['creditFineTotal'][$key]);
+
+    //             }
+
+    //         }elseif($crg->process_type_id == 5 && $crg->process_status_id == 2 && $crg->groupid == 1 && $crg->reduction_id > 5)
+    //         {
+
+    //             $data['creditDiscount'][] = $crg;
+
+    //             //program
+
+    //             foreach($data['program'] as $key => $prg)
+    //             {
+    //                 foreach($data['creditDiscount'] as $keys => $dbt)
+    //                 {
+           
+    //                     if($dbt->program == $prg->id)
+    //                     {
+
+    //                         $data['creditDiscountTotal'][$key][$keys] =+  $dbt->amount;
+
+    //                     }else{
+
+    //                         $data['creditDiscountTotal'][$key][$keys] =+ 0;
+
+    //                     }
+
+    //                 }
+
+    //                 $data['creditDiscountTotals'][$key] =+ array_sum($data['creditDiscountTotal'][$key]);
+
+    //             }
+
+    //         }
+            
+    //     }
+
+    //     if(isset($request->print))
+    //     {
+    //         $data['from'] = Carbon::createFromFormat('Y-m-d', $request->from)->translatedFormat('d F Y'); ;
+    //         $data['to'] = Carbon::createFromFormat('Y-m-d', $request->to)->translatedFormat('d F Y');
+
+    //         return view('finance.report.printChargeReport', compact('data'));
+
+    //     }else{
+
+    //         return view('finance.report.getChargeReport', compact('data'));
+            
+    //     }
+
+    // }
+
     public function chargeReport()
     {
 
@@ -5808,20 +6108,27 @@ class FinanceController extends Controller
 
         $data['fine'] = [];
         $data['fineTotal'] = [];
-
         
         $data['other'] = [];
         $data['otherDetail'] = [];
         $data['otherTotal'] = [];
         $data['otherTotals'] = [];
 
-        $data['creditFee'] = [];
-        $data['creditFeeTotal'] = [];
-        $data['creditFeeTotals'] = [];
+        $data['creditFeeOld'] = [];
+        $data['creditFeeOldTotal'] = [];
+        $data['creditFeeOldTotals'] = [];
 
-        $data['creditFine'] = [];
-        $data['creditFineTotal'] = [];
-        $data['creditFineTotals'] = [];
+        $data['creditFeeGrad'] = [];
+        $data['creditFeeGradTotal'] = [];
+        $data['creditFeeGradTotals'] = [];
+
+        $data['creditFineOld'] = [];
+        $data['creditFineOldTotal'] = [];
+        $data['creditFineOldTotals'] = [];
+
+        $data['creditFineGrad'] = [];
+        $data['creditFineGradTotal'] = [];
+        $data['creditFineGradTotals'] = [];
 
         $data['creditDiscount'] = [];
         $data['creditDiscountTotal'] = [];
@@ -5839,6 +6146,7 @@ class FinanceController extends Controller
                             DB::raw('SUM(tblclaimdtl.amount) AS amount'), 
                             'students.name', 'students.program', 
                             'students.no_matric', 
+                            'students.status', 
                             'tblprogramme.progname', 
                             'tblstudentclaim.groupid',
                             'tblstudentclaim.name AS type')
@@ -5979,61 +6287,119 @@ class FinanceController extends Controller
 
                 }
 
-            }elseif($crg->process_type_id == 5 && $crg->process_status_id == 2 && $crg->groupid == 1 && $crg->reduction_id < 6)
+            }elseif($crg->process_type_id == 5 && $crg->process_status_id == 2 && $crg->groupid == 1 && $crg->reduction_id < 6 && !in_array($crg->status, [8, 20]))
             {
 
-                $data['creditFee'][] = $crg;
+                $data['creditFeeOld'][] = $crg;
 
                 //program
 
                 foreach($data['program'] as $key => $prg)
                 {
-                    foreach($data['creditFee'] as $keys => $dbt)
+                    foreach($data['creditFeeOld'] as $keys => $dbt)
                     {
            
                         if($dbt->program == $prg->id)
                         {
 
-                            $data['creditFeeTotal'][$key][$keys] =+  $dbt->amount;
+                            $data['creditFeeOldTotal'][$key][$keys] =+  $dbt->amount;
 
                         }else{
 
-                            $data['creditFeeTotal'][$key][$keys] =+ 0;
+                            $data['creditFeeOldTotal'][$key][$keys] =+ 0;
 
                         }
 
                     }
 
-                    $data['creditFeeTotals'][$key] =+ array_sum($data['creditFeeTotal'][$key]);
+                    $data['creditFeeOldTotals'][$key] =+ array_sum($data['creditFeeOldTotal'][$key]);
 
                 }
 
-            }elseif($crg->process_type_id == 5 && $crg->process_status_id == 2 && $crg->groupid != 1)
+            }elseif($crg->process_type_id == 5 && $crg->process_status_id == 2 && $crg->groupid == 1 && $crg->reduction_id < 6 && $crg->status == 8)
             {
 
-                $data['creditFine'][] = $crg;
+                $data['creditFeeGrad'][] = $crg;
 
                 //program
 
                 foreach($data['program'] as $key => $prg)
                 {
-                    foreach($data['creditFine'] as $keys => $dbt)
+                    foreach($data['creditFeeGrad'] as $keys => $dbt)
                     {
            
                         if($dbt->program == $prg->id)
                         {
 
-                            $data['creditFineTotal'][$key][$keys] =+  $dbt->amount;
+                            $data['creditFeeGradTotal'][$key][$keys] =+  $dbt->amount;
 
                         }else{
 
-                            $data['creditFineTotal'][$key][$keys] =+ 0;
+                            $data['creditFeeGradTotal'][$key][$keys] =+ 0;
 
                         }
 
                     }
 
-                    $data['creditFineTotals'][$key] =+ array_sum($data['creditFineTotal'][$key]);
+                    $data['creditFeeGradTotals'][$key] =+ array_sum($data['creditFeeGradTotal'][$key]);
+
+                }
+
+            }elseif($crg->process_type_id == 5 && $crg->process_status_id == 2 && $crg->groupid != 1 && !in_array($crg->status, [8, 20]))
+            {
+
+                $data['creditFineOld'][] = $crg;
+
+                //program
+
+                foreach($data['program'] as $key => $prg)
+                {
+                    foreach($data['creditFineOld'] as $keys => $dbt)
+                    {
+           
+                        if($dbt->program == $prg->id)
+                        {
+
+                            $data['creditFineOldTotal'][$key][$keys] =+  $dbt->amount;
+
+                        }else{
+
+                            $data['creditFineOldTotal'][$key][$keys] =+ 0;
+
+                        }
+
+                    }
+
+                    $data['creditFineOldTotals'][$key] =+ array_sum($data['creditFineOldTotal'][$key]);
+
+                }
+
+            }elseif($crg->process_type_id == 5 && $crg->process_status_id == 2 && $crg->groupid != 1 && $crg->status == 8)
+            {
+
+                $data['creditFineGrad'][] = $crg;
+
+                //program
+
+                foreach($data['program'] as $key => $prg)
+                {
+                    foreach($data['creditFineGrad'] as $keys => $dbt)
+                    {
+           
+                        if($dbt->program == $prg->id)
+                        {
+
+                            $data['creditFineGradTotal'][$key][$keys] =+  $dbt->amount;
+
+                        }else{
+
+                            $data['creditFineGradTotal'][$key][$keys] =+ 0;
+
+                        }
+
+                    }
+
+                    $data['creditFineGradTotals'][$key] =+ array_sum($data['creditFineGradTotal'][$key]);
 
                 }
 
