@@ -8,14 +8,14 @@
     <div class="content-header">
       <div class="d-flex align-items-center">
         <div class="me-auto">
-          <h4 class="page-title">Insentif Khas</h4>
+          <h4 class="page-title">Voucher</h4>
           <div class="d-inline-block align-items-center">
             <nav>
               <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="#"><i class="mdi mdi-home-outline"></i></a></li>
                 <li class="breadcrumb-item" aria-current="page">Dashboard</li>
                 <li class="breadcrumb-item" aria-current="page">Package</li>
-                <li class="breadcrumb-item active" aria-current="page">Insentif Khas</li>
+                <li class="breadcrumb-item active" aria-current="page">Voucher</li>
               </ol>
             </nav>
           </div>
@@ -39,7 +39,7 @@
             <!-- general form elements -->
             <div class="card card-primary">
               <div class="card-header">
-                <h3 class="card-title">Create Insentif Khas</h3>
+                <h3 class="card-title">Create Voucher</h3>
               </div>
               <!-- /.card-header -->
               <!-- form start -->
@@ -56,7 +56,7 @@
                       </select>
                     </div>
                   </div>
-                  {{-- <div class="col-md-6" id="package-card">
+                  <div class="col-md-6" id="package-card">
                     <div class="form-group">
                       <label class="form-label" for="package">Package PTPTN</label>
                       <select class="form-select" id="package" name="package">
@@ -66,8 +66,8 @@
                         @endforeach
                       </select>
                     </div>
-                  </div>  --}}
-                  <div class="col-md-6" id="type-card">
+                  </div> 
+                  {{-- <div class="col-md-6" id="type-card">
                     <div class="form-group">
                       <label class="form-label" for="type">Insentif Type</label>
                       <select class="form-select" id="type" name="type">
@@ -77,7 +77,7 @@
                         @endforeach
                       </select>
                     </div>
-                  </div> 
+                  </div>  --}}
                   <div class="col-md-6" id="claim-card">
                     <div class="form-group">
                       <label class="form-label" for="amount">Amount (RM)</label>
@@ -127,15 +127,15 @@
 
   $(document).ready(function(){
 
-    getInsentifKhas();
+    getVoucher();
 
   });
 
-  function getInsentifKhas()
+  function getVoucher()
   {
     return $.ajax({
             headers: {'X-CSRF-TOKEN':  $('meta[name="csrf-token"]').attr('content')},
-            url      : "{{ url('finance/package/insentifkhas/getInsentifkhas') }}",
+            url      : "{{ url('finance/package/voucher/getVoucher') }}",
             method   : 'GET',
             error:function(err){
                 alert("Error");
@@ -157,7 +157,7 @@
     var formData = new FormData();
 
     getInput = {
-      // package : $('#package').val(),
+      package : $('#package').val(),
       type : $('#type').val(),
       intake : $('#intake').val(),
       amount : $('#amount').val()
@@ -167,7 +167,7 @@
 
     $.ajax({
         headers: {'X-CSRF-TOKEN':  $('meta[name="csrf-token"]').attr('content')},
-        url: "{{ url('finance/package/insentifkhas/storeInsentifkhas') }}",
+        url: "{{ url('finance/package/voucher/storeVoucher') }}",
         type: 'POST',
         data: formData,
         cache : false,
@@ -179,8 +179,8 @@
         success:function(res){
             try{
                 if(res.message == "Success"){
-                    alert("Success! Insentif Khas has been added/created!")
-                    getInsentifKhas();
+                    alert("Success! Tabung Khas has been added/created!")
+                    getVoucher();
                 }else{
                     $('.error-field').html('');
                     if(res.message == "Field Error"){
@@ -209,7 +209,7 @@ function getProgram(id)
 
   return $.ajax({
       headers: {'X-CSRF-TOKEN':  $('meta[name="csrf-token"]').attr('content')},
-      url      : "{{ url('/finance/package/insentifkhas/getProgram3') }}",
+      url      : "{{ url('/finance/package/voucher/getProgram4') }}",
       method   : 'POST',
       data 	 : {id: id},
       error:function(err){
@@ -229,7 +229,7 @@ function Register(prg,id)
 
   return $.ajax({
       headers: {'X-CSRF-TOKEN':  $('meta[name="csrf-token"]').attr('content')},
-      url      : "{{ url('/finance/package/insentifkhas/registerPRG3') }}",
+      url      : "{{ url('/finance/package/voucher/registerPRG4') }}",
       method   : 'POST',
       data 	 : {prg: prg,id: id},
       error:function(err){
@@ -248,7 +248,7 @@ function unRegister(prg,id)
 
   return $.ajax({
       headers: {'X-CSRF-TOKEN':  $('meta[name="csrf-token"]').attr('content')},
-      url      : "{{ url('/finance/package/insentifkhas/unregisterPRG3') }}",
+      url      : "{{ url('/finance/package/voucher/unregisterPRG4') }}",
       method   : 'POST',
       data 	 : {prg: prg,id: id},
       error:function(err){
@@ -267,7 +267,7 @@ function updateStartAt(id) {
   
   $.ajax({
       headers: {'X-CSRF-TOKEN':  $('meta[name="csrf-token"]').attr('content')},
-      url: "{{ url('/finance/package/insentifkhas/updateStartAt3') }}",
+      url: "{{ url('/finance/package/voucher/updateStartAt4') }}",
       method: 'POST',
       data: {
           id: id,

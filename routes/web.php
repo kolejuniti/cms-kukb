@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 
 /*
 |--------------------------------------------------------------------------
@@ -238,6 +239,10 @@ Route::post('/AR/student/transcript/printStudentTranscript', [App\Http\Controlle
 Route::get('/AR/student/miniTranscript', [App\Http\Controllers\AR_Controller::class, 'miniTranscript'])->name('pendaftar_akademik.miniTranscript');
 Route::post('/AR/student/miniTranscript/printStudentMiniTranscript', [App\Http\Controllers\AR_Controller::class, 'printStudentMiniTranscript']);
 // Route::get('/AR/student/groupTable', [App\Http\Controllers\AR_Controller::class, 'groupTable'])->name('pendaftar_akademik.groupTable');
+Route::get('/AR/student/resultOverall', [App\Http\Controllers\AR_Controller::class, 'resultOverall'])->name('pendaftar_akademik.resultOverall');
+Route::post('/AR/student/resultOverall/submit', [App\Http\Controllers\AR_Controller::class, 'resultOverallSubmit']);
+
+Route::get('/HEA', [App\Http\Controllers\HEA_Controller::class, 'index'])->name('HEA');
 
 Route::get('/lecturer/getSuratAmaran', [App\Http\Controllers\LecturerController::class, 'getSuratAmaran'])->name('lecturer.suratamaran');
 
@@ -335,6 +340,7 @@ Route::get('/lecturer/quiz/{id}', [App\Http\Controllers\QuizController::class, '
 Route::post('/lecturer/quiz/getextend', [App\Http\Controllers\QuizController::class, 'getExtendQuiz']);
 Route::post('/lecturer/quiz/updateExtend', [App\Http\Controllers\QuizController::class, 'updateExtendQuiz']);
 Route::get('/lecturer/quiz/{id}/create', [App\Http\Controllers\QuizController::class, 'quizcreate'])->name('lecturer.quiz.create');
+Route::post('/lecturer/quiz/{id}/generate-ai-quiz', [App\Http\Controllers\QuizController::class, 'generateAIQuiz'])->name('lecturer.quiz.generate-ai-quiz');
 Route::post('/lecturer/quiz/insert', [App\Http\Controllers\QuizController::class, 'insertquiz']);
 Route::post('/lecturer/quiz/getStatus', [App\Http\Controllers\QuizController::class, 'getStatus']);
 Route::post('/lecturer/quiz/updatequizresult', [App\Http\Controllers\QuizController::class, 'updatequizresult']);
@@ -389,6 +395,33 @@ Route::get('/lecturer/test2/{id}/{test}', [App\Http\Controllers\TestController::
 Route::post('/lecturer/test2/{id}/{test}/getGroup', [App\Http\Controllers\TestController::class, 'test2GetGroup']);
 Route::get('/lecturer/test2/{testid}/{userid}/result', [App\Http\Controllers\TestController::class, 'test2result']);
 Route::post('/lecturer/test2/getChapters', [App\Http\Controllers\TestController::class, 'getChapters']);
+
+Route::get('/lecturer/test3/{id}', [App\Http\Controllers\Test2Controller::class, 'testlist'])->name('lecturer.test3');
+Route::post('/lecturer/test3/getextend', [App\Http\Controllers\Test2Controller::class, 'getExtendTest']);
+Route::post('/lecturer/test3/updateExtend', [App\Http\Controllers\Test2Controller::class, 'updateExtendTest']);
+Route::get('/lecturer/test3/{id}/create', [App\Http\Controllers\Test2Controller::class, 'testcreate'])->name('lecturer.test3.create');
+Route::post('/lecturer/test3/insert', [App\Http\Controllers\Test2Controller::class, 'inserttest']);
+Route::post('/lecturer/test3/getStatus', [App\Http\Controllers\Test2Controller::class, 'getStatus']);
+Route::post('/lecturer/test3/updatetestresult', [App\Http\Controllers\Test2Controller::class, 'updatetestresult']);
+Route::get('/lecturer/test3/{id}/{test}', [App\Http\Controllers\Test2Controller::class, 'lecturerteststatus'])->name('lecturer.test3.status');
+Route::post('/lecturer/test3/{id}/{test}/getGroup', [App\Http\Controllers\Test2Controller::class, 'testGetGroup']);
+Route::delete('/lecturer/test3/status/delete', [App\Http\Controllers\Test2Controller::class, 'deleteteststatus']);
+Route::get('/lecturer/test3/{testid}/{userid}/result', [App\Http\Controllers\Test2Controller::class, 'testresult']);
+Route::post('/lecturer/test3/getChapters', [App\Http\Controllers\Test2Controller::class, 'getChapters']);
+Route::post('/lecturer/test3/deletetest', [App\Http\Controllers\Test2Controller::class, 'deletetest']);
+
+Route::get('/lecturer/test4/{id}', [App\Http\Controllers\Test2Controller::class, 'test2list'])->name('lecturer.test4');
+Route::get('/lecturer/test4/{id}/create', [App\Http\Controllers\Test2Controller::class, 'test2create'])->name('lecturer.test4.create');
+Route::post('/lecturer/test4/insert', [App\Http\Controllers\Test2Controller::class, 'inserttest2']);
+Route::post('/lecturer/test4/update', [App\Http\Controllers\Test2Controller::class, 'updatetest2']);
+Route::post('/lecturer/test4/getStatus', [App\Http\Controllers\Test2Controller::class, 'getStatus']);
+Route::post('/lecturer/test4/updatetest2result', [App\Http\Controllers\Test2Controller::class, 'updatetest2result']);
+Route::get('/lecturer/test4/{id}/{test}', [App\Http\Controllers\Test2Controller::class, 'lecturertest2status'])->name('lecturer.test4.status');
+Route::post('/lecturer/test4/{id}/{test}/getGroup', [App\Http\Controllers\Test2Controller::class, 'test2GetGroup']);
+Route::get('/lecturer/test4/{testid}/{userid}/result', [App\Http\Controllers\Test2Controller::class, 'test2result']);
+Route::post('/lecturer/test4/getChapters', [App\Http\Controllers\Test2Controller::class, 'getChapters']);
+
+
 
 
 Route::get('/lecturer/assign/{id}', [App\Http\Controllers\AssignmentController::class, 'assignlist'])->name('lecturer.assign');
@@ -488,6 +521,7 @@ Route::post('/lecturer/forum/{id}/insert', [App\Http\Controllers\ForumController
 Route::post('/lecturer/forum/{id}/topic/insert', [App\Http\Controllers\ForumController::class, 'insertForum']);
 
 
+Route::get('/studentDashboard', [App\Http\Controllers\StudentController::class, 'dashboard'])->name('studentDashboard');
 Route::get('/student', [App\Http\Controllers\StudentController::class, 'index'])->name('student');
 Route::get('/student/setting', [App\Http\Controllers\StudentController::class, 'setting'])->name('student.setting');
 Route::post('/student/update', [App\Http\Controllers\StudentController::class, 'updateSetting']);
@@ -533,6 +567,17 @@ Route::post('/student/test/savetest', [App\Http\Controllers\TestController::clas
 Route::post('/student/test/submittest', [App\Http\Controllers\TestController::class, 'submittest']);
 
 Route::get('/student/test2/{id}', [App\Http\Controllers\TestController::class, 'studenttest2list'])->name('student.test2');
+
+Route::get('/student/test3/{id}', [App\Http\Controllers\Test2Controller::class, 'studenttestlist'])->name('student.test3');
+Route::get('/student/test3/{id}/{test}', [App\Http\Controllers\Test2Controller::class, 'studentteststatus'])->name('student.test.status3');
+Route::get('/student/test3/{id}/{test}/view', [App\Http\Controllers\Test2Controller::class, 'testview']);
+Route::get('/student/test3/{testid}/{userid}/result', [App\Http\Controllers\Test2Controller::class, 'testresultstd']);
+Route::post('/student/test3/starttest', [App\Http\Controllers\Test2Controller::class, 'starttest']);
+Route::post('/student/test3/savetest', [App\Http\Controllers\Test2Controller::class, 'savetest']);
+Route::post('/student/test3/submittest', [App\Http\Controllers\Test2Controller::class, 'submittest']);
+
+Route::get('/student/test4/{id}', [App\Http\Controllers\Test2Controller::class, 'studenttest2list'])->name('student.test4');
+
 
 
 Route::get('/student/assign/{id}', [App\Http\Controllers\AssignmentController::class, 'studentassignlist'])->name('student.assign');
@@ -587,6 +632,36 @@ Route::post('/student/forum/{id}/topic/insert', [App\Http\Controllers\ForumContr
 Route::get('/student/warning/{id}', [App\Http\Controllers\StudentController::class, 'warningLetter'])->name('student.warning');
 Route::get('/student/warning/{id}/getWarningLetter', [App\Http\Controllers\StudentController::class, 'getWarningLetter']);
 
+// Mark all unread notifications as read for the authenticated student
+Route::get('/notifications/clear', function () {
+    if (auth()->guard('student')->check()) {
+        auth()->guard('student')->user()->unreadNotifications->markAsRead();
+    }
+    return back();
+})->name('notifications.clear');
+
+// Retrieve all notifications (read and unread) for display
+Route::get('/notifications', function () {
+    if (auth()->guard('student')->check()) {
+        $notifications = auth()->guard('student')->user()->notifications;
+        return view('student.notificationsAll', compact('notifications'));
+    }
+    return redirect('/');
+})->name('notifications.index');
+
+// Mark a single notification as read via AJAX
+Route::post('/notifications/mark-read/{id}', function ($id) {
+    if (auth()->guard('student')->check()) {
+        $notification = auth()->guard('student')->user()->unreadNotifications->find($id);
+        if ($notification) {
+            $notification->markAsRead();
+            return response()->json(['success' => true]);
+        }
+    }
+    return response()->json(['success' => false], 404);
+})->name('notifications.markRead');
+
+
 Route::get('/finance_dashboard', [App\Http\Controllers\FinanceController::class, 'dashboard'])->name('finance.dashboard');
 Route::get('/finance', [App\Http\Controllers\FinanceController::class, 'index'])->name('finance');
 Route::post('/finance/claim/create', [App\Http\Controllers\FinanceController::class, 'createClaim']);
@@ -632,6 +707,17 @@ Route::get('/finance/payment/KWSPrefund', [App\Http\Controllers\FinanceControlle
 Route::post('/finance/payment/KWSPrefund/getStudent', [App\Http\Controllers\FinanceController::class, 'getStudentKWSPrefund']);
 Route::post('/finance/payment/KWSPrefund/storeKWSPrefund', [App\Http\Controllers\FinanceController::class, 'storeKWSPrefund']);
 Route::post('/finance/payment/KWSPrefund/deleteKWSPrefund', [App\Http\Controllers\FinanceController::class, 'deleteKWSPrefund']);
+Route::get('/finance/payment/allowance/payment', [App\Http\Controllers\FinanceController::class, 'paymentAllowance'])->name('allowance.payment');
+Route::get('/finance/payment/allowance/payment/input', [App\Http\Controllers\FinanceController::class, 'paymentAllowanceInput'])->name('allowance.payment.input');
+Route::post('/finance/payment/allowance/payment/delete', [App\Http\Controllers\FinanceController::class, 'deleteAllowance']);
+Route::post('/finance/payment/allowance/payment/input/store', [App\Http\Controllers\FinanceController::class, 'paymentAllowanceStore']);
+Route::post('/finance/payment/allowance/payment/input/store2', [App\Http\Controllers\FinanceController::class, 'paymentAllowanceStore2']);
+Route::post('/finance/payment/allowance/payment/input/delete', [App\Http\Controllers\FinanceController::class, 'paymentAllowanceDelete']);
+Route::post('/finance/payment/allowance/payment/input/confirm', [App\Http\Controllers\FinanceController::class, 'paymentAllowanceConfirm']);
+Route::get('/finance/payment/allowance/student', [App\Http\Controllers\FinanceController::class, 'paymentStudentAllowance'])->name('allowance.payment.student');
+Route::post('/finance/payment/allowance/student/getStudent', [App\Http\Controllers\FinanceController::class, 'getStudentAllowance']);
+Route::post('/finance/payment/allowance/student/storeStudent', [App\Http\Controllers\FinanceController::class, 'storeStudentAllowance']);
+Route::post('/finance/payment/allowance/student/confirmStudent', [App\Http\Controllers\FinanceController::class, 'confirmStudentAllowance']);
 Route::get('/finance/sponsorship/library', [App\Http\Controllers\FinanceController::class, 'sponsorLibrary'])->name('sponsorship.library');
 Route::post('/finance/sponsorship/library/create', [App\Http\Controllers\FinanceController::class, 'createSponsor']);
 Route::post('/finance/sponsorship/library/update', [App\Http\Controllers\FinanceController::class, 'updateSponsor']);
@@ -652,6 +738,7 @@ Route::get('/finance/sponsorship/payment/getReceipt3', [App\Http\Controllers\Fin
 Route::get('/finance/sponsorship/payment/report', [App\Http\Controllers\FinanceController::class, 'sponsorReport'])->name('finance.payment.report');
 Route::post('/finance/sponsorship/payment/report/getReport', [App\Http\Controllers\FinanceController::class, 'sponsorGetReport']);
 Route::get('/finance/sponsorship/payment/report/showReportStudent', [App\Http\Controllers\FinanceController::class, 'showReportStudent']);
+Route::get('/finance/sponsorship/payment/PReport', [App\Http\Controllers\FinanceController::class, 'PTPTNReport'])->name('finance.payment.PReport');
 Route::get('/finance/report/statement', [App\Http\Controllers\FinanceController::class, 'studentStatement'])->name('finance.statement');
 Route::post('/finance/report/statement/getStudent', [App\Http\Controllers\FinanceController::class, 'statementGetStudent']);
 Route::get('/finance/report/receiptlist', [App\Http\Controllers\FinanceController::class, 'receiptList'])->name('finance.receiptList');
@@ -673,6 +760,9 @@ Route::get('finance/report/statusAgingReport', [App\Http\Controllers\FinanceCont
 Route::post('finance/report/statusAgingReport/getStatusAgingReport', [App\Http\Controllers\FinanceController::class,'getStatusAgingReport']);
 Route::get('finance/report/studentArrearsReport', [App\Http\Controllers\FinanceController::class,'studentArrearsReport'])->name('finance.studentArrearsReport');
 Route::post('finance/report/studentArrearsReport/getStudentArrearsReport', [App\Http\Controllers\FinanceController::class,'getStudentArrearsReport']);
+Route::post('finance/report/studentArrearsReport/blockStudentArrears', [App\Http\Controllers\FinanceController::class,'blockStudentArrears']);
+Route::get('finance/report/gradReport', [App\Http\Controllers\FinanceController::class,'gradReport'])->name('finance.gradReport');
+Route::post('finance/report/gradReport/getGradReport', [App\Http\Controllers\FinanceController::class,'getGradReport']);
 Route::get('/finance/payment/other', [App\Http\Controllers\FinanceController::class, 'studentOtherPayment'])->name('finance.payment.other');
 Route::post('/finance/payment/other/getStudent', [App\Http\Controllers\FinanceController::class, 'getOtherStudentPayment']);
 Route::post('/finance/payment/other/storePayment', [App\Http\Controllers\FinanceController::class, 'storeOtherPayment']);
@@ -687,18 +777,28 @@ Route::post('/finance/package/incentive/storeIncentive', [App\Http\Controllers\F
 Route::post('/finance/package/incentive/getProgram', [App\Http\Controllers\FinanceController::class, 'getProgram']);
 Route::post('/finance/package/incentive/registerPRG', [App\Http\Controllers\FinanceController::class, 'registerPRG']);
 Route::post('/finance/package/incentive/unregisterPRG', [App\Http\Controllers\FinanceController::class, 'unregisterPRG']);
+Route::post('/finance/package/incentive/updateStartAt', [App\Http\Controllers\FinanceController::class, 'updateStartAt']);
 Route::get('/finance/package/tabungkhas', [App\Http\Controllers\FinanceController::class, 'tabungkhas'])->name('finance.package.tabungkhas');
 Route::get('/finance/package/tabungkhas/getTabungkhas', [App\Http\Controllers\FinanceController::class, 'getTabungkhas']);
 Route::post('/finance/package/tabungkhas/storeTabungkhas', [App\Http\Controllers\FinanceController::class, 'storeTabungkhas']);
 Route::post('/finance/package/tabungkhas/getProgram2', [App\Http\Controllers\FinanceController::class, 'getProgram2']);
 Route::post('/finance/package/tabungkhas/registerPRG2', [App\Http\Controllers\FinanceController::class, 'registerPRG2']);
 Route::post('/finance/package/tabungkhas/unregisterPRG2', [App\Http\Controllers\FinanceController::class, 'unregisterPRG2']);
+Route::post('/finance/package/tabungkhas/updateStartAt2', [App\Http\Controllers\FinanceController::class, 'updateStartAt2']);
 Route::get('/finance/package/insentifkhas', [App\Http\Controllers\FinanceController::class, 'insentifkhas'])->name('finance.package.insentifkhas');
 Route::get('/finance/package/insentifkhas/getInsentifkhas', [App\Http\Controllers\FinanceController::class, 'getInsentifkhas']);
 Route::post('/finance/package/insentifkhas/storeInsentifkhas', [App\Http\Controllers\FinanceController::class, 'storeInsentifkhas']);
 Route::post('/finance/package/insentifkhas/getProgram3', [App\Http\Controllers\FinanceController::class, 'getProgram3']);
 Route::post('/finance/package/insentifkhas/registerPRG3', [App\Http\Controllers\FinanceController::class, 'registerPRG3']);
 Route::post('/finance/package/insentifkhas/unregisterPRG3', [App\Http\Controllers\FinanceController::class, 'unregisterPRG3']);
+Route::post('/finance/package/insentifkhas/updateStartAt3', [App\Http\Controllers\FinanceController::class, 'updateStartAt3']);
+Route::get('/finance/package/voucher', [App\Http\Controllers\FinanceController::class, 'voucher'])->name('finance.package.voucher');
+Route::get('/finance/package/voucher/getVoucher', [App\Http\Controllers\FinanceController::class, 'getVoucher']);
+Route::post('/finance/package/voucher/storeVoucher', [App\Http\Controllers\FinanceController::class, 'storeVoucher']);
+Route::post('/finance/package/voucher/getProgram4', [App\Http\Controllers\FinanceController::class, 'getProgram4']);
+Route::post('/finance/package/voucher/registerPRG4', [App\Http\Controllers\FinanceController::class, 'registerPRG4']);
+Route::post('/finance/package/voucher/unregisterPRG4', [App\Http\Controllers\FinanceController::class, 'unregisterPRG4']);
+Route::post('/finance/package/voucher/updateStartAt4', [App\Http\Controllers\FinanceController::class, 'updateStartAt4']);
 Route::get('/finance/package/sponsorPackage', [App\Http\Controllers\FinanceController::class, 'sponsorPackage'])->name('finance.package.sponsorPackage');
 Route::get('/finance/package/sponsorPackage/getsponsorPackage', [App\Http\Controllers\FinanceController::class, 'getsponsorPackage']);
 Route::post('/finance/package/sponsorPackage/storeSponsorPackage', [App\Http\Controllers\FinanceController::class, 'storeSponsorPackage']);
@@ -743,6 +843,9 @@ Route::get('/finance/debt/studentCtos', [App\Http\Controllers\FinanceController:
 Route::post('/finance/debt/studentCtos/importCtos', [App\Http\Controllers\FinanceController::class,'importCtos'])->name('finance.studentCtos.importCtos');
 Route::post('/finance/debt/studentCtos/releaseCTOS', [App\Http\Controllers\FinanceController::class,'releaseCTOS'])->name('finance.studentCtos.releaseCTOS');
 Route::post('/finance/debt/studentCtos/deleteCTOS', [App\Http\Controllers\FinanceController::class,'deleteCTOS'])->name('finance.studentCtos.deleteCTOS');
+Route::get('/finance/debt/studentRemarks', [App\Http\Controllers\FinanceController::class, 'studentRemarks'])->name('finance.studentRemarks');
+Route::post('/finance/debt/studentRemarks/getStudentRemarks', [App\Http\Controllers\FinanceController::class, 'getStudentRemarks']);
+Route::post('/finance/debt/studentRemarks/storeStudentRemarks', [App\Http\Controllers\FinanceController::class, 'storeStudentRemarks']);
 Route::get('/finance/asset/vehicleRecord', [App\Http\Controllers\FinanceController::class,'vehicleRecord'])->name('finance.vehicleRecord');
 Route::post('/finance/asset/vehicleRecord/storeVehicle', [App\Http\Controllers\FinanceController::class,'storeVehicle']);
 Route::delete('/finance/asset/vehicleRecord/deleteVehicle', [App\Http\Controllers\FinanceController::class,'deleteVehicle']);
@@ -759,6 +862,93 @@ Route::get('/finance/asset/vehicleRecord/vehicleReport', [App\Http\Controllers\F
 Route::get('/finance/asset/vehicleRecord/getVehicleReport', [App\Http\Controllers\FinanceController::class,'getVehicleReport']);
 Route::get('/finance/student/blockList', [App\Http\Controllers\FinanceController::class,'blockList'])->name('finance.student.blockList');
 
+// Route::get('/finance/payment/fixIncentive', function(){
+    
+//     $students = DB::table('students')
+//     ->where(
+//         [
+//             ['program', 38],
+//             ['intake', 110],
+//             ['session', 118],
+//             ['semester', 2],
+//             ['status', 2],
+//             ['campus_id', 1],
+//             ['block_status', 0]
+//         ]
+//     )
+//     ->get();
+
+//     foreach($students as $student){
+        
+//         $insentif = DB::table('tblinsentifkhas')
+//                                     ->join('tblprocess_type', 'tblinsentifkhas.process_type_id', 'tblprocess_type.id')
+//                                     ->where([
+//                                         ['tblinsentifkhas.intake_id', $student->intake],
+//                                         ['tblinsentifkhas.process_type_id', 27]
+//                                     ])->select('tblinsentifkhas.*', 'tblprocess_type.code');
+
+//         if($insentif->exists())
+//         {
+//             $insentifs = $insentif->get();
+
+//             foreach($insentifs as $icv)
+//             {
+//                 if(DB::table('tblinsentifkhas_program')->where([['insentifkhas_id', $icv->id],['program_id', $student->program]])->exists())
+//                 {
+//                     $ref_no = DB::table('tblref_no')->where('id', 8)->first();
+
+//                     DB::table('tblref_no')->where('id', $ref_no->id)->update([
+//                         'ref_no' => $ref_no->ref_no + 1
+//                     ]);
+
+//                     $id = DB::table('tblpayment')->insertGetId([
+//                         'student_ic' => $student->ic,
+//                         'date' => date('Y-m-d'),
+//                         'ref_no' => $ref_no->code . $ref_no->ref_no + 1,
+//                         'session_id' => $student->session,
+//                         'semester_id' => $student->semester,
+//                         'program_id' => $student->program,
+//                         'amount' => $icv->amount,
+//                         'process_status_id' => 2,
+//                         'process_type_id' => $icv->process_type_id,
+//                         'add_staffID' => 871010055018,
+//                         'add_date' => date('Y-m-d'),
+//                         'mod_staffID' => 871010055018,
+//                         'mod_date' => date('Y-m-d')
+//                     ]);
+
+//                     DB::table('tblpaymentmethod')->insert([
+//                         'payment_id' => $id,
+//                         'claim_method_id' => 10,
+//                         'bank_id' => 11,
+//                         'no_document' => "{$icv->code}{$id}",
+//                         'amount' => $icv->amount,
+//                         'add_staffID' => 871010055018,
+//                         'add_date' => date('Y-m-d'),
+//                         'mod_staffID' => 871010055018,
+//                         'mod_date' => date('Y-m-d')
+//                     ]);
+
+//                     DB::table('tblpaymentdtl')->insert([
+//                         'payment_id' => $id,
+//                         'claimDtl_id' => $icv->id,
+//                         'claim_type_id' => 9,
+//                         'amount' => $icv->amount,
+//                         'add_staffID' => 871010055018,
+//                         'add_date' => date('Y-m-d'),
+//                         'mod_staffID' => 871010055018,
+//                         'mod_date' => date('Y-m-d')
+//                     ]);
+//                 }
+//             }
+//         }
+
+//     }
+
+
+//     return 'sucess';
+
+// })->name('finance.arrearNotice');
 
 Route::get('/treasurer_dashboard', [App\Http\Controllers\TreasurerController::class, 'dashboard'])->name('treasurer.dashboard');
 Route::get('/treasurer/payment/credit', [App\Http\Controllers\TreasurerController::class, 'creditNote'])->name('treasurer.payment.credit');
@@ -803,9 +993,24 @@ Route::post('/all/student/spm/report/getStudentSPM', [App\Http\Controllers\AllCo
 
 Route::get('/all/massage/user', [App\Http\Controllers\AllController::class, 'studentMassage']);
 Route::post('/all/massage/user/getStudentMassage', [App\Http\Controllers\AllController::class, 'getStudentMassage']);
+Route::get('/all/massage/user/getStudentNewMassage', [App\Http\Controllers\AllController::class, 'getStudentNewMassage']);
 Route::post('/all/massage/user/sendMassage', [App\Http\Controllers\AllController::class, 'sendMassage']);
 Route::post('/all/massage/user/getMassage', [App\Http\Controllers\AllController::class, 'getMassage']);
 Route::get('/all/massage/student/countMessage', [App\Http\Controllers\AllController::class, 'countMessage']);
+Route::get('/all/massage/student/countMassageAdmin', [App\Http\Controllers\AllController::class, 'countMassageAdmin'])->name('all.massage.student.countMassageAdmin');
+
+Route::prefix('all')->group(function () {
+    Route::get('/student/announcements/getannoucement', [App\Http\Controllers\AllController::class, 'indexAnnouncements']);
+    Route::post('/student/announcements/post', [App\Http\Controllers\AllController::class, 'storeAnnouncements']);
+    Route::get('/student/announcements/get/{id}', [App\Http\Controllers\AllController::class, 'showAnnouncements']);
+    Route::put('/student/announcements/put/{id}', [App\Http\Controllers\AllController::class, 'updateAnnouncements']);
+    Route::delete('/student/announcements/delete/{id}', [App\Http\Controllers\AllController::class, 'destroyAnnouncements']);
+    Route::get('/student/announcements/getBannerAnnouncement', [App\Http\Controllers\AllController::class, 'getBannerAnnouncement']);
+});
+
+Route::get('/all/student/announcements', function () {
+    return view('alluser.student.announcements.index');
+})->name('all.student.announcements');
 
 Route::get('/yuran-pengajian', [App\Http\Controllers\PaymentController::class, 'showPaymentForm'])->name('yuran-pengajian');
 Route::post('/yuran-pengajian/submitPayment', [App\Http\Controllers\PaymentController::class, 'submitPayment'])->name('yuran-pengajian.submitpayment');
@@ -819,7 +1024,7 @@ Route::get('/checkout/cancel', function () {
 Route::get('/checkout/receipt/{session_id}', [App\Http\Controllers\PaymentController::class, 'showReceipt'])->name('checkout.receipt');
 
 Route::post('/securepay-checkout', [App\Http\Controllers\PaymentController::class, 'securePayCheckout'])->name('securepay.checkout');
-Route::post('/checkout/securePay/receipt', [App\Http\Controllers\PaymentController::class, 'showReceiptSecurePay'])->name('checkout.receipt');
+Route::post('/checkout/securePay/receipt', [App\Http\Controllers\PaymentController::class, 'showReceiptSecurePay'])->name('checkout.receipt2');
 
 
 Route::middleware(['preventBackHistory'])->group(function () {

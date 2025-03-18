@@ -1,7 +1,7 @@
 <div class="col-12">
   <div class="box">
     <div class="card-header">
-    <h3 class="card-title d-flex">Incentive List</h3>
+    <h3 class="card-title d-flex">Voucher List</h3>
     </div>
     <div class="box-body">
         <div class="table-responsive">
@@ -14,32 +14,38 @@
                         <th style="width: 1%">
                         No.
                         </th>
-                        <th style="width: 5%">
-                        Session From
+                        <th>
+                        Intake
                         </th>
-                        <th style="width: 5%">
-                        Session To
+                        <th>
+                        Package PTPTN
                         </th>
-                        <th style="width: 5%">
+                        {{-- <th>
+                        Insentif Type
+                        </th> --}}
+                        <th>
                         Amount
                         </th>
-                        <th style="width: 5%">
+                        <th>
                         Program
                         </th>
                     </tr>
                     </thead>
                     <tbody>
-                    @foreach ($data['incentive'] as $keys => $dt)
+                    @foreach ($data['voucher'] as $keys => $dt)
                         <tr>
                             <td>
                             {{ $keys+1 }}
                             </td>
                             <td >
-                            {{ $dt->from }}
+                            {{ $dt->intake }}
                             </td>
                             <td >
-                            {{ $dt->to }}
+                            {{ $dt->package }}
                             </td>
+                            {{-- <td >
+                            {{ $dt->type }}
+                            </td> --}}
                             <td >
                             {{ $dt->amount }}
                             </td>
@@ -66,4 +72,3 @@
     </div>
   </div>
 </div>
-
