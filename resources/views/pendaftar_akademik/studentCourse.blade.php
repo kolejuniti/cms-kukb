@@ -43,39 +43,6 @@
                 </div>
                 <!-- /.card-header -->
                 <div class="card-body">
-                    {{-- <div class="row">
-                        <div class="col-md-6" id="program-card">
-                            <div class="form-group">
-                            <label class="form-label" for="program">Program</label>
-                            <select class="form-select" id="program" name="program">
-                                <option value="-" selected disabled>-</option>
-                                @foreach ($data['programs'] as $prg)
-                                <option value="{{ $prg->id }}">{{ $prg->progcode }} - {{ $prg->progname }}</option>
-                                @endforeach
-                            </select>
-                            </div>
-                        </div>       
-                        <div class="col-md-6" id="session-card">
-                            <div class="form-group">
-                            <label class="form-label" for="session">Session</label>
-                            <select class="form-select" id="session" name="session">
-                                <option value="-" selected disabled>-</option>
-                                @foreach ($data['sessions'] as $ses)
-                                <option value="{{ $ses->SessionID }}">{{ $ses->SessionName}}</option> 
-                                @endforeach
-                            </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6" id="student-card" hidden>
-                            <div class="form-group">
-                            <label class="form-label" for="student">Student</label>
-                            <select class="form-select" id="student" name="student">
-                                <option value="-" selected disabled>-</option>
-                            </select>
-                            </div>
-                        </div>
-                    </div> --}}
-
                     <div class="row">
                       <div class="col-md-6">
                           <div class="form-group">
@@ -90,6 +57,19 @@
                               <option value="-" selected disabled>-</option>
                             </select>
                           </div>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label class="form-label" for="semester">Semester</label>
+                          <select class="form-select" id="semester" name="semester">
+                            <option value="" selected>-</option>
+                            @for ($i = 1; $i <= 8; $i++)
+                              <option value="{{ $i }}">{{ $i }}</option>
+                            @endfor
+                          </select>
+                        </div>
                       </div>
                     </div>
                 </div>
@@ -143,44 +123,6 @@
       
   }
 
-  // $(document).on('change', '#program', async function(e){
-  //   selected_program = $(e.target).val();
-
-  //   student.hidden = false;
-
-  //   await getCourses(selected_program, selected_session);
-
-  // });
-
-
-  // $(document).on('change', '#session', async function(e){
-  //   selected_session = $(e.target).val();
-
-  //   student.hidden = false;
-
-  //   await getCourses(selected_program, selected_session);
-  // });
-
-    // function getCourses(program,session)
-  // {
-  //   return $.ajax({
-  //           headers: {'X-CSRF-TOKEN':  $('meta[name="csrf-token"]').attr('content')},
-  //           url      : "{{ url('AR/student/getStudent') }}",
-  //           method   : 'GET',
-  //           data 	 : {program: program,session: session},
-  //           error:function(err){
-  //               alert("Error");
-  //               console.log(err);
-  //           },
-  //           success  : function(data){
-  //               //$('#lecturer-selection-div').removeAttr('hidden');
-  //               $('#student').html(data);
-  //               $('#student').selectpicker('refresh');
-
-  //           }
-  //       });
-  // }
-
   $(document).on('change', '#student', function(e){
     selected_student = $(e.target).val();
 
@@ -213,11 +155,13 @@
   function register(id,ic)
   {
 
+    semester = $('#semester').val();
+
     return $.ajax({
             headers: {'X-CSRF-TOKEN':  $('meta[name="csrf-token"]').attr('content')},
             url      : "{{ url('AR/student/register') }}",
             method   : 'POST',
-            data 	 : {id: id,ic: ic},
+            data 	 : {id: id,ic: ic, semester: semester},
             error:function(err){
                 alert("Error");
                 console.log(err);
@@ -234,6 +178,7 @@
   function register2(ic)
   {
     id = $('#course2').val();
+    semester = $('#semester').val();
 
     if(id == null)
     {
@@ -246,7 +191,7 @@
               headers: {'X-CSRF-TOKEN':  $('meta[name="csrf-token"]').attr('content')},
               url      : "{{ url('AR/student/register') }}",
               method   : 'POST',
-              data 	 : {id: id,ic: ic},
+              data 	 : {id: id,ic: ic,semester: semester},
               error:function(err){
                   alert("Error");
                   console.log(err);
