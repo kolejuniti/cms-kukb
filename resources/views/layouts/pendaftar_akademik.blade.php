@@ -412,6 +412,16 @@ li a {
 						{{-- <li><a href="/AR/schedule/index" class="{{ (route('pendaftar_akademik.schedule.old') == Request::url()) ? 'active' : ''}}">Upload</a></li> --}}
 					</ul>
 				</li>
+				<li class="treeview">
+				    <a href="#"><i data-feather="archive"></i><span>Archive & Report</span>
+						<span class="pull-right-container">
+							<i class="fa fa-angle-left pull-right"></i>
+						</span>
+				    </a>
+					<ul class="treeview-menu treeview-menu-visible" id="treeview-menu-visible">
+						<li><a href="/KP/report/file">Lecturer</a></li>
+					</ul>
+				</li> 
 				<li>
 					<a href="/all/massage/user">
 						<i data-feather="message-square"></i>

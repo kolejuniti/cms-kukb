@@ -1,4 +1,4 @@
-@extends((Auth::user()->usrtype == "DN") ? '../layouts.dekan' : '../layouts.ketua_program')
+@extends((Auth::user()->usrtype == "DN") ? '../layouts.dekan' : ((Auth::user()->usrtype == "AR") ? '../layouts.pendaftar_akademik' : '../layouts.ketua_program'))
 
 
 @section('main')
