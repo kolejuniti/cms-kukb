@@ -1051,7 +1051,11 @@ $content .= '<tr>
 
         //dd($user);
 
-        $faculty = DB::table('tblfaculty')->where('id', $user->faculty)->get();
+        if(Auth::user()->usrtype == 'AR') {
+            $faculty = DB::table('tblfaculty')->get();
+        } else {
+            $faculty = DB::table('tblfaculty')->where('id', $user->faculty)->get();
+        }
 
         $usrtype = ['LCT', 'KP'];
 
