@@ -419,7 +419,7 @@ li a {
 						</span>
 				    </a>
 					<ul class="treeview-menu treeview-menu-visible" id="treeview-menu-visible">
-						<li><a href="/KP/report/file">Lecturer</a></li>
+						<li><a href="/admin/report/lecturer">Lecturer</a></li>
 					</ul>
 				</li> 
 				<li>
