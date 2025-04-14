@@ -119,33 +119,42 @@ class FinanceController extends Controller
         }elseif($request->program != 0 && $request->semester != 0)
         {
 
-            $datas = '';
+            $datas = DB::table('tblstudentclaimpackage')->where([
+                ['tblstudentclaimpackage.program_id', $request->program],
+                ['tblstudentclaimpackage.semester_id', $request->semester]
+            ]);
 
         }elseif($request->session != 0 && $request->semester != 0)
         {
 
-            $datas = '';
+            $datas = DB::table('tblstudentclaimpackage')->where([
+                ['tblstudentclaimpackage.intake_id', $request->session],
+                ['tblstudentclaimpackage.semester_id', $request->semester]
+            ]);
 
         }elseif($request->program != 0)
         {
 
-            $datas = '';
+            $datas = DB::table('tblstudentclaimpackage')->where([
+                ['tblstudentclaimpackage.program_id', $request->program]
+            ]);
               
         }elseif($request->session != 0)
         {
 
-            $datas = '';
+            $datas = DB::table('tblstudentclaimpackage')->where([
+                ['tblstudentclaimpackage.intake_id', $request->session]
+            ]);
 
 
         }elseif($request->semester != 0)
         {
 
-            $datas = '';
+            $datas = DB::table('tblstudentclaimpackage')->where([
+                ['tblstudentclaimpackage.semester_id', $request->semester]
+            ]);
 
         }
-
-        if($datas != '')
-        {
 
         $data = $datas->join('tblprogramme', 'tblstudentclaimpackage.program_id', 'tblprogramme.id')
                       ->join('sessions', 'tblstudentclaimpackage.intake_id', 'sessions.SessionID')
@@ -153,12 +162,6 @@ class FinanceController extends Controller
                       ->join('tblstudentclaim', 'tblstudentclaimpackage.claim_id', 'tblstudentclaim.id')
                       ->select('tblstudentclaimpackage.*','tblprogramme.progname','sessions.SessionName','semester.semester_name','tblstudentclaim.name')
                       ->get();
-
-        }else{
-
-            $data = [];
-
-        }
 
         return view('finance.getClaim', compact('data'));
         
@@ -1265,7 +1268,7 @@ class FinanceController extends Controller
                         if($key->offer == 1)
                         {
 
-                            if($key->prerequisite_id == 999)
+                            if($key->prerequisite_id == 881)
                             {
 
                                 student::create([
@@ -1323,17 +1326,208 @@ class FinanceController extends Controller
                     ])
                     ->select('tblclaim.*')->first();
 
-                    $incentive = DB::table('tblincentive')
-                                    ->join('tblincentive_program', 'tblincentive.id', 'tblincentive_program.incentive_id')
-                                    ->where('tblincentive_program.program_id', $student->program)
-                                    ->select('tblincentive.*')
-                                    ->get();
+                    //INCENTIVE
 
-                    foreach($incentive as $key => $icv)
+                    $incentive = DB::table('tblincentive')
+                        ->join('tblincentive_program', 'tblincentive.id', 'tblincentive_program.incentive_id')
+                        ->where('tblincentive_program.program_id', $student->program)
+                        ->select('tblincentive.*')
+                        ->get();
+
+                    foreach ($incentive as $icv) {
+                        // Check if student is eligible based on intake session
+                        $isEligibleSession = ($student->intake >= $icv->session_from) && 
+                            ($icv->session_to === null || $student->intake <= $icv->session_to);
+                        
+                        // Check semester eligibility
+                        $isSemesterEligible = !$icv->start_at || $icv->start_at >= $student->semester;
+                        
+                        if ($isEligibleSession && $isSemesterEligible) {
+                            $ref_no = DB::table('tblref_no')->where('id', 8)->first();
+                            
+                            // Begin transaction to ensure data consistency
+                            DB::beginTransaction();
+                            
+                            try {
+                                // Update reference number
+                                DB::table('tblref_no')
+                                    ->where('id', $ref_no->id)
+                                    ->update(['ref_no' => $ref_no->ref_no + 1]);
+                                
+                                // Common data for inserts
+                                $currentDate = date('Y-m-d');
+                                $staffId = Auth::user()->ic;
+                                
+                                // Insert payment record
+                                $id = DB::table('tblpayment')->insertGetId([
+                                    'student_ic' => $student->ic,
+                                    'date' => $currentDate,
+                                    'ref_no' => $ref_no->code . ($ref_no->ref_no + 1),
+                                    'session_id' => $student->session,
+                                    'semester_id' => $student->semester,
+                                    'program_id' => $student->program,
+                                    'amount' => $icv->amount,
+                                    'process_status_id' => 2,
+                                    'process_type_id' => 9,
+                                    'add_staffID' => $staffId,
+                                    'add_date' => $currentDate,
+                                    'mod_staffID' => $staffId,
+                                    'mod_date' => $currentDate
+                                ]);
+                                
+                                // Insert payment method
+                                DB::table('tblpaymentmethod')->insert([
+                                    'payment_id' => $id,
+                                    'claim_method_id' => 10,
+                                    'bank_id' => 11,
+                                    'no_document' => 'INS-' . $id,
+                                    'amount' => $icv->amount,
+                                    'add_staffID' => $staffId,
+                                    'add_date' => $currentDate,
+                                    'mod_staffID' => $staffId,
+                                    'mod_date' => $currentDate
+                                ]);
+                                
+                                // Insert payment detail
+                                DB::table('tblpaymentdtl')->insert([
+                                    'payment_id' => $id,
+                                    'claimDtl_id' => $icv->id,
+                                    'claim_type_id' => 9,
+                                    'amount' => $icv->amount,
+                                    'add_staffID' => $staffId,
+                                    'add_date' => $currentDate,
+                                    'mod_staffID' => $staffId,
+                                    'mod_date' => $currentDate
+                                ]);
+                                
+                                DB::commit();
+                            } catch (\Exception $e) {
+                                DB::rollBack();
+                                throw $e;
+                            }
+                        }
+                    }
+
+                    //TABUNGKHAS
+
+                    // Check if student has sponsors
+                    $sponsors = DB::table('tblpackage_sponsorship')->where('student_ic', $student->ic)->get();
+
+                    if ($sponsors->isNotEmpty()) {
+                        $currentDate = date('Y-m-d');
+                        $userIC = Auth::user()->ic;
+                        
+                        foreach ($sponsors as $sponsor) {
+                            // Get all tabung entries for this package and intake
+                            $tabungs = DB::table('tbltabungkhas')
+                                ->join('tblprocess_type', 'tbltabungkhas.process_type_id', 'tblprocess_type.id')
+                                ->where('tbltabungkhas.package_id', $sponsor->package_id)
+                                ->where('tbltabungkhas.intake_id', $student->intake)
+                                ->select('tbltabungkhas.*', 'tblprocess_type.code')
+                                ->get();
+                                
+                            if ($tabungs->isEmpty()) {
+                                continue;
+                            }
+                            
+                            foreach ($tabungs as $tbg) {
+                                // Skip if program doesn't match
+                                $programMatches = DB::table('tbltabungkhas_program')
+                                    ->where('tabungkhas_id', $tbg->id)
+                                    ->where('program_id', $student->program)
+                                    ->exists();
+                                    
+                                if (!$programMatches) {
+                                    continue;
+                                }
+                                
+                                // Skip if semester eligibility not met
+                                if ($tbg->start_at !== null && $tbg->start_at < $student->semester) {
+                                    continue;
+                                }
+                                
+                                // Get and update reference number
+                                $ref_no = DB::table('tblref_no')->where('id', 8)->first();
+                                $newRefNo = $ref_no->ref_no + 1;
+                                
+                                DB::table('tblref_no')->where('id', $ref_no->id)->update([
+                                    'ref_no' => $newRefNo
+                                ]);
+                                
+                                // Create payment record
+                                $paymentId = DB::table('tblpayment')->insertGetId([
+                                    'student_ic' => $student->ic,
+                                    'date' => $currentDate,
+                                    'ref_no' => $ref_no->code . $newRefNo,
+                                    'session_id' => $student->session,
+                                    'semester_id' => $student->semester,
+                                    'program_id' => $student->program,
+                                    'amount' => $tbg->amount,
+                                    'process_status_id' => 2,
+                                    'process_type_id' => $tbg->process_type_id,
+                                    'add_staffID' => $userIC,
+                                    'add_date' => $currentDate,
+                                    'mod_staffID' => $userIC,
+                                    'mod_date' => $currentDate
+                                ]);
+                                
+                                // Create payment method record
+                                DB::table('tblpaymentmethod')->insert([
+                                    'payment_id' => $paymentId,
+                                    'claim_method_id' => 10,
+                                    'bank_id' => 11,
+                                    'no_document' => $tbg->code . $paymentId,
+                                    'amount' => $tbg->amount,
+                                    'add_staffID' => $userIC,
+                                    'add_date' => $currentDate,
+                                    'mod_staffID' => $userIC,
+                                    'mod_date' => $currentDate
+                                ]);
+                                
+                                // Create payment detail record
+                                DB::table('tblpaymentdtl')->insert([
+                                    'payment_id' => $paymentId,
+                                    'claimDtl_id' => $tbg->id,
+                                    'claim_type_id' => 9,
+                                    'amount' => $tbg->amount,
+                                    'add_staffID' => $userIC,
+                                    'add_date' => $currentDate,
+                                    'mod_staffID' => $userIC,
+                                    'mod_date' => $currentDate
+                                ]);
+                            }
+                        }
+                    }
+
+                    //INSENTIFKHAS
+
+                    $insentif = DB::table('tblinsentifkhas')
+                                    ->join('tblprocess_type', 'tblinsentifkhas.process_type_id', 'tblprocess_type.id')
+                                    ->where([
+                                        ['tblinsentifkhas.intake_id', $student->intake]
+                                    ])->select('tblinsentifkhas.*', 'tblprocess_type.code');
+
+                    if($insentif->isNotEmpty())
                     {
 
-                        if(($student->intake >= $icv->session_from && $student->intake <= $icv->session_to) || ($student->intake >= $icv->session_from && $icv->session_to == null))
+                        $insentifs = $insentif->get();
+
+                        foreach($insentifs as $key => $icv)
                         {
+
+                            $checkStudentEligible = DB::table('tblinsentifkhas_program')->where([['insentifkhas_id', $icv->id],['program_id', $student->program]])->exists();
+
+                            if(!$checkStudentEligible)
+                            {
+                                continue;
+                            }
+
+                            $checkSemesterEligible = $icv->start_at !== null && $icv->start_at < $student->semester;
+
+                            if($checkSemesterEligible)
+                            {
+                                continue;
+                            }
 
                             $ref_no = DB::table('tblref_no')->where('id', 8)->first();
 
@@ -1350,7 +1544,7 @@ class FinanceController extends Controller
                                 'program_id' => $student->program,
                                 'amount' => $icv->amount,
                                 'process_status_id' => 2,
-                                'process_type_id' => 9,
+                                'process_type_id' => $icv->process_type_id,
                                 'add_staffID' => Auth::user()->ic,
                                 'add_date' => date('Y-m-d'),
                                 'mod_staffID' => Auth::user()->ic,
@@ -1361,7 +1555,7 @@ class FinanceController extends Controller
                                 'payment_id' => $id,
                                 'claim_method_id' => 10,
                                 'bank_id' => 11,
-                                'no_document' => 'INS-' . $id,
+                                'no_document' => $icv->code . $id,
                                 'amount' => $icv->amount,
                                 'add_staffID' => Auth::user()->ic,
                                 'add_date' => date('Y-m-d'),
@@ -1379,149 +1573,129 @@ class FinanceController extends Controller
                                 'mod_staffID' => Auth::user()->ic,
                                 'mod_date' => date('Y-m-d')
                             ]);
-
-                        }
-
-                    }
-
-                    //TABUNGKHAS
-
-                    $sponsors = DB::table('tblpackage_sponsorship')->where('student_ic', $student->ic);
-
-                    if($sponsors->exists())
-                    {
-                        $sponsor = $sponsors->get();
-
-                        foreach($sponsor as $spn)
-                        {
-                            $tabungs = DB::table('tbltabungkhas')
-                                    ->join('tblprocess_type', 'tbltabungkhas.process_type_id', 'tblprocess_type.id')
-                                    ->where([
-                                        ['tbltabungkhas.package_id', $spn->package_id],
-                                        ['tbltabungkhas.intake_id', $student->intake]
-                                    ])->select('tbltabungkhas.*', 'tblprocess_type.code');
-
-                            if($tabungs->exists())
-                            {
-                                $tabung = $tabungs->get();
-
-                                foreach($tabung as $key => $tbg)
-                                {
-                                    if(DB::table('tbltabungkhas_program')->where([['tabungkhas_id', $tbg->id],['program_id', $student->program]])->exists())
-                                    {
-                                        $ref_no = DB::table('tblref_no')->where('id', 8)->first();
-
-                                        DB::table('tblref_no')->where('id', $ref_no->id)->update([
-                                            'ref_no' => $ref_no->ref_no + 1
-                                        ]);
-
-                                        $id = DB::table('tblpayment')->insertGetId([
-                                            'student_ic' => $student->ic,
-                                            'date' => date('Y-m-d'),
-                                            'ref_no' => $ref_no->code . $ref_no->ref_no + 1,
-                                            'session_id' => $student->session,
-                                            'semester_id' => $student->semester,
-                                            'program_id' => $student->program,
-                                            'amount' => $tbg->amount,
-                                            'process_status_id' => 2,
-                                            'process_type_id' => $tbg->process_type_id,
-                                            'add_staffID' => Auth::user()->ic,
-                                            'add_date' => date('Y-m-d'),
-                                            'mod_staffID' => Auth::user()->ic,
-                                            'mod_date' => date('Y-m-d')
-                                        ]);
-
-                                        DB::table('tblpaymentmethod')->insert([
-                                            'payment_id' => $id,
-                                            'claim_method_id' => 10,
-                                            'bank_id' => 11,
-                                            'no_document' => $tbg->code . $id,
-                                            'amount' => $tbg->amount,
-                                            'add_staffID' => Auth::user()->ic,
-                                            'add_date' => date('Y-m-d'),
-                                            'mod_staffID' => Auth::user()->ic,
-                                            'mod_date' => date('Y-m-d')
-                                        ]);
-
-                                        DB::table('tblpaymentdtl')->insert([
-                                            'payment_id' => $id,
-                                            'claimDtl_id' => $tbg->id,
-                                            'claim_type_id' => 9,
-                                            'amount' => $tbg->amount,
-                                            'add_staffID' => Auth::user()->ic,
-                                            'add_date' => date('Y-m-d'),
-                                            'mod_staffID' => Auth::user()->ic,
-                                            'mod_date' => date('Y-m-d')
-                                        ]);
-                                    }
-                                }
-                            }
+                            
                         }
                     }
 
-                    //INSENTIFKHAS
 
-                    $insentif = DB::table('tblinsentifkhas')
-                                    ->join('tblprocess_type', 'tblinsentifkhas.process_type_id', 'tblprocess_type.id')
-                                    ->where([
-                                        ['tblinsentifkhas.intake_id', $student->intake]
-                                    ])->select('tblinsentifkhas.*', 'tblprocess_type.code');
+                    // if($insentif->exists())
+                    // {
+                    //     $insentifs = $insentif->get();
 
-                    if($insentif->exists())
-                    {
-                        $insentifs = $insentif->get();
+                    //     foreach($insentifs as $key => $icv)
+                    //     {
+                    //         if(DB::table('tblinsentifkhas_program')->where([['insentifkhas_id', $icv->id],['program_id', $student->program]])->exists())
+                    //         {
+                    //             $ref_no = DB::table('tblref_no')->where('id', 8)->first();
 
-                        foreach($insentifs as $key => $icv)
-                        {
-                            if(DB::table('tblinsentifkhas_program')->where([['insentifkhas_id', $icv->id],['program_id', $student->program]])->exists())
-                            {
-                                $ref_no = DB::table('tblref_no')->where('id', 8)->first();
+                    //             DB::table('tblref_no')->where('id', $ref_no->id)->update([
+                    //                 'ref_no' => $ref_no->ref_no + 1
+                    //             ]);
 
-                                DB::table('tblref_no')->where('id', $ref_no->id)->update([
-                                    'ref_no' => $ref_no->ref_no + 1
-                                ]);
+                    //             $id = DB::table('tblpayment')->insertGetId([
+                    //                 'student_ic' => $student->ic,
+                    //                 'date' => date('Y-m-d'),
+                    //                 'ref_no' => $ref_no->code . $ref_no->ref_no + 1,
+                    //                 'session_id' => $student->session,
+                    //                 'semester_id' => $student->semester,
+                    //                 'program_id' => $student->program,
+                    //                 'amount' => $icv->amount,
+                    //                 'process_status_id' => 2,
+                    //                 'process_type_id' => $icv->process_type_id,
+                    //                 'add_staffID' => Auth::user()->ic,
+                    //                 'add_date' => date('Y-m-d'),
+                    //                 'mod_staffID' => Auth::user()->ic,
+                    //                 'mod_date' => date('Y-m-d')
+                    //             ]);
 
-                                $id = DB::table('tblpayment')->insertGetId([
-                                    'student_ic' => $student->ic,
-                                    'date' => date('Y-m-d'),
-                                    'ref_no' => $ref_no->code . $ref_no->ref_no + 1,
-                                    'session_id' => $student->session,
-                                    'semester_id' => $student->semester,
-                                    'program_id' => $student->program,
-                                    'amount' => $icv->amount,
-                                    'process_status_id' => 2,
-                                    'process_type_id' => $icv->process_type_id,
-                                    'add_staffID' => Auth::user()->ic,
-                                    'add_date' => date('Y-m-d'),
-                                    'mod_staffID' => Auth::user()->ic,
-                                    'mod_date' => date('Y-m-d')
-                                ]);
+                    //             DB::table('tblpaymentmethod')->insert([
+                    //                 'payment_id' => $id,
+                    //                 'claim_method_id' => 10,
+                    //                 'bank_id' => 11,
+                    //                 'no_document' => $icv->code . $id,
+                    //                 'amount' => $icv->amount,
+                    //                 'add_staffID' => Auth::user()->ic,
+                    //                 'add_date' => date('Y-m-d'),
+                    //                 'mod_staffID' => Auth::user()->ic,
+                    //                 'mod_date' => date('Y-m-d')
+                    //             ]);
 
-                                DB::table('tblpaymentmethod')->insert([
-                                    'payment_id' => $id,
-                                    'claim_method_id' => 10,
-                                    'bank_id' => 11,
-                                    'no_document' => $icv->code . $id,
-                                    'amount' => $icv->amount,
-                                    'add_staffID' => Auth::user()->ic,
-                                    'add_date' => date('Y-m-d'),
-                                    'mod_staffID' => Auth::user()->ic,
-                                    'mod_date' => date('Y-m-d')
-                                ]);
+                    //             DB::table('tblpaymentdtl')->insert([
+                    //                 'payment_id' => $id,
+                    //                 'claimDtl_id' => $icv->id,
+                    //                 'claim_type_id' => 9,
+                    //                 'amount' => $icv->amount,
+                    //                 'add_staffID' => Auth::user()->ic,
+                    //                 'add_date' => date('Y-m-d'),
+                    //                 'mod_staffID' => Auth::user()->ic,
+                    //                 'mod_date' => date('Y-m-d')
+                    //             ]);
+                    //         }
+                    //     }
+                    // }
 
-                                DB::table('tblpaymentdtl')->insert([
-                                    'payment_id' => $id,
-                                    'claimDtl_id' => $icv->id,
-                                    'claim_type_id' => 9,
-                                    'amount' => $icv->amount,
-                                    'add_staffID' => Auth::user()->ic,
-                                    'add_date' => date('Y-m-d'),
-                                    'mod_staffID' => Auth::user()->ic,
-                                    'mod_date' => date('Y-m-d')
-                                ]);
-                            }
-                        }
-                    }
+                    //VOUCHER
+
+                    // $insentif = DB::table('tblinsentifkhas')
+                    //                 ->where([
+                    //                     ['tblinsentifkhas.intake_id', $student->intake]
+                    //                 ])->select('tblinsentifkhas.*', 'tblprocess_type.code');
+
+                    // if($insentif->exists())
+                    // {
+                    //     $insentifs = $insentif->get();
+
+                    //     foreach($insentifs as $key => $icv)
+                    //     {
+                    //         if(DB::table('tblinsentifkhas_program')->where([['insentifkhas_id', $icv->id],['program_id', $student->program]])->exists())
+                    //         {
+                    //             $ref_no = DB::table('tblref_no')->where('id', 8)->first();
+
+                    //             DB::table('tblref_no')->where('id', $ref_no->id)->update([
+                    //                 'ref_no' => $ref_no->ref_no + 1
+                    //             ]);
+
+                    //             $id = DB::table('tblpayment')->insertGetId([
+                    //                 'student_ic' => $student->ic,
+                    //                 'date' => date('Y-m-d'),
+                    //                 'ref_no' => $ref_no->code . $ref_no->ref_no + 1,
+                    //                 'session_id' => $student->session,
+                    //                 'semester_id' => $student->semester,
+                    //                 'program_id' => $student->program,
+                    //                 'amount' => $icv->amount,
+                    //                 'process_status_id' => 2,
+                    //                 'process_type_id' => $icv->process_type_id,
+                    //                 'add_staffID' => Auth::user()->ic,
+                    //                 'add_date' => date('Y-m-d'),
+                    //                 'mod_staffID' => Auth::user()->ic,
+                    //                 'mod_date' => date('Y-m-d')
+                    //             ]);
+
+                    //             DB::table('tblpaymentmethod')->insert([
+                    //                 'payment_id' => $id,
+                    //                 'claim_method_id' => 10,
+                    //                 'bank_id' => 11,
+                    //                 'no_document' => $icv->code . $id,
+                    //                 'amount' => $icv->amount,
+                    //                 'add_staffID' => Auth::user()->ic,
+                    //                 'add_date' => date('Y-m-d'),
+                    //                 'mod_staffID' => Auth::user()->ic,
+                    //                 'mod_date' => date('Y-m-d')
+                    //             ]);
+
+                    //             DB::table('tblpaymentdtl')->insert([
+                    //                 'payment_id' => $id,
+                    //                 'claimDtl_id' => $icv->id,
+                    //                 'claim_type_id' => 9,
+                    //                 'amount' => $icv->amount,
+                    //                 'add_staffID' => Auth::user()->ic,
+                    //                 'add_date' => date('Y-m-d'),
+                    //                 'mod_staffID' => Auth::user()->ic,
+                    //                 'mod_date' => date('Y-m-d')
+                    //             ]);
+                    //         }
+                    //     }
+                    // }
 
                 }
 
@@ -1550,7 +1724,7 @@ class FinanceController extends Controller
                     // Prepare the base update data
                     $updateData = [
                     'register_at' => now(),
-                    'status_id' => ($normalizedIc1 == $normalizedIc2) ? 21 : 22,
+                    'status_id' => ($normalizedIc1 == $normalizedIc2) ? 20 : 22,
                     'commission' => ($normalizedIc1 == $normalizedIc2) ? 300 : 0
                     ];
 
@@ -1559,6 +1733,8 @@ class FinanceController extends Controller
                     ->table('students')
                     ->where('ic', $student->ic)
                     ->update($updateData);
+
+                    
 
                 }
 
@@ -1948,6 +2124,23 @@ class FinanceController extends Controller
                         'process_status_id' => 2,
                         'ref_no' => $ref_no->code . $ref_no->ref_no + 1
                     ]);
+
+                    //check if student has remark
+
+                    if(DB::table('student_remarks')->where('student_ic', $ref_no->student_ic)->exists())
+                    {
+
+                        $balance = DB::table('student_remarks')->where('student_ic', $ref_no->student_ic)->value('latest_balance');
+
+                        $value = DB::table('tblpayment')->where('id', $request->id)->value('amount');
+
+                        $newbalance = $balance - $value;
+
+                        DB::table('student_remarks')->where('student_ic', $ref_no->student_ic)->update([
+                            'latest_balance' => $newbalance
+                        ]);
+
+                    }
 
                     //check if newstudent & more than 250
 
@@ -3271,6 +3464,562 @@ class FinanceController extends Controller
 
     }
 
+    public function paymentAllowance()
+    {
+        $method = [];
+
+        $payment = DB::table('tblallowance')
+                   ->where([['tblallowance.student_ic', null],['tblallowance.process_status_id',2]])
+                   ->select('tblallowance.*',)->get();
+
+        foreach($payment as $key => $pym)
+        {
+
+            $method[$key] = DB::table('tblallowancemethod')->where('payment_id', $pym->id)->get();
+
+        }
+
+        return view('finance.payment.allowance.allowance', compact('payment','method'));
+
+    }
+
+    public function paymentAllowanceInput()
+    {
+
+        return view('finance.payment.allowance.allowanceInput');
+
+    }
+
+    public function deleteAllowance(Request $request)
+    {
+
+        DB::table('tblallowance')->where('id', $request->id)->delete();
+
+        DB::table('tblallowancemethod')->where('payment_id', $request->id)->delete();
+
+        return ["message" => "Success"];
+
+    }
+
+    public function paymentAllowanceStore(Request $request)
+    {
+
+        $paymentData = $request->paymentData;
+
+        $validator = Validator::make($request->all(), [
+            'paymentData' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return ["message"=>"Field Error", "error" => $validator->messages()->get('*')];
+        }
+
+        try{ 
+            DB::beginTransaction();
+            DB::connection()->enableQueryLog();
+
+            try{
+                $payment = json_decode($paymentData);
+                
+                if($payment->name != null && $payment->total != null)
+                {
+
+
+                    $id = DB::table('tblallowance')->insertGetId([
+                        'name' => $payment->name,
+                        'date' => date('Y-m-d'),
+                        'amount' => $payment->total,
+                        'process_status_id' => 1,
+                        'process_type_id' => 7,
+                        'add_staffID' => Auth::user()->ic,
+                        'add_date' => date('Y-m-d'),
+                        'mod_staffID' => Auth::user()->ic,
+                        'mod_date' => date('Y-m-d')
+                    ]);
+
+                    $data['method'] = DB::table('tblpayment_method')->get();
+
+                    $data['bank'] = DB::table('tblpayment_bank')->orderBy('name', 'asc')->get();
+ 
+                
+                }else{
+                    return ["message" => "Please fill all required field!"];
+                }
+                
+            }catch(QueryException $ex){
+                DB::rollback();
+                if($ex->getCode() == 23000){
+                    return ["message"=>"Class code already existed inside the system"];
+                }else{
+                    \Log::debug($ex);
+                    return ["message"=>"DB Error"];
+                }
+            }
+
+            DB::commit();
+        }catch(Exception $ex){
+            return ["message"=>"Error"];
+        }
+
+        return view('finance.sponsorship.getSponserMethod', compact('id', 'data'));
+
+    }
+
+    public function paymentAllowanceStore2(Request $request)
+    {
+
+        $paymentData = $request->paymentData;
+
+        $validator = Validator::make($request->all(), [
+            'paymentData' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return ["message"=>"Field Error", "error" => $validator->messages()->get('*')];
+        }
+
+        try{ 
+            DB::beginTransaction();
+            DB::connection()->enableQueryLog();
+
+            try{
+                $payment = json_decode($paymentData);
+                
+                if($payment->method != null && $payment->amount != null)
+                {
+                    $total = $payment->amount;
+
+                    $main = DB::table('tblallowance')->where('id', $payment->id)->first();
+
+                    $details = DB::table('tblallowancemethod')->where('payment_id', $payment->id)->get();
+
+                    if(count($details) > 0)
+                    {
+
+                        $total = $total + DB::table('tblallowancemethod')->where('payment_id', $payment->id)->sum('amount');
+                        
+                    }
+
+                    if($total > $main->amount)
+                    {
+
+                        return ["message" => "Add cannot exceed initial payment value!"];
+
+                    }else{
+
+                        if(($payment->nodoc != null) ? DB::table('tblallowancemethod')->join('tblallowance', 'tblallowancemethod.payment_id', 'tblallowance.id')
+                        ->where('tblallowancemethod.no_document', $payment->nodoc)->whereNotIn('tblallowance.process_status_id', [1, 3])->exists() : '')
+                        {
+
+                            return ["message" => "Document with the same number already used! Please use a different document no."];
+
+                        }else{
+
+                            DB::table('tblallowancemethod')->insert([
+                                'payment_id' => $payment->id,
+                                'claim_method_id' => $payment->method,
+                                'bank_id' => $payment->bank,
+                                'no_document' => $payment->nodoc,
+                                'amount' => $payment->amount,
+                                'add_staffID' => Auth::user()->ic,
+                                'add_date' => date('Y-m-d'),
+                                'mod_staffID' => Auth::user()->ic,
+                                'mod_date' => date('Y-m-d')
+                            ]);
+
+                        }
+
+                    }
+
+                    $methods = DB::table('tblallowancemethod')
+                               ->join('tblpayment_method', 'tblallowancemethod.claim_method_id', 'tblpayment_method.id')
+                               ->where('tblallowancemethod.payment_id', $payment->id)
+                               ->select('tblallowancemethod.*', 'tblpayment_method.name AS claim_method_id')->get();
+
+                    $sum = DB::table('tblallowancemethod')->where('payment_id', $payment->id)->sum('amount');
+
+                    $content = "";
+                    $content .= '<thead>
+                                    <tr>
+                                        <th style="width: 1%">
+                                            No.
+                                        </th>
+                                        <th style="width: 10%">
+                                            Date
+                                        </th>
+                                        <th style="width: 15%">
+                                            Type
+                                        </th>
+                                        <th style="width: 10%">
+                                            Amount
+                                        </th>
+                                        <th style="width: 10%">
+                                            Document No.
+                                        </th>
+                                        <th style="width: 20%">
+                                            Remark
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table">';
+                                
+                    foreach($methods as $key => $dtl){
+                    //$registered = ($dtl->status == 'ACTIVE') ? 'checked' : '';
+                    $content .= '
+                        <tr>
+                            <td style="width: 1%">
+                            '. $key+1 .'
+                            </td>
+                            <td style="width: 15%">
+                            '. $main->date .'
+                            </td>
+                            <td style="width: 15%">
+                            '. $dtl->claim_method_id .'
+                            </td>
+                            <td style="width: 30%">
+                            '. $dtl->amount .'
+                            </td>
+                            <td style="width: 30%">
+                            '. $dtl->no_document .'
+                            </td>
+                            <td>
+                              <a class="btn btn-danger btn-sm" href="#" onclick="deletedtl('. $dtl->id .','. $main->id .')">
+                                  <i class="ti-trash">
+                                  </i>
+                                  Delete
+                              </a>
+                            </td>
+                        </tr>
+                        ';
+                        }
+                        $content .= '</tbody>';
+                        $content .= '<tfoot>
+                        <tr>
+                            <td style="width: 1%">
+                            
+                            </td>
+                            <td style="width: 15%">
+                            TOTAL AMOUNT
+                            </td>
+                            <td style="width: 15%">
+                            :
+                            </td>
+                            <td style="width: 30%">
+                            '. $sum .'
+                            </td>
+                            <td>
+                                <div class="col-md-6" hidden>
+                                     <input type="number" class="form-control" name="sum" id="sum" value="'. $sum .'">
+                                </div> 
+                            </td>
+                        </tr>
+                        </tfoot>';
+
+                
+                }else{
+                    return ["message" => "Please fill all required field!"];
+                }
+                
+            }catch(QueryException $ex){
+                DB::rollback();
+                if($ex->getCode() == 23000){
+                    return ["message"=>"Class code already existed inside the system"];
+                }else{
+                    \Log::debug($ex);
+                    return ["message"=>"DB Error"];
+                }
+            }
+
+            DB::commit();
+        }catch(Exception $ex){
+            return ["message"=>"Error"];
+        }
+
+        return ["message" => "Success", "data" => $content];
+
+    }
+
+    public function paymentAllowanceDelete(Request $request)
+    {
+        DB::table('tblallowancemethod')->where('id', $request->dtl)->delete();
+
+        $main = DB::table('tblallowance')->where('id', $request->id)->first();
+
+        $sum = DB::table('tblallowancemethod')->where('payment_id', $request->id)->sum('amount');
+
+        $methods = DB::table('tblallowancemethod')
+                               ->join('tblpayment_method', 'tblallowancemethod.claim_method_id', 'tblpayment_method.id')
+                               ->where('tblallowancemethod.payment_id', $request->id)
+                               ->select('tblallowancemethod.*', 'tblpayment_method.name AS claim_method_id')->get();
+
+        $content = "";
+        $content .= '<thead>
+                        <tr>
+                            <th style="width: 1%">
+                                No.
+                            </th>
+                            <th style="width: 10%">
+                                Date
+                            </th>
+                            <th style="width: 15%">
+                                Type
+                            </th>
+                            <th style="width: 10%">
+                                Amount
+                            </th>
+                            <th style="width: 10%">
+                                Document No.
+                            </th>
+                            <th style="width: 20%">
+                                Remark
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="table">';
+                    
+        foreach($methods as $key => $dtl){
+        //$registered = ($dtl->status == 'ACTIVE') ? 'checked' : '';
+        $content .= '
+            <tr>
+                <td style="width: 1%">
+                '. $key+1 .'
+                </td>
+                <td style="width: 15%">
+                '. $main->date .'
+                </td>
+                <td style="width: 15%">
+                '. $dtl->claim_method_id .'
+                </td>
+                <td style="width: 30%">
+                '. $dtl->amount .'
+                </td>
+                <td style="width: 30%">
+                '. $dtl->no_document .'
+                </td>
+                <td>
+                    <a class="btn btn-danger btn-sm" href="#" onclick="deletedtl('. $dtl->id .', '. $dtl->payment_id .')">
+                        <i class="ti-trash">
+                        </i>
+                        Delete
+                    </a>
+                </td>
+            </tr>
+            ';
+            }
+        $content .= '</tbody>';
+        $content .= '<tfoot>
+                <tr>
+                    <td style="width: 1%">
+                    
+                    </td>
+                    <td style="width: 15%">
+                    TOTAL AMOUNT
+                    </td>
+                    <td style="width: 15%">
+                    :
+                    </td>
+                    <td style="width: 30%">
+                    '. $sum .'
+                    </td>
+                    <td>
+                
+                    </td>
+                </tr>
+            </tfoot>';
+        
+
+        return $content;
+
+    }
+
+    public function paymentAllowanceConfirm(Request $request)
+    {
+
+        DB::table('tblallowance')->where('id', $request->id)->update([
+            'process_status_id' => 2
+        ]);
+
+        return true;
+
+    }
+
+    public function paymentStudentAllowance()
+    {
+
+        $allowance = DB::table('tblallowance')
+                   ->where('tblallowance.id', request()->id)
+                   ->first();
+
+        return view('finance.payment.allowance.studentPayment', compact('allowance'));
+
+    }
+
+    public function getStudentAllowance(Request $request)
+    {
+
+        $data['student'] = DB::table('students')
+                           ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
+                           ->join('tblprogramme', 'students.program', 'tblprogramme.id')
+                           ->join('sessions AS t1', 'students.intake', 't1.SessionID')
+                           ->join('sessions AS t2', 'students.session', 't2.SessionID')
+                           ->select('students.*', 'tblstudent_status.name AS status', 'tblprogramme.progname AS program', 'students.program AS progid', 't1.SessionName AS intake_name', 't2.SessionName AS session_name')
+                           ->where('ic', $request->student)->first();
+        
+        return view('finance.payment.allowance.allowanceGetStudent', compact('data'));
+
+    }
+
+    public function storeStudentAllowance(Request $request)
+    {
+
+        $paymentData = $request->paymentData;
+
+        $validator = Validator::make($request->all(), [
+            'paymentData' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return ["message"=>"Field Error", "error" => $validator->messages()->get('*')];
+        }
+
+        try{ 
+            DB::beginTransaction();
+            DB::connection()->enableQueryLog();
+
+            try{
+                $payment = json_decode($paymentData);
+                
+                if($payment->total != null)
+                {
+                    $stddetail = DB::table('students')->where('ic', $payment->ic)->first();
+
+                    $pymdetails = DB::table('tblallowance')->where('id', $payment->id)->first();
+
+                    if(count(DB::table('tblallowance')->where([['allowance_id', $payment->id],['process_status_id', 2]])->get()) > 0)
+                    {
+                        $sum = DB::table('tblallowance')->where([['allowance_id', $payment->id],['process_status_id', 2]])->sum('amount');
+
+                        $balance = $pymdetails->amount - $sum;
+
+                    }else{
+
+                        $balance = $pymdetails->amount;
+
+                    }
+
+                    $count = DB::table('tblallowance')->where([['allowance_id', $payment->id],['process_status_id', 2],['student_ic', $payment->ic]])->get();
+
+                    if(count($count) > 0)
+                    {
+
+                        return ["message" => "Student sponsorship has already been paid!"];
+
+                    }else{
+
+                        if($payment->total > $balance)
+                        {
+
+                            return ["message" => "Amount cannot exceed " . $balance . "!"];
+
+                        }else{
+
+                            $id = DB::table('tblallowance')->insertGetId([
+                                'student_ic' => $payment->ic,
+                                'allowance_id' => $payment->id,
+                                'date' => date('Y-m-d'),
+                                'ref_no' => null,
+                                'program_id' => $stddetail->program,
+                                'session_id' => $stddetail->session,
+                                'semester_id' => $stddetail->semester,
+                                'amount' => $payment->total,
+                                'process_status_id' => 1,
+                                'process_type_id' => 7,
+                                'add_staffID' => Auth::user()->ic,
+                                'add_date' => date('Y-m-d'),
+                                'mod_staffID' => Auth::user()->ic,
+                                'mod_date' => date('Y-m-d')
+                            ]);
+
+                        }
+
+                    }
+
+                
+                }else{
+                    return ["message" => "Please fill all required field!"];
+                }
+                
+            }catch(QueryException $ex){
+                DB::rollback();
+                if($ex->getCode() == 23000){
+                    return ["message"=>"Class code already existed inside the system"];
+                }else{
+                    \Log::debug($ex);
+                    return ["message"=>"DB Error"];
+                }
+            }
+
+            DB::commit();
+        }catch(Exception $ex){
+            return ["message"=>"Error"];
+        }
+
+        return ["message" => "Success", "data" => $id, "sum" => $payment->total];
+
+    }
+
+    public function confirmStudentAllowance(Request $request)
+    {
+
+        $paymentDetail = $request->paymentDetail;
+
+        $validator = Validator::make($request->all(), [
+            'paymentDetail' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return ["message"=>"Field Error", "error" => $validator->messages()->get('*')];
+        }
+
+        try{ 
+            DB::beginTransaction();
+            DB::connection()->enableQueryLog();
+
+            try{
+                $payment = json_decode($paymentDetail);
+                
+                if($payment != null)
+                {
+
+                    DB::table('tblallowance')->where('id', $payment->id)->update([
+                        'process_status_id' => 2,
+                        'ref_no' => null
+                    ]);
+
+                
+                }else{
+                    return ["message" => "Please fill all required field!", "id" => $payment->id];
+                }
+                
+            }catch(QueryException $ex){
+                DB::rollback();
+                if($ex->getCode() == 23000){
+                    return ["message"=>"Class code already existed inside the system"];
+                }else{
+                    \Log::debug($ex);
+                    return ["message"=>"DB Error"];
+                }
+            }
+
+            DB::commit();
+        }catch(Exception $ex){
+            return ["message"=>"Error"];
+        }
+
+        return ["message" => "Success", "id" => $payment->id];
+
+    }
+
     public function sponsorLibrary()
     {
 
@@ -4020,7 +4769,7 @@ class FinanceController extends Controller
                 $data['sum1'] += $req->amount;
                 
 
-            }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26], (array) $req->process_type_id) && $req->source == 'payment')
+            }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27], (array) $req->process_type_id) && $req->source == 'payment')
             {
 
                 $data['total'][$key] = $val - $req->amount;
@@ -4057,12 +4806,21 @@ class FinanceController extends Controller
 
             $semester_column = 'semester_' . $data['student']->semester; // e.g., this will be 'semester_2' if $user->semester is 2
 
-            if (isset($data['package']->$semester_column)) {
-                $data['value'] = $data['sum3'] - $data['package']->$semester_column;
-                // Do something with $semester_value
-            } else {
-                $data['value'] = 0;
-                // Handle case where the column is not set
+            if($data['student']->status == 'TARIK DIRI')
+            {
+
+                $data['value'] = $data['sum3'];
+
+            }else{
+
+                if (isset($data['package']->$semester_column)) {
+                    $data['value'] = $data['sum3'] - $data['package']->$semester_column;
+                    // Do something with $semester_value
+                } else {
+                    $data['value'] = 0;
+                    // Handle case where the column is not set
+                }
+                
             }
 
         }else{
@@ -4131,7 +4889,7 @@ class FinanceController extends Controller
                 $data['sum1_2'] += $req->amount;
                 
 
-            }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26], (array) $req->process_type_id))
+            }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27], (array) $req->process_type_id))
             {
 
                 $data['total2'][$key] = $val - $req->amount;
@@ -4192,7 +4950,7 @@ class FinanceController extends Controller
                 $data['sum1_3'] += $req->amount;
                 
 
-            }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26], (array) $req->process_type_id))
+            }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27], (array) $req->process_type_id))
             {
 
                 $data['total3'][$key] = $val - $req->amount;
@@ -4320,6 +5078,18 @@ class FinanceController extends Controller
 
         $data['total_all'] =  $data['current_balance'] + $data['pk_balance'];
 
+        //REMARk
+
+        $data['remark'] = DB::table('student_remarks')
+                          ->join('categories', 'student_remarks.category_id', 'categories.id')
+                          ->where('student_remarks.student_ic', $request->student)
+                          ->select('student_remarks.*', 'categories.name')
+                          ->first();
+
+        if ($data['remark']) {
+            $data['remark']->latest_balance = number_format($data['sum3'] - $data['remark']->correction_amount, 2, '.', '');
+        }
+
         if(isset($request->print))
         {
 
@@ -4419,7 +5189,7 @@ class FinanceController extends Controller
 
             return redirect()->route('receipt3', ['id' => $request->id]);
 
-        }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26], (array) $request->type)){
+        }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27], (array) $request->type)){
 
             if(array_intersect([7], (array) $request->type))
             {
@@ -4438,6 +5208,69 @@ class FinanceController extends Controller
 
     public function dailyReport()
     {
+        // $data['hostel'] = [];
+        // $data['convo'] = [];
+        // $data['fine'] = [];
+
+        // // Subquery for tblpaymentdtl with row numbers
+        // $paymentDtl = DB::table('tblpaymentdtl')
+        // ->select('id', 'payment_id', 'claim_type_id', 'amount',
+        //     DB::raw('ROW_NUMBER() OVER (PARTITION BY payment_id ORDER BY id) as row_num')
+        // );
+
+        // // Subquery for tblpaymentmethod with row numbers
+        // $paymentMethod = DB::table('tblpaymentmethod')
+        // ->select('id', 'payment_id', 'claim_method_id', 'bank_id', 'no_document',
+        //     DB::raw('ROW_NUMBER() OVER (PARTITION BY payment_id ORDER BY id) as row_num')
+        // );
+        
+        // // Main query with join modifications
+        // $other = DB::table('tblpayment')
+        // ->joinSub($paymentDtl, 'dtl', function ($join) {
+        //     $join->on('dtl.payment_id', '=', 'tblpayment.id');
+        // })
+        // ->joinSub($paymentMethod, 'method', function ($join) {
+        //     $join->on('method.payment_id', '=', 'tblpayment.id')
+        //         ->on('method.row_num', '=', 'dtl.row_num');
+        // })
+        // ->join('tblstudentclaim', 'dtl.claim_type_id', '=', 'tblstudentclaim.id')
+        // ->leftJoin('tblpayment_bank', 'method.bank_id', '=', 'tblpayment_bank.id')
+        // ->join('tblpayment_method', 'method.claim_method_id', '=', 'tblpayment_method.id')
+        // ->whereBetween('tblpayment.add_date', ['2024-09-30', '2024-09-30'])
+        // ->where('tblpayment.process_status_id', 2)
+        // ->select(
+        //     'tblpayment.*',
+        //     'tblstudentclaim.groupid',
+        //     'tblstudentclaim.name AS type',
+        //     'dtl.amount',
+        //     'dtl.claim_type_id',
+        //     'method.no_document',
+        //     'tblpayment_method.name AS method',
+        //     'tblpayment_bank.name AS bank'
+        // )
+        // ->orderBy('tblpayment.ref_no', 'asc')
+        // ->groupBy('dtl.id')
+        // ->get();
+
+        // foreach($other as $ot)
+        // {
+        //     if(array_intersect([8], (array) $ot->process_type_id) && array_intersect([2], (array) $ot->groupid) && $ot->amount != 0)
+        //     {
+        //         $data['hostel'][] = $ot;
+
+        //     }elseif(array_intersect([8,1], (array) $ot->process_type_id) && array_intersect([5], (array) $ot->groupid) && $ot->amount != 0 && $ot->claim_type_id == 47)
+        //     {
+        //         $data['convo'][] = $ot;
+
+        //     }elseif(array_intersect([4], (array) $ot->groupid) && $ot->amount != 0)
+        //     {
+        //         $data['fine'][] = $ot;
+
+        //     }
+
+        // }
+
+        // dd($data['convo']);
 
         return view('finance.report.dailyReport');
 
@@ -4540,7 +5373,7 @@ class FinanceController extends Controller
                    ->whereBetween('tblpayment.add_date', [$request->from, $request->to])
                    ->where('tblpayment.process_status_id', 2)
                    ->whereNotNull('tblpayment.ref_no')
-                   ->orderBy('tblpayment.ref_no', 'asc')
+                   ->orderByRaw('CAST(SUBSTRING(tblpayment.ref_no, 2) AS UNSIGNED) ASC')
                    ->get();
 
         $sponsor = DB::table('tblpayment')
@@ -4550,7 +5383,7 @@ class FinanceController extends Controller
                    ->where('tblpayment.process_status_id', 2)
                    ->whereNotNull('tblpayment.student_ic')
                    ->whereNotNull('tblpayment.payment_sponsor_id')
-                   ->orderBy('tblpayment.ref_no', 'asc')
+                   ->orderByRaw('CAST(SUBSTRING(tblpayment.ref_no, 2) AS UNSIGNED) ASC')
                    ->get();
 
         $data['program'] = DB::table('tblprogramme')->orderBy('program_ID')->get();
@@ -4559,25 +5392,25 @@ class FinanceController extends Controller
         {
 
             // Log payment details
-    \Log::info('Processing payment:', (array) $pym);
+            \Log::info('Processing payment:', (array) $pym);
 
-            $status = 0;
+                    $status = 0;
 
-            $status = DB::table('tblstudent_log')
-                    ->leftJoin('tblstudent_status', 'tblstudent_log.status_id', '=', 'tblstudent_status.id')
-                    ->where('tblstudent_log.student_ic', $pym->ic)
-                    ->where('tblstudent_log.date', '<=', $pym->add_date)
-                    ->orderBy('tblstudent_log.id', 'desc')
-                    ->select('tblstudent_status.id')
-                    ->first();
+                    $status = DB::table('tblstudent_log')
+                            ->leftJoin('tblstudent_status', 'tblstudent_log.status_id', '=', 'tblstudent_status.id')
+                            ->where('tblstudent_log.student_ic', $pym->ic)
+                            ->where('tblstudent_log.date', '<=', $pym->add_date)
+                            ->orderBy('tblstudent_log.id', 'desc')
+                            ->select('tblstudent_status.id')
+                            ->first();
 
-                    // Log status query result
-    \Log::info('Status query result:', (array) $status);
+                            // Log status query result
+            \Log::info('Status query result:', (array) $status);
 
-    if (is_null($status)) {
-        \Log::warning('No status found for student IC:', ['student_ic' => $pym->ic, 'add_date' => $pym->add_date]);
-      
-    }
+            if (is_null($status)) {
+                \Log::warning('No status found for student IC:', ['student_ic' => $pym->ic, 'add_date' => $pym->add_date]);
+            
+            }
 
             if($pym->process_type_id == 6 && $pym->process_status_id == 2)
             {
@@ -4741,7 +5574,7 @@ class FinanceController extends Controller
                 if(DB::table('tblpaymentdtl')
                 ->join('tblstudentclaim', 'tblpaymentdtl.claim_type_id', 'tblstudentclaim.id')
                 ->where('tblpaymentdtl.payment_id', $pym->id)
-                ->whereIn('tblstudentclaim.groupid', [1])->exists())
+                ->whereIn('tblstudentclaim.groupid', [1])->exists() && $pym->process_type_id != 10)
                 {
 
                     $data['newStudent'][] = $pym;
@@ -5061,7 +5894,7 @@ class FinanceController extends Controller
                     }
                 }
 
-            }elseif($status->id == 2 && $pym->sponsor_id == null && $pym->semester != 1)
+            }elseif(($status->id == 2 || $status->id == 5) && $pym->sponsor_id == null && $pym->semester != 1)
             {
 
                 if($pym->process_type_id == 1)
@@ -5711,6 +6544,7 @@ class FinanceController extends Controller
         //dd( $data['otherStudMethod']);
         
         // Subquery for tblpaymentdtl with row numbers
+        // Subquery for tblpaymentdtl with row numbers
         $paymentDtl = DB::table('tblpaymentdtl')
         ->select('id', 'payment_id', 'claim_type_id', 'amount',
             DB::raw('ROW_NUMBER() OVER (PARTITION BY payment_id ORDER BY id) as row_num')
@@ -5721,7 +6555,7 @@ class FinanceController extends Controller
         ->select('id', 'payment_id', 'claim_method_id', 'bank_id', 'no_document',
             DB::raw('ROW_NUMBER() OVER (PARTITION BY payment_id ORDER BY id) as row_num')
         );
-
+        
         // Main query with join modifications
         $other = DB::table('tblpayment')
         ->joinSub($paymentDtl, 'dtl', function ($join) {
@@ -5750,7 +6584,6 @@ class FinanceController extends Controller
         ->groupBy('dtl.id')
         ->get();
 
-
         foreach($other as $ot)
         {
             if(array_intersect([8], (array) $ot->process_type_id) && array_intersect([2], (array) $ot->groupid) && $ot->amount != 0)
@@ -5769,6 +6602,18 @@ class FinanceController extends Controller
 
         }
         
+        $data['allowance'] = DB::table('tblallowance As a')
+                             ->join('tblallowance As b', 'a.id', 'b.allowance_id')
+                             ->join('students As c', 'a.student_ic', 'c.ic')
+                             ->where([
+                                ['a.student_ic', '!=', null],
+                                ['a.process_status_id', 2],
+                                ['a.add_date', '>=', $request->from],
+                                ['a.add_date', '<=', $request->to]
+                             ])
+                             ->select('a.*', 'b.name AS Allowance', 'b.amount AS Total', 'c.name AS student', 'c.no_matric')
+                             ->get();
+        
         if(isset($request->print))
         {
 
@@ -5784,306 +6629,6 @@ class FinanceController extends Controller
         }
 
     }
-
-    // public function chargeReport()
-    // {
-
-    //     return view('finance.report.chargeReport');
-
-    // }
-
-    // public function getChargeReport(Request $request)
-    // {
-    //     $data['newStudent'] = [];
-    //     $data['newStudentTotal'] = [];
-    //     $data['newStudentTotals'] = [];
-
-    //     $data['oldStudent'] = [];
-    //     $data['oldStudentTotal'] = [];
-    //     $data['oldStudentTotals'] = [];
-
-    //     $data['debit'] = [];
-    //     $data['debitTotal'] = [];
-    //     $data['debitTotals'] = [];
-
-    //     $data['fine'] = [];
-    //     $data['fineTotal'] = [];
-
-        
-    //     $data['other'] = [];
-    //     $data['otherDetail'] = [];
-    //     $data['otherTotal'] = [];
-    //     $data['otherTotals'] = [];
-
-    //     $data['creditFee'] = [];
-    //     $data['creditFeeTotal'] = [];
-    //     $data['creditFeeTotals'] = [];
-
-    //     $data['creditFine'] = [];
-    //     $data['creditFineTotal'] = [];
-    //     $data['creditFineTotals'] = [];
-
-    //     $data['creditDiscount'] = [];
-    //     $data['creditDiscountTotal'] = [];
-    //     $data['creditDiscountTotals'] = [];
-
-    //     $charge = DB::table('tblclaim')
-    //               ->join('tblclaimdtl', 'tblclaim.id', 'tblclaimdtl.claim_id')
-    //               ->join('tblstudentclaim', 'tblclaimdtl.claim_package_id', 'tblstudentclaim.id')
-    //               ->join('students', 'tblclaim.student_ic', 'students.ic')
-    //               ->join('tblprogramme', 'students.program', 'tblprogramme.id')
-    //               ->groupBy('tblclaim.id', 'tblstudentclaim.groupid')
-    //               ->where('tblclaim.ref_no', '!=', null)
-    //               ->whereBetween('tblclaim.add_date', [$request->from, $request->to])
-    //               ->select('tblclaim.*', 
-    //                         DB::raw('SUM(tblclaimdtl.amount) AS amount'), 
-    //                         'students.name', 'students.program', 
-    //                         'students.no_matric', 
-    //                         'tblprogramme.progname', 
-    //                         'tblstudentclaim.groupid',
-    //                         'tblstudentclaim.name AS type')
-    //               ->orderBy('tblclaim.ref_no', 'desc')
-    //               ->get();
-
-        
-
-    //     $data['program'] = DB::table('tblprogramme')->orderBy('program_ID')->get();
-
-    //     $data['otherCharge'] = DB::table('tblstudentclaim')->where('groupid', 5)->get();
-
-    //     foreach($charge as $i => $crg)
-    //     {
-
-    //         if($crg->process_type_id == 2 && $crg->process_status_id == 2 && $crg->semester_id == 1)
-    //         {
-
-    //             $data['newStudent'][] = $crg;
-
-    //             //program
-
-    //             foreach($data['program'] as $key => $prg)
-    //             {
-    //                 foreach($data['newStudent'] as $keys => $dbt)
-    //                 {
-           
-    //                     if($dbt->program == $prg->id)
-    //                     {
-
-    //                         $data['newStudentTotal'][$key][$keys] =+  $dbt->amount;
-
-    //                     }else{
-
-    //                         $data['newStudentTotal'][$key][$keys] =+ 0;
-
-    //                     }
-
-    //                 }
-
-    //                 $data['newStudentTotals'][$key] =+ array_sum($data['newStudentTotal'][$key]);
-
-    //             }
-
-    //         }elseif($crg->process_type_id == 2 && $crg->process_status_id == 2 && $crg->semester_id >= 2)
-    //         {
-
-    //             $data['oldStudent'][] = $crg;
-
-    //             //program
-
-    //             foreach($data['program'] as $key => $prg)
-    //             {
-    //                 foreach($data['oldStudent'] as $keys => $dbt)
-    //                 {
-           
-    //                     if($dbt->program == $prg->id)
-    //                     {
-
-    //                         $data['oldStudentTotal'][$key][$keys] =+  $dbt->amount;
-
-    //                     }else{
-
-    //                         $data['oldStudentTotal'][$key][$keys] =+ 0;
-
-    //                     }
-
-    //                 }
-
-    //                 $data['oldStudentTotals'][$key] =+ array_sum($data['oldStudentTotal'][$key]);
-
-    //             }
-
-    //         }elseif($crg->process_type_id == 4 && $crg->process_status_id == 2 && $crg->groupid == 1)
-    //         {
-
-    //             $data['debit'][] = $crg;
-
-    //             //program
-
-    //             foreach($data['program'] as $key => $prg)
-    //             {
-    //                 foreach($data['debit'] as $keys => $dbt)
-    //                 {
-           
-    //                     if($dbt->program == $prg->id)
-    //                     {
-
-    //                         $data['debitTotal'][$key][$keys] =+  $dbt->amount;
-
-    //                     }else{
-
-    //                         $data['debitTotal'][$key][$keys] =+ 0;
-
-    //                     }
-
-    //                 }
-
-    //                 $data['debitTotals'][$key] =+ array_sum($data['debitTotal'][$key]);
-
-    //             }
-
-    //         }elseif($crg->process_type_id == 4 && $crg->process_status_id == 2 && $crg->groupid == 4)
-    //         {
-
-    //             $data['fine'][] = $crg;
-
-    //         }elseif($crg->process_type_id == 4 && $crg->process_status_id == 2 && $crg->groupid == 5)
-    //         {
-
-    //             //graduate
-
-    //             $data['other'][] = $crg;
-
-    //             $data['otherDetail'] = DB::table('tblclaimdtl')->where('claim_id', $crg->id)->get();
-
-    //             //program
-
-    //             foreach($data['otherCharge'] as $key => $chrgs)
-    //             {
-    //                 foreach($data['otherDetail'] as $keys => $dtl)
-    //                 {
-
-    //                     if($chrgs->id == $dtl->claim_package_id)
-    //                     {
-
-    //                         $data['otherTotal'][$key][$keys] =+  $dtl->amount;
-
-    //                     }else{
-
-    //                         $data['otherTotal'][$key][$keys] = null;
-
-    //                     }
-
-    //                 }
-
-    //                 $data['otherTotals'][$key] =+ array_sum($data['otherTotal'][$key]);
-
-    //             }
-
-    //         }elseif($crg->process_type_id == 5 && $crg->process_status_id == 2 && $crg->groupid == 1 && $crg->reduction_id < 6)
-    //         {
-
-    //             $data['creditFee'][] = $crg;
-
-    //             //program
-
-    //             foreach($data['program'] as $key => $prg)
-    //             {
-    //                 foreach($data['creditFee'] as $keys => $dbt)
-    //                 {
-           
-    //                     if($dbt->program == $prg->id)
-    //                     {
-
-    //                         $data['creditFeeTotal'][$key][$keys] =+  $dbt->amount;
-
-    //                     }else{
-
-    //                         $data['creditFeeTotal'][$key][$keys] =+ 0;
-
-    //                     }
-
-    //                 }
-
-    //                 $data['creditFeeTotals'][$key] =+ array_sum($data['creditFeeTotal'][$key]);
-
-    //             }
-
-    //         }elseif($crg->process_type_id == 5 && $crg->process_status_id == 2 && $crg->groupid != 1)
-    //         {
-
-    //             $data['creditFine'][] = $crg;
-
-    //             //program
-
-    //             foreach($data['program'] as $key => $prg)
-    //             {
-    //                 foreach($data['creditFine'] as $keys => $dbt)
-    //                 {
-           
-    //                     if($dbt->program == $prg->id)
-    //                     {
-
-    //                         $data['creditFineTotal'][$key][$keys] =+  $dbt->amount;
-
-    //                     }else{
-
-    //                         $data['creditFineTotal'][$key][$keys] =+ 0;
-
-    //                     }
-
-    //                 }
-
-    //                 $data['creditFineTotals'][$key] =+ array_sum($data['creditFineTotal'][$key]);
-
-    //             }
-
-    //         }elseif($crg->process_type_id == 5 && $crg->process_status_id == 2 && $crg->groupid == 1 && $crg->reduction_id > 5)
-    //         {
-
-    //             $data['creditDiscount'][] = $crg;
-
-    //             //program
-
-    //             foreach($data['program'] as $key => $prg)
-    //             {
-    //                 foreach($data['creditDiscount'] as $keys => $dbt)
-    //                 {
-           
-    //                     if($dbt->program == $prg->id)
-    //                     {
-
-    //                         $data['creditDiscountTotal'][$key][$keys] =+  $dbt->amount;
-
-    //                     }else{
-
-    //                         $data['creditDiscountTotal'][$key][$keys] =+ 0;
-
-    //                     }
-
-    //                 }
-
-    //                 $data['creditDiscountTotals'][$key] =+ array_sum($data['creditDiscountTotal'][$key]);
-
-    //             }
-
-    //         }
-            
-    //     }
-
-    //     if(isset($request->print))
-    //     {
-    //         $data['from'] = Carbon::createFromFormat('Y-m-d', $request->from)->translatedFormat('d F Y'); ;
-    //         $data['to'] = Carbon::createFromFormat('Y-m-d', $request->to)->translatedFormat('d F Y');
-
-    //         return view('finance.report.printChargeReport', compact('data'));
-
-    //     }else{
-
-    //         return view('finance.report.getChargeReport', compact('data'));
-            
-    //     }
-
-    // }
 
     public function chargeReport()
     {
@@ -7093,6 +7638,12 @@ class FinanceController extends Controller
                               ->get();
 
         $data['id'] = $request->id;
+
+        // Get the tabungkhas data including start_at
+        $data['tabungkhas'] = DB::table('tbltabungkhas')
+                              ->where('id', $request->id)
+                              ->select('start_at')
+                              ->first();
 
         return view('finance.package.getProgram', compact('data'));
     }
@@ -8420,77 +8971,6 @@ class FinanceController extends Controller
                                              ($data['paymentNK'][$key] + $data['dailyPayment'][$key] + $data['sponsor'][$key]) + 
                                              ($data['refund'][$key]));
 
-                    // $optimizedQuery = function () use ($filter, $prg) {
-                    //     return DB::query()
-                    //         ->select(DB::raw("
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 9 AND tblstudentclaim.groupid = 1 THEN tblpaymentdtl.amount ELSE 0 END) AS insentif,
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 10 AND tblstudentclaim.groupid IN (1,5) THEN tblpaymentdtl.amount ELSE 0 END) AS iNED,
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 12 AND tblstudentclaim.groupid = 1 THEN tblpaymentdtl.amount ELSE 0 END) AS unitiFund,
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 13 AND tblstudentclaim.groupid = 1 THEN tblpaymentdtl.amount ELSE 0 END) AS biasiswa,
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 7 AND tblpayment.payment_sponsor_id = 8 AND tblstudentclaim.groupid IN (1,4,5) THEN tblpaymentdtl.amount ELSE 0 END) AS uef,
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 14 AND tblstudentclaim.groupid = 1 THEN tblpaymentdtl.amount ELSE 0 END) AS dc19,
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 15 AND tblstudentclaim.groupid = 1 THEN tblpaymentdtl.amount ELSE 0 END) AS iMCO,
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 21 AND tblstudentclaim.groupid = 1 THEN tblpaymentdtl.amount ELSE 0 END) AS iKKU,
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 16 AND tblstudentclaim.groupid = 1 THEN tblpaymentdtl.amount ELSE 0 END) AS tkB40,
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 17 AND tblstudentclaim.groupid = 1 THEN tblpaymentdtl.amount ELSE 0 END) AS tkM40,
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 18 AND tblstudentclaim.groupid = 1 THEN tblpaymentdtl.amount ELSE 0 END) AS tkT20,
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 19 AND tblstudentclaim.groupid = 1 THEN tblpaymentdtl.amount ELSE 0 END) AS tk,
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 22 AND tblstudentclaim.groupid = 1 THEN tblpaymentdtl.amount ELSE 0 END) AS trB40,
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 23 AND tblstudentclaim.groupid = 1 THEN tblpaymentdtl.amount ELSE 0 END) AS trM40,
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 24 AND tblstudentclaim.groupid = 1 THEN tblpaymentdtl.amount ELSE 0 END) AS trT20,
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 25 AND tblstudentclaim.groupid = 1 THEN tblpaymentdtl.amount ELSE 0 END) AS tr,
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 5 AND tblstudentclaim.groupid IN (1,4,5) THEN tblpaymentdtl.amount ELSE 0 END) AS paymentNK,
-                    //             SUM(CASE WHEN tblpayment.process_type_id IN (1,8) AND tblstudentclaim.groupid IN (1,4,5) THEN tblpaymentdtl.amount ELSE 0 END) AS dailyPayment,
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 7 AND tblpayment.payment_sponsor_id != 8 AND tblstudentclaim.groupid IN (1,4,5) THEN tblpaymentdtl.amount ELSE 0 END) AS sponsor,
-                    //             SUM(CASE WHEN tblpayment.process_type_id = 6 AND tblstudentclaim.groupid IN (1,4,5) THEN tblpaymentdtl.amount ELSE 0 END) AS refund,
-                    //         "))
-                    //         ->from('tblpayment')
-                    //         ->join('students', 'tblpayment.student_ic', '=', 'students.ic')
-                    //         ->join('tblpaymentdtl', 'tblpayment.id', '=', 'tblpaymentdtl.claim_id')
-                    //         ->join('tblstudentclaim', 'tblpaymentdtl.claim_package_id', '=', 'tblstudentclaim.id')
-                    //         ->join('tblpayment', 'students.ic', '=', 'tblpayment.student_ic')
-                    //         ->join('tblpaymentdtl', 'tblpayment.id', '=', 'tblpaymentdtl.payment_id')
-                    //         // Assuming tblpayment and tblpayment can be joined on a common condition
-                    //         ->whereBetween('tblpayment.add_date', [$filter->from, $filter->to])
-                    //         ->where('tblpayment.program_id', $prg->id)
-                    //         ->where('tblpayment.process_status_id', 2)
-                    //         ->when($filter->status != 'all', function ($query) use ($filter) {
-                    //             return $query->where('students.status', '=', $filter->status);
-                    //         });
-                    // };
-
-                    // // Execute the optimized query
-                    // $data = ($optimizedQuery)()->first();
-
-                    // DB::table('tblarrears_report')->insert([
-                    //     'add_date' => date("Y-m-d H:i:s"),
-                    //     'program_id' => $prg->id,
-                    //     'YP' => $data['debt'][$key],
-                    //     'ND' => $data['debtND'][$key],
-                    //     'NK' => $data['debtNK'][$key],
-                    //     'INS' => $data['insentif'][$key],
-                    //     'IPI' => $data['iNED'][$key],
-                    //     'UF' => $data['unitiFund'][$key],
-                    //     'B' => $data['biasiswa'][$key],
-                    //     'UEF' => $data['uef'][$key],
-                    //     'DC19' => $data['dc19'][$key],
-                    //     'IM3' => $data['iMCO'][$key],
-                    //     'IKKU' => $data['iKKU'][$key],
-                    //     'TKBKU' => $data['tkB40'][$key],
-                    //     'YKMKU' => $data['tkM40'][$key],
-                    //     'TKTKU' => $data['tkT20'][$key],
-                    //     'TKKU' => $data['tk'][$key],
-                    //     'TRBKU' => $data['trB40'][$key],
-                    //     'TRMKU' => $data['trM40'][$key],
-                    //     'TRTKU' => $data['trT20'][$key],
-                    //     'RRKU' => $data['tr'][$key],
-                    //     'NK2' => $data['paymentNK'][$key],
-                    //     'PK' => $data['dailyPayment'][$key],
-                    //     'BP' => $data['sponsor'][$key],
-                    //     'BL' => $data['refund'][$key],
-                    //     'BTU' => $data['balance'][$key],
-                    // ]);
-
                 }
 
                 $content = "";
@@ -9255,6 +9735,87 @@ class FinanceController extends Controller
 
     }
 
+    public function PTPTNReport()
+    {
+
+        $data['semester'] = DB::table('semester')->get();
+
+        $data['session'] = DB::table('sessions')->where('Status', 'ACTIVE')->get();
+
+        $data['package'] = ['FULL', '75%', '50%', 'SENDIRI'];
+
+        $data['total'] = [];
+
+        foreach($data['semester'] as $key => $sm)
+        {
+
+            foreach($data['package'] as $key2 => $pcg)
+            {
+
+                if($pcg == 'FULL')
+                {
+
+                    $packageID = [6,7,8,9,10];
+
+                }elseif($pcg == '75%'){
+
+                    $packageID = [2,11];
+
+                }elseif($pcg == '50%'){
+
+                    $packageID = [3];
+
+                }elseif($pcg == 'SENDIRI'){
+
+                    $packageID = [1,4,5];
+
+                }
+
+                foreach($data['session'] as $key3 => $ssn)
+                {
+
+                    $data['total'][$key][$key2][$key3] = DB::table('tblpackage_sponsorship')
+                    ->join('students', 'tblpackage_sponsorship.student_ic', 'students.ic')
+                    ->join('tblpackage', 'tblpackage_sponsorship.package_id', 'tblpackage.id')
+                    ->where([
+                        ['students.session', $ssn->SessionID],
+                        ['students.semester', $sm->id],
+                        ['students.status', 2]
+                    ])
+                    ->whereIn('tblpackage.id', $packageID)
+                    ->count();
+
+                    if($pcg == 'FULL')
+                    {
+
+                        $data['amount'][$key][$key2][$key3] = $data['total'][$key][$key2][$key3] * 3900;
+
+                    }elseif($pcg == '75%'){
+
+                        $data['amount'][$key][$key2][$key3] = $data['total'][$key][$key2][$key3] * 2450;
+
+                    }elseif($pcg == '50%'){
+
+                        $data['amount'][$key][$key2][$key3] = $data['total'][$key][$key2][$key3] * 1600;
+
+                    }elseif($pcg == 'SENDIRI'){
+
+                        $data['amount'][$key][$key2][$key3] = 0;
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        //dd($data['total']);
+
+        return view('finance.sponsorship.ptptn_report.ptptnReport', compact('data'));
+
+    }
+
     public function claimLog()
     {
 
@@ -9371,7 +9932,7 @@ class FinanceController extends Controller
 
                     $val += $req->amount;
 
-                }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26], (array) $req->process_type_id) && $req->source == 'payment')
+                }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27], (array) $req->process_type_id) && $req->source == 'payment')
                 {
 
                     $val -= $req->amount;
@@ -9584,7 +10145,7 @@ class FinanceController extends Controller
 
                     $val += $req->amount;
 
-                }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26], (array) $req->process_type_id) && $req->source == 'payment')
+                }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27], (array) $req->process_type_id) && $req->source == 'payment')
                 {
 
                     $val -= $req->amount;
@@ -9736,6 +10297,14 @@ class FinanceController extends Controller
         ->orderBy('student_payment_log.date_of_call', 'DESC')
         ->get();
 
+        //H
+
+        $data['remark'] = DB::table('student_remarks')
+                          ->join('categories', 'student_remarks.category_id', 'categories.id')
+                          ->where('student_remarks.student_ic', request()->ic)
+                          ->select('student_remarks.*', 'categories.name')
+                          ->first();
+
 
 
         return view('finance.debt.claim_log.studentClaimLog', compact('data'));
@@ -9881,7 +10450,7 @@ class FinanceController extends Controller
 
                     $data['total'][$key] += $req->amount;
                     
-                }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26], (array) $req->process_type_id) && $req->source == 'payment')
+                }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27], (array) $req->process_type_id) && $req->source == 'payment')
                 {
 
                     $data['total'][$key] -= $req->amount;
@@ -10021,7 +10590,7 @@ class FinanceController extends Controller
 
                         $data['total'] += $req->amount;
                         
-                    }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26], (array) $req->process_type_id) && $req->source == 'payment')
+                    }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27], (array) $req->process_type_id) && $req->source == 'payment')
                     {
 
                         $data['total'] -= $req->amount;
@@ -10057,6 +10626,7 @@ class FinanceController extends Controller
          // Get current month and year
         $currentMonth = date('m');
         $currentYear = date('Y');
+        $filterStd = [];
 
         // Set the start date to January of the previous year
         $startYear = $currentYear - 1;
@@ -10077,6 +10647,17 @@ class FinanceController extends Controller
             }
         }
 
+        $remark = filter_var($request->input('remark'), FILTER_VALIDATE_BOOLEAN);
+        if($remark) {
+            $filterStd = DB::table('student_remarks')
+                ->select('student_ic')
+                ->where('latest_balance', '<=', 0)
+                ->get()
+                ->pluck('student_ic')
+                ->toArray();
+        }
+
+
         //A
 
         if($request->program != 'all')
@@ -10084,10 +10665,15 @@ class FinanceController extends Controller
 
             $data['student'] = DB::table('students')
             ->join('sessions', 'students.session', 'sessions.SessionID')
+            ->join('tblprogramme', 'students.program', 'tblprogramme.id')
             ->where('students.program', $request->program)
             ->whereIn('students.status', [8])
             ->whereBetween('sessions.Year', [$request->from, $request->to])
-            ->select('students.*', 'sessions.Year AS graduate', 'sessions.SessionName AS session')
+            ->when($request->input('remark'), function($query) use ($filterStd) {
+                return $query->whereNotIn('students.ic', $filterStd);
+            })
+
+            ->select('students.*', 'sessions.Year AS graduate', 'sessions.SessionName AS session', 'tblprogramme.progcode AS program')
             ->get();
 
         }else{
@@ -10095,10 +10681,15 @@ class FinanceController extends Controller
 
             $data['student'] = DB::table('students')
             ->join('sessions', 'students.session', 'sessions.SessionID')
+            ->join('tblprogramme', 'students.program', 'tblprogramme.id')
             ->where('students.program', '!=', 30)
             ->whereIn('students.status', [8])
             ->whereBetween('sessions.Year', [$request->from, $request->to])
-            ->select('students.*', 'sessions.Year AS graduate', 'sessions.SessionName AS session')
+            ->when($request->input('remark'), function($query) use ($filterStd) {
+                return $query->whereNotIn('students.ic', $filterStd);
+            })
+
+            ->select('students.*', 'sessions.Year AS graduate', 'sessions.SessionName AS session', 'tblprogramme.progcode AS program')
             ->get();
 
         }
@@ -10231,7 +10822,7 @@ class FinanceController extends Controller
 
                     $data['total'] += $req->amount;
                     
-                }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26], (array) $req->process_type_id) && $req->source == 'payment')
+                }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27], (array) $req->process_type_id) && $req->source == 'payment')
                 {
 
                     $data['total'] -= $req->amount;
@@ -10244,7 +10835,21 @@ class FinanceController extends Controller
 
             //TUNGGAKAN KESELURUHAN
 
-            $data['total_balance'][$key] = $data['sum3'];
+            //REMARk
+
+            $data['remark'] = DB::table('student_remarks')
+                ->join('categories', 'student_remarks.category_id', 'categories.id')
+                ->where('student_remarks.student_ic', $std->ic)
+                ->select('student_remarks.*', 'categories.name')
+                ->first();
+
+            if ($data['remark']) {
+                $data['total_balance'][$key] = number_format($data['sum3'] - $data['remark']->correction_amount, 2, '.', '');
+            } else {
+                $data['total_balance'][$key] = $data['sum3'];
+            }
+
+            // $data['total_balance'][$key] = $data['sum3'];
 
             // $data['amount'] = DB::
 
@@ -10841,212 +11446,170 @@ class FinanceController extends Controller
 
     public function getProgramAgingReport(Request $request)
     {
-
-        $lastKnownBalance = 0; // Default to 0 initially
-        $filtersData = $request->filtersData;
-
+        // Validate request
         $validator = Validator::make($request->all(), [
             'filtersData' => 'required'
         ]);
 
         if ($validator->fails()) {
-            return ["message"=>"Field Error", "error" => $validator->messages()->get('*')];
+            return ["message" => "Field Error", "error" => $validator->messages()->get('*')];
         }
 
-        try{ 
-            DB::beginTransaction();
-            DB::connection()->enableQueryLog();
-
-            try{
-
-                $filter = json_decode($filtersData);
-
-                if($filter->program == 'all')
-                {
-
-                    $data['program'] = DB::table('tblprogramme')->pluck('id');
-
-                }else{
-
-                    $data['program'] = DB::table('tblprogramme')->where('id', $filter->program)->pluck('id');
+        try {
+            $filter = json_decode($request->filtersData);
+            
+            // Get programs once, outside the loop
+            if ($filter->program == 'all') {
+                $programs = DB::table('tblprogramme')
+                    ->select('id', 'progcode', 'progname')
+                    ->get();
+            } else {
+                $programs = DB::table('tblprogramme')
+                    ->select('id', 'progcode', 'progname')
+                    ->where('id', $filter->program)
+                    ->get();
+            }
+            
+            // Calculate years range
+            $startYear = date('Y', strtotime($filter->from));
+            $endYear = date('Y', strtotime($filter->to));
+            $currentYear = now()->year;
+            
+            // Create array of years
+            $arrayYears = range($startYear, $currentYear);
+            $rangeYears = range($startYear, $endYear);
+            
+            // Initialize results array with proper structure
+            $results = [];
+            $totals = array_fill_keys($arrayYears, 0);
+            
+            // Get all needed data in a single query per program instead of per year
+            foreach ($programs as $program) {
+                $programId = $program->id;
+                $yearlyBalances = [];
+                $lastKnownBalance = 0;
+                
+                // Get all claims and payments in one query with year extraction
+                $query = DB::select("
+                    SELECT 
+                        YEAR(transaction_date) as year,
+                        SUM(CASE WHEN transaction_type = 'claim' THEN amount ELSE 0 END) as total_claims,
+                        SUM(CASE WHEN transaction_type = 'payment' THEN amount ELSE 0 END) as total_payments
+                    FROM (
+                        SELECT 
+                            tblclaim.add_date as transaction_date,
+                            'claim' as transaction_type,
+                            IFNULL(SUM(tblclaimdtl.amount), 0) as amount
+                        FROM students
+                        JOIN tblclaim ON students.ic = tblclaim.student_ic
+                        LEFT JOIN tblclaimdtl ON tblclaim.id = tblclaimdtl.claim_id
+                        LEFT JOIN tblstudentclaim ON tblclaimdtl.claim_package_id = tblstudentclaim.id
+                        WHERE tblclaim.process_status_id = 2
+                        AND tblstudentclaim.groupid = 1
+                        AND tblclaim.program_id = ?
+                        AND tblclaim.add_date BETWEEN ? AND ?
+                        GROUP BY YEAR(tblclaim.add_date)
+                        
+                        UNION ALL
+                        
+                        SELECT 
+                            tblpayment.add_date as transaction_date,
+                            'payment' as transaction_type,
+                            IFNULL(SUM(tblpaymentdtl.amount), 0) as amount
+                        FROM students
+                        JOIN tblpayment ON students.ic = tblpayment.student_ic
+                        LEFT JOIN tblpaymentdtl ON tblpayment.id = tblpaymentdtl.payment_id
+                        LEFT JOIN tblstudentclaim ON tblpaymentdtl.claim_type_id = tblstudentclaim.id
+                        WHERE tblpayment.process_status_id = 2
+                        AND tblstudentclaim.groupid = 1
+                        AND tblpayment.program_id = ?
+                        AND tblpayment.add_date BETWEEN ? AND ?
+                        GROUP BY YEAR(tblpayment.add_date)
+                    ) as combined_data
+                    GROUP BY year
+                    ORDER BY year
+                ", [$programId, $filter->from, $filter->to, $programId, $filter->from, $filter->to]);
+                
+                // Convert query results to a more manageable format
+                $yearData = [];
+                foreach ($query as $row) {
+                    $yearData[$row->year] = $row->total_claims - $row->total_payments;
+                }
+                
+                // Fill in the results for each year
+                foreach ($arrayYears as $year) {
+                    if (in_array($year, $rangeYears)) {
+                        if (isset($yearData[$year])) {
+                            // We have data for this year
+                            $balance = $lastKnownBalance + $yearData[$year];
+                            $lastKnownBalance = $balance;
+                        }
+                        // If no data for this year, keep last known balance
+                    } 
                     
+                    $yearlyBalances[$year] = $lastKnownBalance;
+                    $totals[$year] += $lastKnownBalance;
                 }
-
-                // Assuming $request->year has the value of 2019
-                $startYear = date('Y', strtotime($filter->from)); // Starting year
-                $endYear = date('Y', strtotime($filter->to)); // Starting year
-                $currentYear = now()->year; // This gets the current year
-
-                // Create an array of years from start year to current year
-                $data['arrayYears'] = range($startYear, $currentYear);
-
-                // Create an array of years from and to
-                $data['rangeYears'] = range($startYear, $endYear);
-
-                foreach($data['program'] as $key => $prg)
-                {
-
-                    foreach($data['arrayYears'] as $key2 => $year)
-                    {
-
-                        if(in_array($year, $data['rangeYears']))
-                        {
-
-                            // Create a date instance for the last day of the year using Carbon
-                            $lastDayOfYear = Carbon::createFromDate($year)->endOfYear()->toDateString();
-                            
-                            if($year == $endYear)
-                            {
-
-                                $endYear2 = $filter->to;
-
-                            }else{
-
-                                $endYear2 = $lastDayOfYear;
-
-                            }
-
-                            // Define the first part of the union
-                            $query = DB::table('tblclaim')
-                            ->leftjoin('tblclaimdtl', 'tblclaim.id', '=', 'tblclaimdtl.claim_id')
-                            ->leftjoin('tblstudentclaim', 'tblclaimdtl.claim_package_id', '=', 'tblstudentclaim.id')
-                            ->where([
-                                ['tblclaim.process_status_id', '=', 2],
-                                ['tblstudentclaim.groupid', '=', 1]
-                            ])
-                            ->where('tblclaim.program_id', $prg)
-                            ->whereBetween('tblclaim.add_date', [$filter->from, $endYear2])
-                            ->select(DB::raw("IFNULL(SUM(tblclaimdtl.amount), 0) AS claim"), DB::raw('0 as payment'));
-
-                            // Define the second part of the union
-                            $subQuery = DB::table('tblpayment')
-                            ->leftjoin('tblpaymentdtl', 'tblpayment.id', '=', 'tblpaymentdtl.payment_id')
-                            ->leftjoin('tblstudentclaim', 'tblpaymentdtl.claim_type_id', '=', 'tblstudentclaim.id')
-                            ->where([
-                                ['tblpayment.process_status_id', '=', 2],
-                                ['tblstudentclaim.groupid', '=', 1]
-                            ])
-                            ->where('tblpayment.program_id', $prg)
-                            ->whereBetween('tblpayment.add_date', [$filter->from, $endYear2])
-                            ->select(DB::raw('0 as claim'), DB::raw("IFNULL(SUM(tblpaymentdtl.amount), 0) AS payment"))
-                            ->unionAll($query); // Here, use the Query Builder instance directly
-
-                            // // Now, wrap the subquery and calculate the balance
-                            // $data['balance'][$key][$key2] = DB::query()->fromSub($subQuery, 'sub')
-                            // ->select(DB::raw('SUM(claim) - SUM(payment) AS balance'))
-                            // ->get();
-
-                            $result = DB::query()->fromSub($subQuery, 'sub')
-                            ->select(DB::raw('SUM(claim) - SUM(payment) AS balance'))
-                            ->get();
-
-                            if ($result->isNotEmpty() && isset($result[0]->balance)) {
-                                // Update last known balance if the result is not empty
-                                $lastKnownBalance = $result[0]->balance;
-                                $data['balance'][$key][$key2] = $result;
-                            } else {
-                                // If result is empty, ensure last known balance is maintained
-                                $data['balance'][$key][$key2] = collect([(object) ['balance' => $lastKnownBalance]]);
-                            }
-
-                        }else{
-
-                            // // Set balance to a default object in a collection if the year is not in the array
-                            // $data['balance'][$key][$key2] = collect([ (object) ['balance' => 0] ]);
-
-                            // Set balance to the last known balance if the year is not in the array
-                            $data['balance'][$key][$key2] = collect([(object) ['balance' => $lastKnownBalance]]);
-
-                        }
-
-                    }
-
-                }
-
-                $content = "";
-                $content .= '<thead>
-                                <tr>
-                                    <th rowspan="2">
-                                        Program
-                                    </th>
-                                    <th colspan="'. count($data['arrayYears']) .'" style="text-align: center">
-                                        AGING REPORT BY PROGRAM AND YEAR from '. $startYear .' UNTIL '. $currentYear; 
-                        $content .= '</th>
-                                </tr>
-                                <tr>';
-                                    foreach($data['arrayYears'] as $year)
-                                    {
-                                    $content .= 
-                                    '<th>
-                                    '. $year .'  
-                                    </th>';
-                                    }
-
-
-                    $content .= '</tr>
-                            </thead>
-                            <tbody id="table">';
-
-                            // Initialize totals array
-                            $totals = array_fill_keys($data['arrayYears'], 0);
-                            
-                foreach($data['program'] as $key => $prg){
-                    //$registered = ($std->status == 'ACTIVE') ? 'checked' : '';
-
-                    $program = DB::table('tblprogramme')->where('id', $prg)->select('progcode', 'progname')->first();
-
-                    $content .= '
-                    <tr>
-                        <td>
-                        '. $program->progcode .' - '. $program->progname .'
-                        </td>';
-                        foreach($data['arrayYears'] as $key2 => $year)
-                        {
-                            foreach($data['balance'][$key][$key2] as $balance)
-                            {
-                            // Add balance to totals
-                            $totals[$year] += $balance->balance;
-
-                            $content .= 
-                            '<td>
-                            '. $balance->balance .'  
-                            </td>';
-                            }
-                        }
-        $content .='</tr>
-                    ';
-                    }
-
-                $content .= '</tbody>';
-                $content .= '<tfoot>
-                        <tr>
-                            <td>
-                                TOTAL
-                            </td>';
-                            // Display totals in the footer
-                            foreach($totals as $yearTotal) {
-                                $content .= '<td>'. number_format($yearTotal, 2) .'</td>';
+                
+                $results[] = [
+                    'program' => $program,
+                    'balances' => $yearlyBalances
+                ];
+            }
+            
+            // Build the HTML directly in the function as requested
+            $content = "";
+            $content .= '<thead>
+                            <tr>
+                                <th rowspan="2">
+                                    Program
+                                </th>
+                                <th colspan="'. count($arrayYears) .'" style="text-align: center">
+                                    AGING REPORT BY PROGRAM AND YEAR from '. $startYear .' UNTIL '. $currentYear; 
+            $content .= '</th>
+                            </tr>
+                            <tr>';
+                            foreach($arrayYears as $year) {
+                                $content .= '<th>'. $year .'</th>';
                             }
             $content .= '</tr>
-                    </tfoot>';
-
-            }catch(QueryException $ex){
-                DB::rollback();
-                if($ex->getCode() == 23000){
-                    return ["message"=>"Class code already existed inside the system"];
-                }else{
-                    \Log::debug($ex);
-                    return ["message"=>"DB Error"];
+                        </thead>
+                        <tbody id="table">';
+            
+            foreach ($results as $result) {
+                $program = $result['program'];
+                $balances = $result['balances'];
+                
+                $content .= '<tr>
+                                <td>'. $program->progcode .' - '. $program->progname .'</td>';
+                
+                foreach ($arrayYears as $year) {
+                    $content .= '<td>'. $balances[$year] .'</td>';
                 }
-            } 
-
-            DB::commit();
-        }catch(Exception $ex){
-            return ["message"=>"Error"];
+                
+                $content .= '</tr>';
+            }
+            
+            $content .= '</tbody>';
+            $content .= '<tfoot>
+                            <tr>
+                                <td>TOTAL</td>';
+            
+            foreach ($totals as $yearTotal) {
+                $content .= '<td>'. number_format($yearTotal, 2) .'</td>';
+            }
+            
+            $content .= '</tr>
+                        </tfoot>';
+            
+            return response()->json(['message' => 'Success', 'data' => $content]);
+            
+        } catch (QueryException $ex) {
+            \Log::debug($ex);
+            return ["message" => "Database Error: " . $ex->getMessage()];
+        } catch (Exception $ex) {
+            return ["message" => "Error: " . $ex->getMessage()];
         }
-
-        return response()->json(['message' => 'Success', 'data' => $content]);
-
     }
 
     public function statusAgingReport()
@@ -11191,7 +11754,7 @@ class FinanceController extends Controller
                                     </th>
                                     <th colspan="'. count($data['arrayYears']) .'" style="text-align: center">
                                         AGING REPORT BY STATUS AND YEAR from '. $startYear .' UNTIL '. $currentYear; 
-                        $content .= '</th>
+                $content .= '</th>
                                 </tr>
                                 <tr>';
                                     foreach($data['arrayYears'] as $year)
@@ -11810,6 +12373,207 @@ class FinanceController extends Controller
 
     }
 
+    public function blockStudentArrears(Request $request)
+    {
+
+        $filtersData = $request->filtersData;
+
+        $validator = Validator::make($request->all(), [
+            'filtersData' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return ["message"=>"Field Error", "error" => $validator->messages()->get('*')];
+        }
+
+
+                $filter = json_decode($filtersData);
+
+                if($filter->program == 'all')
+                {
+
+                    $program = DB::table('tblprogramme')->pluck('id');
+
+                }else{
+
+                    $program = DB::table('tblprogramme')->where('id', $filter->program)->pluck('id');
+                    
+                }
+
+                $data['student'] = DB::table('students')
+                                   ->leftjoin('sessions', 'students.session', 'sessions.SessionID')
+                                   ->leftjoin('tblprogramme', 'students.program', 'tblprogramme.id')
+                                   ->leftjoin('tblstudent_status', 'students.status', 'tblstudent_status.id')
+                                   ->whereIn('students.program', $program)
+                                   ->when($filter->status != 'all', function ($query) use ($filter){
+                                        return $query->where('students.status', $filter->status);
+                                   })
+                                   ->when($filter->session != 'all', function ($query) use ($filter){
+                                        return $query->where('students.session', $filter->session);
+                                    })
+                                   ->select('students.*')
+                                   ->get();
+
+                foreach($data['student'] as $key => $std)
+                {
+
+                    $data['total'] = [];
+
+                    $record = DB::table('tblpaymentdtl')
+                    ->leftJoin('tblpayment', 'tblpaymentdtl.payment_id', 'tblpayment.id')
+                    ->leftJoin('tblprocess_type', 'tblpayment.process_type_id', 'tblprocess_type.id')
+                    ->leftJoin('tblstudentclaim', 'tblpaymentdtl.claim_type_id', 'tblstudentclaim.id')
+                    ->leftjoin('tblprogramme', 'tblpayment.program_id', 'tblprogramme.id')
+                    ->where([
+                        ['tblpayment.student_ic', $std->ic],
+                        ['tblpayment.process_status_id', 2], 
+                        ['tblstudentclaim.groupid', 1], 
+                        ['tblpaymentdtl.amount', '!=', 0]
+                        ])
+                    ->select(DB::raw("'payment' as source"), 'tblprocess_type.name AS process', 'tblpayment.ref_no','tblpayment.date', 'tblstudentclaim.name', 
+                    'tblpaymentdtl.amount',
+                    'tblpayment.process_type_id', 'tblprogramme.progcode AS program', DB::raw('NULL as remark'));
+
+                    $data['record'] = DB::table('tblclaimdtl')
+                    ->leftJoin('tblclaim', 'tblclaimdtl.claim_id', 'tblclaim.id')
+                    ->leftJoin('tblprocess_type', 'tblclaim.process_type_id', 'tblprocess_type.id')
+                    ->leftJoin('tblstudentclaim', 'tblclaimdtl.claim_package_id', 'tblstudentclaim.id')
+                    ->leftjoin('tblprogramme', 'tblclaim.program_id', 'tblprogramme.id')
+                    ->where([
+                        ['tblclaim.student_ic', $std->ic],
+                        ['tblclaim.process_status_id', 2],  
+                        ['tblstudentclaim.groupid', 1],
+                        ['tblclaimdtl.amount', '!=', 0]
+                        ])
+                    ->unionALL($record)
+                    ->select(DB::raw("'claim' as source"), 'tblprocess_type.name AS process', 'tblclaim.ref_no','tblclaim.date', 'tblstudentclaim.name', 
+                    'tblclaimdtl.amount',
+                    'tblclaim.process_type_id', 'tblprogramme.progcode AS program', 'tblclaim.remark')
+                    ->orderBy('date')
+                    ->get();
+
+                    $val = 0;
+
+                    foreach($data['record'] as $key => $req)
+                    {
+
+                        if(array_intersect([2,3,4,5,11], (array) $req->process_type_id) && $req->source == 'claim')
+                        {
+
+                            $data['total'][$key] = $val + $req->amount;
+
+                            $val = $val + $req->amount;
+                            
+
+                        }elseif(array_intersect([1,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27], (array) $req->process_type_id) && $req->source == 'payment')
+                        {
+
+                            $data['total'][$key] = $val - $req->amount;
+
+                            $val = $val - $req->amount;
+
+                        }
+
+                    }
+
+                    $data['sum3'] = end($data['total']);
+
+                    if(in_array($std->semester, [7,8]))
+                    {
+
+                        if($data['sum3'] > 0)
+                        {
+
+                            DB::table('students')->where('ic', $std->ic)->update(['block_status' => 1]);
+
+                        }else{
+
+                            DB::table('students')->where('ic', $std->ic)->update(['block_status' => 0]);
+
+                        }
+
+
+                    }else{
+
+                        
+
+                        $data['sponsor'] = DB::table('tblpackage_sponsorship')
+                                ->join('tblpackage', 'tblpackage_sponsorship.package_id', 'tblpackage.id')
+                                ->join('tblpayment_type', 'tblpackage_sponsorship.payment_type_id', 'tblpayment_type.id')
+                                ->where('student_ic', $std->ic)
+                                ->select('tblpackage_sponsorship.*', 'tblpackage.name AS package', 'tblpayment_type.name AS type')
+                                ->first();
+
+                        if($data['sponsor'] != null) {
+
+                            $data['package'] = DB::table('tblpayment_package')
+                                            ->join('tblpackage', 'tblpayment_package.package_id', 'tblpackage.id')
+                                            ->join('tblpayment_type', 'tblpayment_package.payment_type_id', 'tblpayment_type.id')
+                                            ->join('tblpayment_program', 'tblpayment_package.id', 'tblpayment_program.payment_package_id')
+                                            ->where([
+                                                ['tblpayment_package.package_id', $data['sponsor']->package_id],
+                                                ['tblpayment_package.payment_type_id', $data['sponsor']->payment_type_id],
+                                                ['tblpayment_program.intake_id', $std->intake],
+                                                ['tblpayment_program.program_id',$std->program]
+                                            ])->select('tblpayment_package.*','tblpackage.name AS package', 'tblpayment_type.name AS type')->first();
+
+                            $semester_column = 'semester_' . $std->semester; // e.g., this will be 'semester_2' if $user->semester is 2
+
+                            if($data['student']->status == 4)
+                            {
+
+                                $data['value'] = $data['sum3'];
+
+                            }else{
+
+                                if (isset($data['package']->$semester_column)) {
+                                    $data['value'] = $data['sum3'] - $data['package']->$semester_column;
+                                    // Do something with $semester_value
+                                } else {
+                                    $data['value'] = 0;
+                                    // Handle case where the column is not set
+                                }
+                                
+                            }
+
+                        }else{
+
+                            $data['value'] = 0;
+
+                        }
+
+                        // if($std->ic == '060907101120')
+                        // {
+
+
+                        //     // Return the JSON data as part of the response
+                        //     return response()->json([
+                        //         'data' => $data['sum3'],
+                        //     ]);
+
+                        // }
+
+                        if($data['value'] > 0)
+                        {
+
+                            DB::table('students')->where('ic', $std->ic)->update(['block_status' => 1]);
+
+                        }else{
+
+                            DB::table('students')->where('ic', $std->ic)->update(['block_status' => 0]);
+
+                        }
+
+                    }
+
+                }
+
+                return response()->json(['message' => 'Success']);
+
+ 
+
+    }
+
     public function studentCtos()
     {
 
@@ -11979,6 +12743,168 @@ class FinanceController extends Controller
 
     }
 
+    public function studentRemarks()
+    {
+
+        return view('finance.debt.student_remarks.studentRemarks');
+
+    }
+
+    public function getStudentRemarks(Request $request)
+    {
+
+        $data['student'] = DB::table('students')
+                           ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
+                           ->join('tblprogramme', 'students.program', 'tblprogramme.id')
+                           ->join('sessions AS t1', 'students.intake', 't1.SessionID')
+                           ->join('sessions AS t2', 'students.session', 't2.SessionID')
+                           ->select('students.*', 'tblstudent_status.name AS statusName', 'tblprogramme.progname AS program', 'students.program AS progid', 't1.SessionName AS intake_name', 't2.SessionName AS session_name')
+                           ->where('ic', $request->student)->first();
+
+        $data['remarks'] = DB::table('student_remarks')
+                           ->join('categories', 'student_remarks.category_id', 'categories.id')
+                           ->join('students', 'student_remarks.student_ic', 'students.ic')
+                           ->where('student_ic', $request->student)
+                           ->select('student_remarks.*', 'categories.name AS category', 'students.name AS student_name')
+                           ->get();
+
+        $data['category'] = DB::table('categories')->get();
+
+
+        return view('finance.debt.student_remarks.updateStudentRemarks', compact('data'));
+
+    }
+
+    public function storeStudentRemarks(Request $request)
+    {
+
+        $studentData = $request->studentData;
+
+        $validator = Validator::make($request->all(), [
+            'studentData' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return ["message"=>"Field Error", "error" => $validator->messages()->get('*')];
+        }
+
+        try{ 
+            DB::beginTransaction();
+            DB::connection()->enableQueryLog();
+
+            try{
+                $student = json_decode($studentData);
+
+                $exists = DB::table('student_remarks')
+                    ->where('student_ic', $student->ic)
+                    ->exists();
+
+                if (!$exists) {
+                    DB::table('student_remarks')->insert([
+                        'student_ic' => $student->ic,
+                        'category_id' => $student->categories,
+                        'correction_amount' => $student->correction,
+                        'latest_balance' => $student->current,
+                        'notes' => $student->comment,
+                        'add_staffID' => Auth::user()->ic
+                    ]);
+                } else {
+                    DB::table('student_remarks')
+                        ->where('student_ic', $student->ic)
+                        ->update([
+                            'category_id' => $student->categories,
+                            'correction_amount' => $student->correction,
+                            'latest_balance' => $student->current,
+                            'notes' => $student->comment,
+                            'add_staffID' => Auth::user()->ic
+                        ]);
+                }
+
+                $std_rem = DB::table('student_remarks')
+                           ->join('categories', 'student_remarks.category_id', 'categories.id')
+                           ->join('students', 'student_remarks.student_ic', 'students.ic')
+                           ->where('student_ic', $student->ic)
+                           ->select('student_remarks.*', 'categories.name AS category', 'students.name AS student_name')
+                           ->get();
+
+                $content = "";
+                $content .= '<thead>
+                                <tr>
+                                    <th style="width: 1%">
+                                        No.
+                                    </th>
+                                    <th>
+                                        No. IC
+                                    </th>
+                                    <th>
+                                        Name
+                                    </th>
+                                    <th>
+                                        Category
+                                    </th>
+                                    <th>
+                                        Correction Amount
+                                    </th>
+                                    <th>
+                                        Latest Balance
+                                    </th>
+                                    <th>
+                                        Remark
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="table">';
+                            
+                foreach($std_rem as $key => $std){
+                    //$registered = ($std->status == 'ACTIVE') ? 'checked' : '';
+                    $content .= '
+                    <tr>
+                        <td>
+                        '. $key+1 .'
+                        </td>
+                        <td>
+                        '. $std->student_ic .'
+                        </td>
+                        <td>
+                        '. $std->student_name .'
+                        </td>
+                        <td>
+                        '. $std->category .'
+                        </td>
+                        <td>
+                        '. $std->correction_amount .'
+                        </td>
+                        <td>
+                        '. $std->latest_balance .'
+                        </td>
+                        <td>
+                        '. $std->notes .'
+                        </td>
+                    </tr>
+                    ';
+                    }
+                $content .= '</tbody>';
+                
+            }catch(QueryException $ex){
+                DB::rollback();
+                if($ex->getCode() == 23000){
+                    return ["message"=>"Class code already existed inside the system"];
+                }else{
+                    \Log::debug($ex);
+                    return ["message"=>"DB Error"];
+                }
+            }
+
+            DB::commit();
+        }catch(Exception $ex){
+            return ["message"=>"Error"];
+        }
+
+        return ["message"=>"Success", "data" => $content];
+
+    }
+
+
     public function vehicleRecord()
     {
 
@@ -11993,7 +12919,7 @@ class FinanceController extends Controller
         {
             $odometer = DB::table('tblvehicle_service')->where('vehicle_id', $vehicle->id)->orderBy('id', 'DESC')->first();
 
-            $data['nextService'][$key] = ($odometer) ? $odometer->odometer + 5000 : 0;
+            $data['nextService'][$key] = ($odometer) ? $odometer->odometer + 10000 : 0;
 
             if ($odometer) {
                 $data['nextService2'][$key] = Carbon::parse($odometer->date_of_service)->addMonths(3)->toDateString();
@@ -12457,21 +13383,238 @@ class FinanceController extends Controller
 
     }
 
-    // public function blockList()
-    // {
-
-    //     $data['block'] = DB::table('students')->where('block_status', 1)->get();
-
-    //     return view('finance.student.block_list.blockList', compact('data'));
-        
-    // }
-
     public function blockList()
     {
-        $data = []; // Initialize as empty array
-        $data['block'] = DB::table('students')->where('block_status', 1)->get();
+
+        $data['block'] = DB::table('students')
+                        ->leftjoin('sessions', 'students.session', 'sessions.SessionID')
+                        ->leftjoin('tblprogramme', 'students.program', 'tblprogramme.id')
+                        ->leftjoin('tblstudent_status', 'students.status', 'tblstudent_status.id')
+                        ->whereIn('students.block_status', [1])
+                        ->select('students.*', 'sessions.SessionName', 'tblprogramme.progcode', 'tblstudent_status.name AS status')
+                        ->get();
 
         return view('finance.student.block_list.blockList', compact('data'));
+        
+    }
+
+    public function gradReport()
+    {
+
+        return view('finance.report.gradReport');
+
+    }
+
+    public function getGradReport(Request $request)
+    {
+
+        $filtersData = $request->filtersData;
+
+        $validator = Validator::make($request->all(), [
+            'filtersData' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return ["message"=>"Field Error", "error" => $validator->messages()->get('*')];
+        }
+
+        try{ 
+            DB::beginTransaction();
+            DB::connection()->enableQueryLog();
+
+            try{
+
+                $filter = json_decode($filtersData);
+
+                $payment = DB::table('tblpayment')
+                           ->leftjoin('tblprogramme', 'tblpayment.program_id', 'tblprogramme.id')
+                           ->where('tblpayment.add_date', '>=', $filter->from)
+                           ->where('tblpayment.add_date', '<=', $filter->to)
+                           ->where('tblpayment.process_status_id', 2)
+                           ->where('student_ic', '!=', null)
+                           ->whereIn('tblpayment.process_type_id', [1,7])
+                           ->select('tblpayment.*', 'tblprogramme.progcode')
+                           ->get();
+
+
+                foreach($payment as $key => $pym)
+                {
+
+                    $student[$key] = DB::table('students')
+                               ->leftjoin('tblstudent_personal', 'students.ic', 'tblstudent_personal.student_ic')
+                               ->leftjoin('tbledu_advisor', 'tblstudent_personal.advisor_id', 'tbledu_advisor.id')
+                               ->where('students.ic', $pym->student_ic)
+                               ->select('students.name', 'students.ic', 'students.no_matric', 'students.id', 'tbledu_advisor.name AS advisor')
+                               ->first();
+
+                    $method[$key] = DB::table('tblpaymentmethod')
+                              ->leftjoin('tblpayment_method', 'tblpaymentmethod.claim_method_id', 'tblpayment_method.id')
+                              ->leftjoin('tblpayment_bank', 'tblpaymentmethod.bank_id', 'tblpayment_bank.id')
+                              ->where('tblpaymentmethod.payment_id', $pym->id)
+                              ->select('tblpayment_method.name', 'tblpayment_bank.code', 'tblpaymentmethod.no_document', 'tblpaymentmethod.amount')
+                              ->get();
+
+                }
+
+
+
+                $content = "";
+                $content .= '<thead>
+                                <tr>
+                                    <th>
+                                        #
+                                    </th>
+                                    <th>
+                                        Receipt No.
+                                    </th>
+                                    <th>
+                                        Date
+                                    </th>
+                                    <th>
+                                        Name
+                                    </th>
+                                    <th>
+                                        IC No.
+                                    </th>
+                                    <th>
+                                        Matric No.
+                                    </th>
+                                    <th>
+                                        Student ID No.
+                                    </th>
+                                    <th>
+                                        Payment Method
+                                    </th>
+                                    <th>
+                                        Bank
+                                    </th>
+                                    <th>
+                                        Document No.
+                                    </th>
+                                    <th>
+                                        Amount
+                                    </th>
+                                    <th>
+                                        Total
+                                    </th>
+                                    <th>
+                                        Program
+                                    </th>
+                                    <th>
+                                        EA
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="table">';
+                $total = 0;
+                
+                foreach($payment as $key => $pym){
+                    //$registered = ($std->status == 'ACTIVE') ? 'checked' : '';
+
+                    $studentID = '';
+
+                    if($student[$key]->id)
+                    {
+
+                        $currentLength = strlen($student[$key]->id);
+                        $newLength = $currentLength + 1;
+                        $studentID = str_pad($student[$key]->id, $newLength, '1', STR_PAD_LEFT);
+
+                    }
+
+                    $content .= '
+                    <tr>
+                        <td>
+                        '. $key+1 .'
+                        </td>
+                        <td>
+                        '. $pym->ref_no .'
+                        </td>
+                        <td>
+                        '. $pym->date .'
+                        </td>
+                        <td>
+                        '. ($student[$key]->name ?? '') .'
+                        </td>
+                        <td>
+                        '. ($student[$key]->ic ?? '') .'
+                        </td>
+                        <td>
+                        '. ($student[$key]->no_matric ?? '') .'
+                        </td>
+                        <td>
+                        '. $studentID .'
+                        </td>';
+
+                    $content .= '<td>';
+                    foreach ($method[$key] as $key2 => $mtd) {
+                        $content .= "<div>{$mtd->name}</div>";
+                    }
+                    $content .= '</td>';
+
+                    $content .= '<td>';
+                    foreach ($method[$key] as $key2 => $mtd) {
+                        $content .= "<div>{$mtd->code}</div>";
+                    }
+                    $content .= '</td>';
+
+                    $content .= '<td>';
+                    foreach ($method[$key] as $key2 => $mtd) {
+                        $content .= "<div>{$mtd->no_document}</div>";
+                    }
+                    $content .= '</td>';
+
+                    $content .= '<td>';
+                    foreach ($method[$key] as $key2 => $mtd) {
+                        $total += $mtd->amount;
+
+                        $content .= "<div>{$mtd->amount}</div>";
+                    }
+                    $content .= '</td>';
+
+                    $content .= '<td>
+                        '. $pym->amount .'
+                        </td>
+                        <td>
+                        '. $pym->progcode .'
+                        </td>
+                        <td>
+                        '. ($student[$key]->advisor ?? '') .'
+                        </td>
+                    </tr>
+                    ';
+                    }
+
+                $content .= '</tbody>';
+
+                $content .= '<tfoot>
+                                <tr>
+                                    <td colspan="10">
+                                        Total :
+                                    </td>
+                                    <td>
+                                        '. $total .
+                                    '</td>
+                                </tr>
+                            </tfoot>';
+                
+            }catch(QueryException $ex){
+                DB::rollback();
+                if($ex->getCode() == 23000){
+                    return ["message"=>"Class code already existed inside the system"];
+                }else{
+                    \Log::debug($ex);
+                    return ["message"=>"DB Error"];
+                }
+            }
+
+            DB::commit();
+        }catch(Exception $ex){
+            return ["message"=>"Error"];
+        }
+
+        return response()->json(['message' => 'Success', 'data' => $content]);
+
     }
 
 }
