@@ -1268,7 +1268,7 @@ class FinanceController extends Controller
                         if($key->offer == 1)
                         {
 
-                            if($key->prerequisite_id == 881)
+                            if($key->prerequisite_id == 999)
                             {
 
                                 student::create([
