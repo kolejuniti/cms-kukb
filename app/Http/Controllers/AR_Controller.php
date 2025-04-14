@@ -2528,7 +2528,14 @@ class AR_Controller extends Controller
     private function roundToNearestHalfHour($carbonInstance) 
     {
         $minute = $carbonInstance->minute;
-        $roundedMinute = $minute < 30 ? 0 : 30;
+        if ($minute < 15) {
+            $roundedMinute = 15;
+        } elseif ($minute < 45) {
+            $roundedMinute = 45;
+        } else {
+            $roundedMinute = 15;
+            $carbonInstance->addHour();
+        }
         return $carbonInstance->setMinute($roundedMinute)->setSecond(0);
     }
 
