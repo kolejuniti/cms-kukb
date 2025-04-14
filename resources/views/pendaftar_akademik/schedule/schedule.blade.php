@@ -1056,7 +1056,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var date = new Date(fetchInfo.start);
             while (date < fetchInfo.end) {
                 var dayOfWeek = date.getDay(); 
-                if (dayOfWeek >= 1 && dayOfWeek <= 4) {
+                if (dayOfWeek >= 0 && dayOfWeek <= 4) {
                     // Monday-Thursday => 13:30 to 14:00
                     rehatEvents.push({
                         title: 'REHAT',

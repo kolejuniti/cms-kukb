@@ -167,7 +167,7 @@
                 var date = new Date(fetchInfo.start);
                 while (date < fetchInfo.end) {
                     var dayOfWeek = date.getDay();
-                    if (dayOfWeek >= 1 && dayOfWeek <= 4) {
+                    if (dayOfWeek >= 0 && dayOfWeek <= 4) {
                         rehatEvents.push({
                             title: 'REHAT',
                             start: new Date(date.getFullYear(), date.getMonth(), date.getDate(), 13, 30, 0),
