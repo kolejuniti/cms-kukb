@@ -2544,8 +2544,8 @@ class AR_Controller extends Controller
         // Parse the start and end times from the request
         $startTime = $this->roundToNearestHalfHour(Carbon::parse($request->start));
         $endTime = $this->roundToNearestHalfHour(Carbon::parse($request->end));
-        $rehat1 = '13:30:00';
-        $rehat2 = '14:00:00';
+        $rehat1 = '13:15:00';
+        $rehat2 = '14:15:00';
 
         $rehat3 = '12:30:00';
         $rehat4 = '14:30:00';
@@ -3307,7 +3307,7 @@ private function validateBreakTimeConflict($dayOfWeek, $startTimeOnly, $endTimeO
 {
     // Define break times
     $breakTimes = [
-        'regular' => ['start' => '13:30:00', 'end' => '14:00:00'],
+        'regular' => ['start' => '13:15:00', 'end' => '14:15:00'],
         'friday' => ['start' => '12:30:00', 'end' => '14:30:00']
     ];
 

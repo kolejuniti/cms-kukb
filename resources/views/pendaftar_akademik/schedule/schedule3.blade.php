@@ -170,8 +170,8 @@
                     if (dayOfWeek >= 0 && dayOfWeek <= 4) {
                         rehatEvents.push({
                             title: 'REHAT',
-                            start: new Date(date.getFullYear(), date.getMonth(), date.getDate(), 13, 30, 0),
-                            end: new Date(date.getFullYear(), date.getMonth(), date.getDate(), 14, 0, 0),
+                            start: new Date(date.getFullYear(), date.getMonth(), date.getDate(), 13, 15, 0),
+                            end: new Date(date.getFullYear(), date.getMonth(), date.getDate(), 14, 15, 0),
                             allDay: false,
                             color: 'red'
                         });
