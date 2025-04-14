@@ -139,7 +139,7 @@
         const colors = ['blue', 'green', 'purple', 'orange', 'pink', 'cyan', 'magenta', '#34ebc9', '#eb34df'];
         return colors[Math.floor(Math.random() * colors.length)];
     }
-    var hiddenDays = [0, 6];
+    var hiddenDays = [5, 6]; // Hide Friday(5) & Saturday(6)
     
     // Declare calendar in the global scope
     var calendar;
@@ -155,7 +155,7 @@
                 right: 'timeGridWeek,timeGridDay'
             },
             hiddenDays: hiddenDays,
-            slotMinTime: '08:30:00',
+            slotMinTime: '08:15:00',
             slotMaxTime: '18:00:00',
             slotDuration: '00:30:00',
             slotLabelInterval: '00:30:00',

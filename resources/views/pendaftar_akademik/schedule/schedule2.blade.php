@@ -820,7 +820,7 @@ function setupCalendar() {
     var calendarEl = document.getElementById('calendar');
     if (!calendarEl) return;
     
-    var hiddenDays = [0, 6]; // Hide Sunday(0) & Saturday(6)
+    var hiddenDays = [5, 6]; // Hide Friday(5) & Saturday(6)
 
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'timeGridWeek',
@@ -835,7 +835,7 @@ function setupCalendar() {
             day: 'Day'
         },
         hiddenDays: hiddenDays,
-        slotMinTime: '08:30:00',
+        slotMinTime: '08:15:00',
         slotMaxTime: '18:00:00',
         slotDuration: '00:30:00',
         slotLabelInterval: '00:30:00',
