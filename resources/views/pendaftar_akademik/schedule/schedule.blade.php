@@ -1870,265 +1870,225 @@ function printScheduleTable(name, ic, staffNo, email) {
     // Show loading notification
     showNotification('Preparing timetable for printing...', 'info');
     
-    // Use requestAnimationFrame to avoid blocking the main thread
-    requestAnimationFrame(() => {
-        const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+    const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
 
-        // Build half-hour time slots (08:15..18:00)
-        let times = [];
-        let startHour = 8;
-        let startMinute = 15;
-        let endHour = 18;
+    // Build half-hour time slots aligned with calendar's slotMinTime (08:15)
+    let times = [];
+    let startHour = 8;
+    let startMinute = 15; // Align with calendar's slotMinTime
+    let endHour = 18;
 
-        while (startHour < endHour || (startHour === endHour && startMinute === 0)) {
-            let hh = String(startHour).padStart(2, '0');
-            let mm = String(startMinute).padStart(2, '0');
-            times.push(`${hh}:${mm}`);
-            startMinute += 30;
-            if (startMinute === 60) {
-                startMinute = 0;
-                startHour++;
+    // Generate time slots
+    let currentDate = new Date();
+    currentDate.setHours(startHour, startMinute, 0, 0);
+    let endDate = new Date();
+    endDate.setHours(endHour, 0, 0, 0);
+
+    while (currentDate < endDate) {
+        times.push(toHHMM(currentDate));
+        currentDate.setMinutes(currentDate.getMinutes() + 30);
+    }
+
+    // Get events from FullCalendar
+    const events = calendar.getEvents();
+
+    // Build a 2D array scheduleData[dayIndex][timeIndex] = [events]
+    let scheduleData = Array(dayNames.length).fill(null)
+        .map(() => Array(times.length).fill(null)
+        .map(() => []));
+
+    // Process events
+    events.forEach(event => {
+        if (!event.start) return; // Skip invalid events
+
+        let start = event.start;
+        let end = event.end || new Date(start.getTime() + 30 * 60000);
+
+        // Convert day-of-week (Mon=1..Fri=5 => index 0..4)
+        let dayIndex = start.getDay() - 1; 
+        if (dayIndex < 0 || dayIndex > 4) return; // skip Sat/Sun
+
+        let startTimeStr = toHHMM(start);
+        let endTimeStr = toHHMM(end);
+
+        let startIndex = times.indexOf(startTimeStr);
+        if (startIndex === -1) return;
+
+        let endIndex = times.indexOf(endTimeStr);
+        if (endIndex === -1) endIndex = times.length;
+
+        // Fill each half-hour slot with the event
+        for (let i = startIndex; i < endIndex; i++) {
+            if (i < times.length) {
+                scheduleData[dayIndex][i].push(event);
             }
-        }
-
-        // Get events from FullCalendar
-        const events = calendar.getEvents();
-
-        // Pre-process events to improve performance
-        const processedEventData = new Map();
-        events.forEach(event => {
-            const start = event.start;
-            const end = event.end || new Date(start.getTime() + 60 * 60 * 1000);
-            const dayIndex = start.getDay() - 1;
-            
-            if (dayIndex >= 0 && dayIndex <= 4) { // Only process Mon-Fri
-                const key = `${dayIndex}-${toHHMM(start)}-${toHHMM(end)}`;
-                if (!processedEventData.has(key)) {
-                    processedEventData.set(key, []);
-                }
-                processedEventData.get(key).push(event);
-            }
-        });
-
-        // Build HTML with modern styling
-        let html = `
-        <html>
-        <head>
-            <title>Timetable - ${name}</title>
-            <style>
-                @page {
-                    size: A4 landscape;
-                    margin: 0.5cm;
-                }
-                body {
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    margin: 0;
-                    padding: 0;
-                    color: #000000;
-                    font-size: 9px;
-                    font-weight: 500;
-                }
-                .container {
-                    max-width: 100%;
-                    margin: 0 auto;
-                    padding: 10px;
-                }
-                .header {
-                    text-align: center;
-                    margin-bottom: 10px;
-                    padding-bottom: 5px;
-                    border-bottom: 1px solid #4361ee;
-                }
-                h1 {
-                    color: #4361ee;
-                    margin: 0;
-                    font-size: 16px;
-                    font-weight: 600;
-                }
-                .lecturer-info {
-                    background-color: #f8f9fa;
-                    border-radius: 4px;
-                    padding: 5px;
-                    margin-bottom: 10px;
-                    border: 1px solid #e0e0e0;
-                }
-                .lecturer-info p {
-                    margin: 2px 0;
-                    font-size: 9px;
-                    font-weight: 600;
-                    color: #000000;
-                }
-                .lecturer-info strong {
-                    color: #000000;
-                    font-weight: 700;
-                }
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    box-shadow: none;
-                    border-radius: 0;
-                    font-size: 9px;
-                    table-layout: fixed;
-                }
-                th {
-                    background-color: #1e40af;
-                    color: white;
-                    padding: 5px;
-                    text-align: center;
-                    font-weight: 700;
-                    font-size: 10px;
-                }
-                td {
-                    border: 1px solid #000000;
-                    padding: 4px;
-                    text-align: center;
-                    vertical-align: middle;
-                    background-color: #f8f8f8;
-                    height: 20px;
-                }
-                .time-column {
-                    background-color: #e0e0e0;
-                    font-weight: 700;
-                    color: #000000;
-                    width: 70px;
-                }
-                .event-cell {
-                    background-color: #d1e4ff;
-                    border: 1.5px solid #000000;
-                }
-                .event-title {
-                    font-weight: 700;
-                    color: #000000;
-                    margin-bottom: 2px;
-                }
-                .event-description {
-                    color: #333333;
-                    font-size: 8px;
-                    font-weight: 500;
-                }
-                .rehat-cell {
-                    background-color: #ffcccf;
-                    border: 1.5px solid #000000;
-                    color: #c62828;
-                    font-weight: 700;
-                }
-                @media print {
-                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                    * { color: #000000 !important; }
-                    th { 
-                        background-color: #1e40af !important;
-                        color: white !important;
-                    }
-                    .event-cell { background-color: #d1e4ff !important; }
-                    .rehat-cell { background-color: #ffcccf !important; }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h1>Lecturer Timetable</h1>
-                </div>
-                
-                <div class="lecturer-info">
-                    <p><strong>Name:</strong> ${name}</p>
-                    <p><strong>IC:</strong> ${ic}</p>
-                    <p><strong>Staff No:</strong> ${staffNo}</p>
-                    <p><strong>Email:</strong> ${email}</p>
-                </div>
-                
-                <table>
-                    <thead>
-                        <tr>
-                            <th class="time-column">Time</th>
-                            ${dayNames.map(day => `<th>${day}</th>`).join('')}
-                        </tr>
-                    </thead>
-                    <tbody>`;
-
-        // Generate time slots rows more efficiently
-        times.forEach((time, timeIndex) => {
-            const nextTime = times[timeIndex + 1] || '18:00';
-            const timeLabel = `${time} - ${nextTime}`;
-            
-            html += `<tr><td class="time-column">${timeLabel}</td>`;
-            
-            // Process each day
-            for (let dayIndex = 0; dayIndex < dayNames.length; dayIndex++) {
-                const key = `${dayIndex}-${time}`;
-                const events = processedEventData.get(key) || [];
-                
-                if (events.length > 0) {
-                    const rehatEvent = events.find(e => e.title === 'REHAT');
-                    if (rehatEvent) {
-                        html += `<td class="rehat-cell"><div class="event-title">REHAT</div></td>`;
-                    } else {
-                        html += `<td class="event-cell">
-                            ${events.map(event => `
-                                <div class="event-title">${event.title || '(No Title)'}</div>
-                                ${event.extendedProps?.description ? 
-                                    `<div class="event-description">${event.extendedProps.description}</div>` : ''}
-                                ${event.extendedProps?.programInfo ? 
-                                    `<div class="event-description">Program: ${event.extendedProps.programInfo}</div>` : ''}
-                            `).join('<hr style="margin: 2px 0; border-top: 1px dashed #ccc;">')}
-                        </td>`;
-                    }
-                } else {
-                    html += '<td></td>';
-                }
-            }
-            
-            html += '</tr>';
-        });
-
-        html += `
-                    </tbody>
-                </table>
-                
-                <div style="text-align: right; color: #999; font-size: 8px; margin-top: 5px;">
-                    Generated on: ${new Date().toLocaleDateString('en-GB', {
-                        day: '2-digit', 
-                        month: 'short', 
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    })}
-                </div>
-                
-                <div style="text-align: center; margin-top: 5px; font-size: 8px; color: #999;">
-                    © Timetable Management System
-                </div>
-            </div>
-        </body>
-        </html>`;
-
-        // Create and open print window with smaller delay
-        const printWindow = window.open('', '_blank', 'width=1100,height=800');
-        if (printWindow) {
-            printWindow.document.write(html);
-            printWindow.document.close();
-            
-            // Use a shorter timeout and check if document is loaded
-            const checkPrintReady = () => {
-                if (printWindow.document.readyState === 'complete') {
-                    printWindow.focus();
-                    printWindow.print();
-                } else {
-                    setTimeout(checkPrintReady, 250);
-                }
-            };
-            setTimeout(checkPrintReady, 250);
-        } else {
-            showNotification('Please allow pop-ups to print the timetable', 'warning');
         }
     });
+
+    // Track processed events to avoid duplicates
+    let processedEvents = new Set();
+
+    // Build HTML
+    let html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Timetable - ${name}</title>
+        <style>
+            @page { 
+                size: landscape; 
+                margin: 1cm; 
+            }
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 20px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                table-layout: fixed;
+            }
+            th, td {
+                border: 1px solid #000;
+                padding: 4px;
+                font-size: 9px;
+                vertical-align: top;
+            }
+            th {
+                background-color: #1e40af !important;
+                color: white !important;
+                font-weight: bold;
+            }
+            .time-col {
+                width: 80px;
+                background-color: #e0e0e0 !important;
+                font-weight: bold;
+            }
+            .event {
+                background-color: #d1e4ff !important;
+                margin-bottom: 2px;
+                padding: 2px;
+            }
+            .rehat {
+                background-color: #ffcccf !important;
+                color: #c62828 !important;
+                font-weight: bold;
+            }
+            .info {
+                margin-bottom: 20px;
+                padding: 10px;
+                background: #f8f9fa;
+                border: 1px solid #ddd;
+            }
+            @media print {
+                body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                th { background-color: #1e40af !important; color: white !important; }
+                .time-col { background-color: #e0e0e0 !important; }
+                .event { background-color: #d1e4ff !important; }
+                .rehat { background-color: #ffcccf !important; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="info">
+            <h2 style="margin-top:0">Lecturer Timetable</h2>
+            <p><strong>Name:</strong> ${name}</p>
+            <p><strong>IC:</strong> ${ic}</p>
+            <p><strong>Staff No:</strong> ${staffNo}</p>
+            <p><strong>Email:</strong> ${email}</p>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th class="time-col">Time</th>
+                    ${dayNames.map(day => `<th>${day}</th>`).join('')}
+                </tr>
+            </thead>
+            <tbody>`;
+
+    // Generate rows
+    times.forEach((time, timeIndex) => {
+        const nextTime = times[timeIndex + 1] || '18:00';
+        
+        html += `<tr>
+            <td class="time-col">${time} - ${nextTime}</td>`;
+        
+        // Process each day's events for this time slot
+        for (let dayIndex = 0; dayIndex < dayNames.length; dayIndex++) {
+            const events = scheduleData[dayIndex][timeIndex];
+            
+            if (events && events.length > 0) {
+                // Check for REHAT event first
+                const rehatEvent = events.find(e => e.title === 'REHAT');
+                if (rehatEvent) {
+                    html += `<td class="rehat">REHAT</td>`;
+                    continue;
+                }
+
+                // Process other events
+                html += `<td>`;
+                events.forEach(event => {
+                    if (!processedEvents.has(event.id)) {
+                        html += `
+                            <div class="event">
+                                <div style="font-weight:bold">${event.title || '(No Title)'}</div>
+                                ${event.extendedProps?.description ? 
+                                    `<div style="font-size:8px">${event.extendedProps.description}</div>` : ''}
+                                ${event.extendedProps?.programInfo ? 
+                                    `<div style="font-size:8px">Program: ${event.extendedProps.programInfo}</div>` : ''}
+                            </div>`;
+                        processedEvents.add(event.id);
+                    }
+                });
+                html += `</td>`;
+            } else {
+                html += `<td></td>`;
+            }
+        }
+        html += `</tr>`;
+    });
+
+    html += `
+            </tbody>
+        </table>
+        <div style="text-align:right; margin-top:10px; font-size:8px; color:#666;">
+            Generated on: ${new Date().toLocaleDateString('en-GB', {
+                day: '2-digit', 
+                month: 'short', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            })}
+        </div>
+    </body>
+    </html>`;
+
+    // Create a blob and open in new window
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const printWindow = window.open(url, '_blank');
+
+    if (printWindow) {
+        // Clean up the URL after the window loads
+        printWindow.onload = () => {
+            URL.revokeObjectURL(url);
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        };
+    } else {
+        showNotification('Please allow pop-ups to print the timetable', 'warning');
+    }
 }
 
 // Helper to convert Date -> "HH:MM"
 function toHHMM(dateObj) {
     let hh = String(dateObj.getHours()).padStart(2, '0');
     let mm = String(dateObj.getMinutes()).padStart(2, '0');
-    return hh + ':' + mm;
+    return `${hh}:${mm}`;
 }
 
 function showNotification(message, type = 'info', autoHide = true) {
