@@ -1880,18 +1880,18 @@ function printScheduleTable(name, ic, staffNo, email) {
     let endMinute = 0;
     
     // Generate consistent 15-minute slots
-    let currentDate = new Date();
-    currentDate.setHours(startHour, startMinute, 0, 0);
+    let timeSlotDate = new Date();
+    timeSlotDate.setHours(startHour, startMinute, 0, 0);
     let endDate = new Date();
     endDate.setHours(endHour, endMinute, 0, 0);
     
-    while (currentDate <= endDate) {
-        let hh = String(currentDate.getHours()).padStart(2, '0');
-        let mm = String(currentDate.getMinutes()).padStart(2, '0');
+    while (timeSlotDate <= endDate) {
+        let hh = String(timeSlotDate.getHours()).padStart(2, '0');
+        let mm = String(timeSlotDate.getMinutes()).padStart(2, '0');
         times.push(`${hh}:${mm}`);
         
         // Add 15 minutes
-        currentDate.setMinutes(currentDate.getMinutes() + 15);
+        timeSlotDate.setMinutes(timeSlotDate.getMinutes() + 15);
     }
 
     // Get events from FullCalendar
