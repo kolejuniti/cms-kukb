@@ -1872,10 +1872,10 @@ function printScheduleTable(name, ic, staffNo, email) {
     
     const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
 
-    // Build half-hour time slots (08:30..18:00)
+    // Build half-hour time slots (08:15..18:00)
     let times = [];
     let startHour = 8;
-    let startMinute = 30;
+    let startMinute = 15;
     let endHour = 18;
 
     while (startHour < endHour || (startHour === endHour && startMinute === 0)) {
@@ -2133,7 +2133,7 @@ function printScheduleTable(name, ic, staffNo, email) {
 
     // For each timeslot row
     for (let t = 0; t < times.length; t++) {
-        // Build the time label, e.g. "08:30 - 09:00"
+        // Build the time label, e.g. "08:15 - 08:45"
         let timeLabel = times[t];
         if (t < times.length - 1) {
             timeLabel += ' - ' + times[t + 1];
