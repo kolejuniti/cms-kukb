@@ -1969,233 +1969,235 @@ function initializeTooltips() {
     });
 }
 
-// Simple script to add a print button to the timetable
-document.addEventListener('DOMContentLoaded', function() {
-    // Find the action buttons container
-    var actionButtons = document.querySelector('.action-buttons');
+// Add Print Button Function
+function addPrintButton() {
+  // Find action buttons container
+  var actionButtons = document.querySelector('.action-buttons');
+  
+  if (actionButtons && !document.getElementById('print-schedule-btn')) {
+    // Create button
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-info';
+    btn.id = 'print-schedule-btn';
+    btn.innerHTML = '<i class="fas fa-print me-2"></i> Print Schedule';
     
-    if (actionButtons) {
-        // Create print button
-        var printBtn = document.createElement('button');
-        printBtn.type = 'button';
-        printBtn.className = 'btn btn-info';
-        printBtn.id = 'print-schedule-btn';
-        printBtn.innerHTML = '<i class="fas fa-print me-2"></i> Print Schedule';
-        
-        // Append to action buttons
-        actionButtons.appendChild(printBtn);
-        
-        // Add click handler
-        printBtn.addEventListener('click', printTimetable);
-    }
-});
-
-// Function to print timetable
-function printTimetable() {
-    // Get lecturer information
-    var lecturerName = document.querySelector('.profile-content h1') ? 
-                        document.querySelector('.profile-content h1').textContent.trim() : 'Lecturer';
-    var lecturerIC = document.querySelector('.profile-content p:nth-of-type(1)') ? 
-                     document.querySelector('.profile-content p:nth-of-type(1)').textContent.replace('IC:', '').trim() : '';
-    var lecturerStaffNo = document.querySelector('.profile-content p:nth-of-type(2)') ? 
-                          document.querySelector('.profile-content p:nth-of-type(2)').textContent.replace('Staff No:', '').trim() : '';
-    var lecturerEmail = document.querySelector('.profile-content p:nth-of-type(3)') ? 
-                        document.querySelector('.profile-content p:nth-of-type(3)').textContent.replace('Email:', '').trim() : '';
+    // Add to container
+    actionButtons.appendChild(btn);
     
-    // Open new window
-    var printWindow = window.open('', '_blank');
-    if (!printWindow) {
-        alert('Please allow pop-ups to print the schedule');
-        return;
-    }
-    
-    // Get events from calendar
-    var events = [];
-    if (typeof calendar !== 'undefined') {
-        events = calendar.getEvents().filter(function(event) {
-            return event.title !== 'REHAT';
-        });
-    }
-    
-    // Create time slots
-    var timeSlots = [];
-    var startHour = 8;
-    var endHour = 19;
-    
-    for (var h = startHour; h < endHour; h++) {
-        for (var m = 0; m < 60; m += 30) {
-            var startTime = h * 60 + m;
-            var endTime = startTime + 30;
-            
-            var startHourStr = Math.floor(startTime / 60).toString().padStart(2, '0');
-            var startMinStr = (startTime % 60).toString().padStart(2, '0');
-            var endHourStr = Math.floor(endTime / 60).toString().padStart(2, '0');
-            var endMinStr = (endTime % 60).toString().padStart(2, '0');
-            
-            timeSlots.push({
-                display: startHourStr + ':' + startMinStr + ' - ' + endHourStr + ':' + endMinStr,
-                start: startTime,
-                end: endTime
-            });
-        }
-    }
-    
-    // Check if event is in a time slot
-    function isEventInSlot(event, day, slot) {
-        if (!event.start || !event.end) return false;
-        
-        var eventDay = event.start.getDay();
-        // Adjust Sunday = 0 to our format
-        if (eventDay === 0) eventDay = 7;
-        
-        // Our days are 0-based where 0 = Monday
-        var tableDay = day + 1;
-        
-        if (eventDay !== tableDay) return false;
-        
-        var eventStartTime = event.start.getHours() * 60 + event.start.getMinutes();
-        var eventEndTime = event.end.getHours() * 60 + event.end.getMinutes();
-        
-        return (eventStartTime < slot.end && eventEndTime > slot.start);
-    }
-    
-    // Format event for display
-    function formatEvent(event) {
-        var title = event.title || '';
-        var group = event.extendedProps && event.extendedProps.groupName ? event.extendedProps.groupName : '';
-        var students = event.extendedProps && event.extendedProps.studentCount ? event.extendedProps.studentCount : '';
-        var program = event.extendedProps && event.extendedProps.programInfo ? event.extendedProps.programInfo : 'DPI';
-        
-        var html = '<div class="event-title">' + title + '</div>';
-        
-        if (group) {
-            html += '<div class="event-details">';
-            html += group;
-            if (students) {
-                html += ' | Total Student: ' + students;
-            }
-            html += '<br>Program: ' + program;
-            html += '</div>';
-        }
-        
-        return html;
-    }
-    
-    // Create HTML
-    var html = '<!DOCTYPE html><html><head><title>Lecturer Timetable</title>';
-    html += '<style>';
-    html += '@media print { @page { size: landscape; margin: 10mm; } }';
-    html += 'body { font-family: Arial, sans-serif; margin: 10mm; }';
-    html += '.header { text-align: center; margin-bottom: 20px; }';
-    html += '.lecturer-info { margin-bottom: 15px; }';
-    html += '.lecturer-info-item { margin-bottom: 5px; }';
-    html += '.timetable { width: 100%; border-collapse: collapse; }';
-    html += '.timetable th, .timetable td { border: 1px solid #444; padding: 3px; vertical-align: top; font-size: 9pt; }';
-    html += '.timetable th { background-color: #073b73; color: white; text-align: center; font-weight: bold; }';
-    html += '.timetable .time-column { width: 80px; text-align: center; background-color: #f2f2f2; font-weight: bold; }';
-    html += '.rehat-cell { background-color: #ffcccc; text-align: center; font-weight: bold; }';
-    html += '.event-title { font-weight: bold; margin-bottom: 2px; }';
-    html += '.event-details { font-size: 7pt; }';
-    html += '.footer { margin-top: 20px; text-align: right; font-size: 8pt; }';
-    html += '.print-button { background-color: #4361ee; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }';
-    html += '</style>';
-    html += '</head><body>';
-    
-    // Print button
-    html += '<button class="print-button" onclick="window.print()">Print Schedule</button>';
-    
-    // Header
-    html += '<div class="header"><h1>Lecturer Timetable</h1></div>';
-    
-    // Lecturer info
-    html += '<div class="lecturer-info">';
-    html += '<div class="lecturer-info-item"><strong>Name:</strong> ' + lecturerName + '</div>';
-    html += '<div class="lecturer-info-item"><strong>IC:</strong> ' + lecturerIC + '</div>';
-    html += '<div class="lecturer-info-item"><strong>Staff No:</strong> ' + lecturerStaffNo + '</div>';
-    html += '<div class="lecturer-info-item"><strong>Email:</strong> ' + lecturerEmail + '</div>';
-    html += '</div>';
-    
-    // Timetable
-    html += '<table class="timetable">';
-    html += '<thead><tr>';
-    html += '<th class="time-column">Time</th>';
-    html += '<th>Monday</th>';
-    html += '<th>Tuesday</th>';
-    html += '<th>Wednesday</th>';
-    html += '<th>Thursday</th>';
-    html += '<th>Friday</th>';
-    html += '</tr></thead>';
-    html += '<tbody>';
-    
-    // Time slots
-    timeSlots.forEach(function(slot) {
-        html += '<tr>';
-        html += '<td class="time-column">' + slot.display + '</td>';
-        
-        // Days (0=Monday, 4=Friday)
-        for (var day = 0; day < 5; day++) {
-            // Check if REHAT cell
-            var isRehat = (slot.start === 13 * 60 + 30 && slot.end === 14 * 60);
-            
-            if (isRehat) {
-                html += '<td class="rehat-cell">REHAT</td>';
-            } else {
-                // Find events for this day and slot
-                var cellEvents = events.filter(function(event) {
-                    return isEventInSlot(event, day, slot);
-                });
-                
-                if (cellEvents.length > 0) {
-                    html += '<td>';
-                    cellEvents.forEach(function(event) {
-                        html += formatEvent(event);
-                    });
-                    html += '</td>';
-                } else {
-                    html += '<td></td>';
-                }
-            }
-        }
-        
-        html += '</tr>';
-    });
-    
-    html += '</tbody></table>';
-    
-    // Footer
-    html += '<div class="footer">';
-    html += 'Generated on: ' + new Date().toLocaleDateString('en-GB', {
-        day: '2-digit', 
-        month: 'short', 
-        year: 'numeric'
-    });
-    html += '<br>© Timetable Management System</div>';
-    
-    // Auto-print script
-    html += '<script>';
-    html += 'setTimeout(function() { window.print(); }, 1000);';
-    html += '</script>';
-    
-    html += '</body></html>';
-    
-    // Write to the window
-    printWindow.document.open();
-    printWindow.document.write(html);
-    printWindow.document.close();
+    // Add click handler
+    btn.onclick = function() {
+      printTimetable();
+    };
+  }
 }
 
-// Try to add button if page is already loaded
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    var actionButtons = document.querySelector('.action-buttons');
-    if (actionButtons && !document.getElementById('print-schedule-btn')) {
-        var printBtn = document.createElement('button');
-        printBtn.type = 'button';
-        printBtn.className = 'btn btn-info';
-        printBtn.id = 'print-schedule-btn';
-        printBtn.innerHTML = '<i class="fas fa-print me-2"></i> Print Schedule';
-        actionButtons.appendChild(printBtn);
-        printBtn.addEventListener('click', printTimetable);
+// Main print function
+function printTimetable() {
+  // Basic lecturer info
+  var lecturerName = "";
+  var lecturerIC = "";
+  var lecturerStaffNo = "";
+  var lecturerEmail = "";
+  
+  try {
+    // Try to get lecturer info from page
+    var nameEl = document.querySelector('.profile-content h1');
+    var icEl = document.querySelector('.profile-content p:nth-of-type(1)');
+    var staffEl = document.querySelector('.profile-content p:nth-of-type(2)');
+    var emailEl = document.querySelector('.profile-content p:nth-of-type(3)');
+    
+    if (nameEl) lecturerName = nameEl.textContent.trim();
+    if (icEl) lecturerIC = icEl.textContent.replace('IC:', '').trim();
+    if (staffEl) lecturerStaffNo = staffEl.textContent.replace('Staff No:', '').trim();
+    if (emailEl) lecturerEmail = emailEl.textContent.replace('Email:', '').trim();
+  } catch(e) {
+    console.log("Error getting lecturer info:", e);
+  }
+  
+  // Open print window
+  var win = window.open('', '_blank');
+  
+  if (!win) {
+    alert('Please allow popups to print the schedule');
+    return;
+  }
+  
+  // Get calendar events
+  var events = [];
+  try {
+    if (typeof calendar !== 'undefined') {
+      events = calendar.getEvents().filter(function(e) {
+        return e.title !== 'REHAT';
+      });
     }
+  } catch(e) {
+    console.log("Error getting events:", e);
+  }
+  
+  // Create time slots
+  var slots = [];
+  for (var h = 8; h < 19; h++) {
+    for (var m = 0; m < 60; m += 30) {
+      var start = h * 60 + m;
+      var end = start + 30;
+      
+      var sh = Math.floor(start / 60).toString().padStart(2, '0');
+      var sm = (start % 60).toString().padStart(2, '0');
+      var eh = Math.floor(end / 60).toString().padStart(2, '0');
+      var em = (end % 60).toString().padStart(2, '0');
+      
+      slots.push({
+        display: sh + ':' + sm + ' - ' + eh + ':' + em,
+        start: start,
+        end: end
+      });
+    }
+  }
+  
+  // Check if event is in slot
+  function eventInSlot(evt, day, slot) {
+    if (!evt.start || !evt.end) return false;
+    
+    var evtDay = evt.start.getDay();
+    if (evtDay === 0) evtDay = 7;
+    
+    var tableDay = day + 1;
+    if (evtDay !== tableDay) return false;
+    
+    var evtStart = evt.start.getHours() * 60 + evt.start.getMinutes();
+    var evtEnd = evt.end.getHours() * 60 + evt.end.getMinutes();
+    
+    return (evtStart < slot.end && evtEnd > slot.start);
+  }
+  
+  // Format event cell content
+  function formatEvt(evt) {
+    var title = evt.title || '';
+    var group = evt.extendedProps && evt.extendedProps.groupName ? evt.extendedProps.groupName : '';
+    var count = evt.extendedProps && evt.extendedProps.studentCount ? evt.extendedProps.studentCount : '';
+    var program = evt.extendedProps && evt.extendedProps.programInfo ? evt.extendedProps.programInfo : 'DPI';
+    
+    var content = '<div class="event-title">' + title + '</div>';
+    
+    if (group) {
+      content += '<div class="event-details">';
+      content += group;
+      if (count) content += ' | Total Student: ' + count;
+      content += '<br>Program: ' + program;
+      content += '</div>';
+    }
+    
+    return content;
+  }
+  
+  // Build HTML content
+  var html = '<!DOCTYPE html><html><head><title>Lecturer Timetable</title>';
+  
+  // CSS styles
+  html += '<style>';
+  html += '@media print { @page { size: landscape; margin: 10mm; } }';
+  html += 'body { font-family: Arial, sans-serif; margin: 10mm; }';
+  html += '.header { text-align: center; margin-bottom: 20px; }';
+  html += '.lecturer-info { margin-bottom: 15px; }';
+  html += '.lecturer-info-item { margin-bottom: 5px; }';
+  html += '.timetable { width: 100%; border-collapse: collapse; }';
+  html += '.timetable th, .timetable td { border: 1px solid #444; padding: 3px; vertical-align: top; font-size: 9pt; }';
+  html += '.timetable th { background-color: #073b73; color: white; text-align: center; font-weight: bold; }';
+  html += '.timetable .time-column { width: 80px; text-align: center; background-color: #f2f2f2; font-weight: bold; }';
+  html += '.rehat-cell { background-color: #ffcccc; text-align: center; font-weight: bold; }';
+  html += '.event-title { font-weight: bold; margin-bottom: 2px; }';
+  html += '.event-details { font-size: 7pt; }';
+  html += '.footer { margin-top: 20px; text-align: right; font-size: 8pt; }';
+  html += '.print-button { background-color: #4361ee; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }';
+  html += '</style>';
+  html += '</head><body>';
+  
+  // Print button
+  html += '<button class="print-button" onclick="window.print()">Print Schedule</button>';
+  
+  // Header
+  html += '<div class="header"><h1>Lecturer Timetable</h1></div>';
+  
+  // Lecturer info
+  html += '<div class="lecturer-info">';
+  html += '<div class="lecturer-info-item"><strong>Name:</strong> ' + lecturerName + '</div>';
+  html += '<div class="lecturer-info-item"><strong>IC:</strong> ' + lecturerIC + '</div>';
+  html += '<div class="lecturer-info-item"><strong>Staff No:</strong> ' + lecturerStaffNo + '</div>';
+  html += '<div class="lecturer-info-item"><strong>Email:</strong> ' + lecturerEmail + '</div>';
+  html += '</div>';
+  
+  // Timetable
+  html += '<table class="timetable">';
+  html += '<thead><tr>';
+  html += '<th class="time-column">Time</th>';
+  html += '<th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th>';
+  html += '</tr></thead>';
+  html += '<tbody>';
+  
+  // Create rows for each time slot
+  for (var i = 0; i < slots.length; i++) {
+    var slot = slots[i];
+    html += '<tr>';
+    html += '<td class="time-column">' + slot.display + '</td>';
+    
+    // Create cells for each day
+    for (var day = 0; day < 5; day++) {
+      // Check if REHAT
+      var isRehat = (slot.start === 13 * 60 + 30 && slot.end === 14 * 60);
+      
+      if (isRehat) {
+        html += '<td class="rehat-cell">REHAT</td>';
+      } else {
+        // Find matching events
+        var cellEvents = [];
+        for (var e = 0; e < events.length; e++) {
+          if (eventInSlot(events[e], day, slot)) {
+            cellEvents.push(events[e]);
+          }
+        }
+        
+        if (cellEvents.length > 0) {
+          html += '<td>';
+          for (var c = 0; c < cellEvents.length; c++) {
+            html += formatEvt(cellEvents[c]);
+          }
+          html += '</td>';
+        } else {
+          html += '<td></td>';
+        }
+      }
+    }
+    
+    html += '</tr>';
+  }
+  
+  html += '</tbody></table>';
+  
+  // Footer
+  html += '<div class="footer">';
+  html += 'Generated on: ' + new Date().toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'});
+  html += '<br>© Timetable Management System</div>';
+  
+  // Simple auto-print script
+  html += '<script>';
+  html += 'setTimeout(function() { window.print(); }, 1000);';
+  html += '</script>';
+  
+  html += '</body></html>';
+  
+  // Write to window
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+}
+
+// Run when document loads
+document.addEventListener('DOMContentLoaded', addPrintButton);
+
+// Also try to add button now if page is already loaded
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  addPrintButton();
 }
 </script>
 
