@@ -38,6 +38,7 @@
 
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
 
+	{{-- <link rel="stylesheet" href="{{ asset('css/customCSS.css') }}"> --}}
   </head>
 
 <style>
@@ -303,6 +304,14 @@
 						</ul>
 					</li>
 					<li class="treeview">
+						<a href="#"><span>Test 2</span>
+						</a>
+						<ul class="treeview-menu treeview-menu-visible" id="treeview-menu-visible">
+						<li><a href="/lecturer/test3/{{ Session::get('CourseID') }}?session={{ Session::get('SessionID') }}" class="">Online</a></li>
+						<li><a href="/lecturer/test4/{{ Session::get('CourseID') }}?session={{ Session::get('SessionID') }}" class="">Offline</a></li>
+						</ul>
+					</li>
+					<li class="treeview">
 						<a href="#"><span>Assignment</span>
 						</a>
 						<ul class="treeview-menu treeview-menu-visible" id="treeview-menu-visible">
@@ -312,8 +321,8 @@
 					</li>
 					<li><a href="/lecturer/midterm/{{ Session::get('CourseID') }}?session={{ Session::get('SessionID') }}" class="">Midterm</a></li>
 					<li><a href="/lecturer/final/{{ Session::get('CourseID') }}?session={{ Session::get('SessionID') }}" class="">Final</a></li>
-					<!--<li><a href="/lecturer/paperwork/{{ Session::get('CourseID') }}?session={{ Session::get('SessionID') }}" class="">Paperwork</a></li>
-					<li><a href="/lecturer/practical/{{ Session::get('CourseID') }}?session={{ Session::get('SessionID') }}" class="">Practical</a></li>-->
+					{{-- <li><a href="/lecturer/paperwork/{{ Session::get('CourseID') }}?session={{ Session::get('SessionID') }}" class="">Paperwork</a></li> --}}
+					<li><a href="/lecturer/practical/{{ Session::get('CourseID') }}?session={{ Session::get('SessionID') }}" class="">Practical</a></li>
 					<li><a href="/lecturer/other/{{ Session::get('CourseID') }}?session={{ Session::get('SessionID') }}" class="">Lain-Lain</a></li>
 					<li><a href="/lecturer/extra/{{ Session::get('CourseID') }}?session={{ Session::get('SessionID') }}" class="">Extra</a></li>
 					<li><a href="/lecturer/report/{{ Session::get('CourseID') }}" class="">Report</a></li>

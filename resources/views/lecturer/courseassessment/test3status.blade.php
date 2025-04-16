@@ -17,12 +17,12 @@
     <div class="content-header">
         <div class="d-flex align-items-center">
             <div class="me-auto">
-                <h4 class="page-title">Practical</h4>
+                <h4 class="page-title">Test</h4>
                 <div class="d-inline-block align-items-center">
                     <nav>
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="#"><i class="mdi mdi-home-outline"></i></a></li>
-                            <li class="breadcrumb-item" aria-current="page">Practical</li>
+                            <li class="breadcrumb-item" aria-current="page">Test</li>
                         </ol>
                     </nav>
                 </div>
@@ -37,7 +37,7 @@
           <div class="col-12">
             <div class="box">
               <div class="card-header mb-4">
-                <h3 class="card-title">Practical List</h3>
+                <h3 class="card-title">Test List</h3>
               </div>
               <div class="box-body">
                 <div class="table-responsive">
@@ -49,7 +49,7 @@
                           <select class="form-select" id="group" name="group" required>
                               <option value="" selected disabled>-</option>
                               @foreach ($group as $grp)
-                                <option value="{{ $grp->groupid }}">Group {{ $grp->groupname }}</option>
+                                <option value="{{ $grp->groupid }}|{{ $grp->groupname }}">Group {{ $grp->groupname }}</option>
                               @endforeach
                           </select>
                           <span class="text-danger">@error('folder')
@@ -71,14 +71,14 @@
                                 <th style="width: 5%">
                                   Matric No.
                                 </th>
+                                <th style="width: 5%">
+                                  Program
+                                </th>
                                 <th style="width: 20%">
                                   Submission Date
                                 </th>
-                                <th style="width: 15%">
-                                  Attachment
-                                </th>
                                 <th style="width: 10%">
-                                  Status Submission
+                                  Status
                                 </th>
                                 <th style="width: 5%">
                                   Marks
@@ -88,7 +88,7 @@
                               </tr>
                             </thead>
                             <tbody>
-                              @foreach ($practical as $key => $qz)
+                              @foreach ($test as $key => $qz)
 
                               @if (count($status[$key]) > 0)
                                 @php
@@ -110,38 +110,33 @@
                                 <td style="width: 5%">
                                   <span class="">{{ $qz->no_matric }}</span>
                                 </td>
+                                <td style="width: 5%">
+                                  <span class="">{{ $qz->progcode }}</span>
+                                </td>
                                 @if (count($status[$key]) > 0)
                                   @foreach ($status[$key] as $keys => $sts)
                                   <td style="width: 20%">
-                                        {{ empty($sts) ? '-' : $sts->subdate}}
+                                        {{ empty($sts) ? '-' : $sts->submittime }}
                                   </td>
-                                  <td style="width: 5%">
-                                    @if (empty($sts))
-                                      -
-                                    @else
-                                      <a href="{{ Storage::disk('linode')->url($sts->content) }}"><i class="fa fa-file-pdf-o fa-3x"></i></a>
-                                    @endif
-                                </td>
                                   <td>
-                                    @if (empty($sts))
-                                    -
-                                    @else
-                                      @if ($sts->status_submission == 2)
-                                        <span class="badge bg-danger">Late</span>
-                                      @else
-                                        <span class="badge bg-success">Submit</span>
-                                      @endif
-                                    @endif
+                                        {{ empty($sts) ? '-' : $sts->status }}
                                   </td>
                                   <td>
                                         {{ empty($sts) ? '-' : $sts->final_mark }} / {{ $qz->total_mark }}
                                   </td>
                                   <td class="project-actions text-center" >
-                                    <a class="btn btn-success btn-sm mr-2" href="/lecturer/practical/{{ request()->practical }}/{{ $sts->userid }}/result">
-                                        <i class="ti-user">
+                                    <a class="btn btn-success btn-sm mr-2" href="/lecturer/test3/{{ request()->test }}/{{ $sts->userid }}/result">
+                                        <i class="ti-pencil-alt">
                                         </i>
-                                        Students
+                                        Answer
                                     </a>
+                                    @if(date('Y-m-d H:i:s') >= $qz->date_from && date('Y-m-d H:i:s') <= $qz->date_to)
+                                      <a class="btn btn-danger btn-sm mr-2" onclick="deleteStdTest('{{ $sts->id }}')">
+                                          <i class="ti-trash">
+                                          </i>
+                                          Delete
+                                      </a>
+                                      @endif
                                   </td>                                               
                                   @endforeach
                                 @else
@@ -154,9 +149,6 @@
                                   <td>
                                   -
                                   </td> 
-                                  <td>
-
-                                  </td>
                                   <td>
 
                                   </td>
@@ -187,7 +179,7 @@
 
 <script type="text/javascript">
     var selected_group = "";
-    var selected_practical = "{{ request()->practical }}";
+    var selected_test = "{{ request()->test }}";
 
     $(document).ready( function () {
         $('#myTable').DataTable();
@@ -198,33 +190,66 @@
     $(document).on('change', '#group', function(e) {
         selected_group = $(e.target).val();
 
-        getGroup(selected_group,selected_practical);
+        getGroup(selected_group);
     });
 
-    function getGroup(group,practical)
+    function getGroup(group)
     {
 
       return $.ajax({
             headers: {'X-CSRF-TOKEN':  $('meta[name="csrf-token"]').attr('content')},
-            url      : "{{ url('lecturer/practical/getStatus') }}",
+            url      : "{{ url('lecturer/test3/' . request()->id . '/' . request()->test . '/getGroup') }}",
             method   : 'POST',
-            data 	 : {group: group,practical: practical },
+            data 	 : {group: group},
             error:function(err){
                 alert("Error");
                 console.log(err);
             },
             success  : function(data){
                 
-                //$('#lecturer-selection-div').removeAttr('hidden');
-                //$('#lecturer').selectpicker('refresh');
-      
-                //$('#chapter').removeAttr('hidden');
-                    $('#status').html(data);
-                    $('#myTable').DataTable();
-                    //$('#group').selectpicker('refresh');
+              if(data.message == 'success')
+              {
+              $('#myTable').DataTable().destroy();
+              $('#myTable').html(data.content);
+              $('#myTable').DataTable({
+                dom: 'lBfrtip', // if you remove this line you will see the show entries dropdown
+                
+                buttons: [
+                    'copy', 'csv', 'excel', 'pdf', 'print'
+                ],
+              });
+              }
+
             }
         });
 
+    }
+
+    function deleteStdTest(id){     
+      Swal.fire({
+    title: "Are you sure?",
+    text: "This will be permanent",
+    showCancelButton: true,
+    confirmButtonText: "Yes, delete it!"
+    }).then(function(res){
+      
+      if (res.isConfirmed){
+                $.ajax({
+                    headers: {'X-CSRF-TOKEN':  $('meta[name="csrf-token"]').attr('content')},
+                    url      : "{{ url('lecturer/test3/status/delete') }}",
+                    method   : 'DELETE',
+                    data 	 : {id:id},
+                    error:function(err){
+                        alert("Error");
+                        console.log(err);
+                    },
+                    success  : function(data){
+                        window.location.reload();
+                        alert("success");
+                    }
+                });
+            }
+        });
     }
 
 </script>
