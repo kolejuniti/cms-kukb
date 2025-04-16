@@ -2536,6 +2536,12 @@ class PendaftarController extends Controller
                                     ['students.status', 6]
                                     ])->get());
 
+            $data['suspend'][$key] = count(DB::table('students')
+                                    ->where([
+                                    ['students.program', $prg->id],
+                                    ['students.status', 15]
+                                    ])->get());
+
             $data['dismissed'][$key] = count(DB::table('students')
                                     ->where([
                                     ['students.program', $prg->id],

@@ -54,7 +54,7 @@
                           <th style="text-align: center; border: 1px solid black;" colspan="2">6</th>
                           <th style="text-align: center; border: 1px solid black;" colspan="2">2</th>
                           <th style="text-align: center; border: 1px solid black;" colspan="2">0</th>
-                          <th style="text-align: center; border: 1px solid black;" colspan="11"> </th>
+                          <th style="text-align: center; border: 1px solid black;" colspan="12"> </th>
                         </tr>
                         <tr>
                           <th style="text-align: center; width: 1%; border: 1px solid black;" rowspan="2">
@@ -101,6 +101,9 @@
                           </th>
                           <th style="width: 10%; text-align: center; border: 1px solid black;" rowspan="2">
                           Postpone
+                          </th>
+                          <th style="width: 10%; text-align: center; border: 1px solid black;" rowspan="2">
+                          Suspend
                           </th>
                           <th style="width: 10%; text-align: center; border: 1px solid black;" rowspan="2">
                           Dismissed
@@ -363,6 +366,11 @@
                             @endforeach
                           </td>
                           <td style="text-align: center; border: 1px solid black;">
+                            @foreach ((array) $data['suspend'][$key] as $suspend)
+                            {{ $suspend }}
+                            @endforeach
+                          </td>
+                          <td style="text-align: center; border: 1px solid black;">
                             @foreach ((array) $data['dismissed'][$key] as $dismissed)
                             {{ $dismissed }}
                             @endforeach
@@ -480,6 +488,14 @@
                           </td>
                           <td style="text-align: center; border: 1px solid black;">
                             @php
+                              $suspend = count(DB::table('students')->where([
+                                    ['students.status', 15]
+                                    ])->get());
+                            @endphp
+                            {{ $suspend }}
+                          </td>
+                          <td style="text-align: center; border: 1px solid black;">
+                            @php
                               $dismissed = count(DB::table('students')->where([
                                     ['students.status', 4]
                                     //['students.campus_id', 1]
@@ -557,7 +573,7 @@
                           </td>
                           @php
 
-                          $total_all = $active + $aol + $postpone + $holding;
+                          $total_all = $active + $aol + $postpone + $suspend + $holding;
 
                           @endphp
                           <td style="text-align: center; border: 1px solid black;" colspan="4">
@@ -591,7 +607,7 @@
                           </td>
                           @php
 
-                          $total_all = $industry + $active + $aol + $postpone + $holding;
+                          $total_all = $industry + $active + $aol + $postpone + $suspend + $holding;
 
                           @endphp
                           <td style="text-align: center; border: 1px solid black;" colspan="5">
