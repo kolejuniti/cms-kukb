@@ -1870,15 +1870,16 @@ function printScheduleTable(name, ic, staffNo, email) {
     // Show loading notification
     showNotification('Preparing timetable for printing...', 'info');
     
-    const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+    const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday'];
 
-    // Build half-hour time slots (08:30..18:00)
+    // Build half-hour time slots (08:15..18:15)
     let times = [];
     let startHour = 8;
-    let startMinute = 30;
+    let startMinute = 15;
     let endHour = 18;
+    let endMinute = 15;
 
-    while (startHour < endHour || (startHour === endHour && startMinute === 0)) {
+    while (startHour < endHour || (startHour === endHour && startMinute <= endMinute)) {
         let hh = String(startHour).padStart(2, '0');
         let mm = String(startMinute).padStart(2, '0');
         times.push(`${hh}:${mm}`);
@@ -1906,9 +1907,9 @@ function printScheduleTable(name, ic, staffNo, email) {
         let start = event.start;
         let end = event.end || new Date(start.getTime() + 60 * 60 * 1000);
 
-        // Convert day-of-week (Mon=1..Fri=5 => index 0..4)
-        let dayIndex = start.getDay() - 1; 
-        if (dayIndex < 0 || dayIndex > 4) return; // skip Sat/Sun
+        // Convert day-of-week (Sun=0..Thu=4 => index 0..4)
+        let dayIndex = start.getDay(); 
+        if (dayIndex > 4) return; // skip Fri/Sat
 
         let startTimeStr = toHHMM(start);
         let endTimeStr = toHHMM(end);
@@ -2133,12 +2134,12 @@ function printScheduleTable(name, ic, staffNo, email) {
 
     // For each timeslot row
     for (let t = 0; t < times.length; t++) {
-        // Build the time label, e.g. "08:30 - 09:00"
+        // Build the time label, e.g. "08:15 - 08:45"
         let timeLabel = times[t];
         if (t < times.length - 1) {
             timeLabel += ' - ' + times[t + 1];
         } else {
-            timeLabel += ' - 18:00';
+            timeLabel += ' - 18:45';
         }
 
         // Start a row
