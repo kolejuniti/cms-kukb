@@ -1870,7 +1870,7 @@ function printScheduleTable(name, ic, staffNo, email) {
     // Show loading notification
     showNotification('Preparing timetable for printing...', 'info');
     
-    const dayNames = ['Mondayss','Tuesday','Wednesday','Thursday','Friday'];
+    const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday'];
 
     // Build half-hour time slots (08:30..18:00)
     let times = [];
