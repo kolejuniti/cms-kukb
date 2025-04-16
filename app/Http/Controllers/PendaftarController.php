@@ -119,12 +119,9 @@ class PendaftarController extends Controller
             ->join('tblstudent_personal', 'students.ic', 'tblstudent_personal.student_ic')
             ->leftJoin('tblqualification_std', 'tblstudent_personal.qualification', 'tblqualification_std.id')
             ->join('tblsex', 'tblstudent_personal.sex_id', 'tblsex.id')
-            ->leftjoin('tblreligion', 'tblstudent_personal.religion_id', 'tblreligion.id')
-            ->leftjoin('tblnationality', 'tblstudent_personal.nationality_id', 'tblnationality.id')
             ->select('students.*', 'tblprogramme.progcode', 'a.SessionName AS intake', 
                      'b.SessionName AS session', 'tblstudent_status.name AS status',
-                     'tblstudent_personal.no_tel', 'tblsex.code AS gender', 'tblqualification_std.name AS qualification',
-                     'tblreligion.religion_name AS religion', 'tblnationality.nationality_name AS race');
+                     'tblstudent_personal.no_tel', 'tblsex.code AS gender', 'tblqualification_std.name AS qualification');
 
         if(!empty($request->program) && $request->program != '-')
         {
@@ -196,98 +193,158 @@ class PendaftarController extends Controller
         }
 
         $content = "";
-        // Add a hidden marker header column:
         $content .= '<thead>
                         <tr>
-                            <th style="display:none">Marker</th> <!-- Hidden marker column -->
-                            <th style="width: 1%">No.</th>
-                            <th>Name</th>
-                            <th>Gender</th>
-                            <th>No. IC</th>
-                            <th>No. Matric</th>
-                            <th>Program</th>
-                            <th>Intake</th>
-                            <th>Current Session</th>
-                            <th>Semester</th>
-                            <th>Sponsorship</th>
-                            <th>Status</th>
-                            <th>No. Phone</th>
-                            <th>Campus</th>
-                            <th>Qualification</th>
-                            <th>Race</th>
-                            <th>Religion</th>
-                            <th></th>
+                            <th style="width: 1%">
+                                No.
+                            </th>
+                            <th>
+                                Name
+                            </th>
+                            <th>
+                                Gender
+                            </th>
+                            <th>
+                                No. IC
+                            </th>
+                            <th>
+                                No. Matric
+                            </th>
+                            <th>
+                                Program
+                            </th>
+                            <th>
+                                Intake
+                            </th>
+                            <th>
+                                Current Session
+                            </th>
+                            <th>
+                                Semester
+                            </th>
+                            <th>
+                                Sponsorship
+                            </th>
+                            <th>
+                                Status
+                            </th>
+                            <th>
+                                No. Phone
+                            </th>
+                            <th>
+                                Campus
+                            </th>
+                            <th>
+                                Qualification
+                            </th>
+                            <th>
+                            </th>
                         </tr>
                     </thead>
                     <tbody id="table">';
+                    
+        foreach($students as $key => $student)
+        {
+            //$registered = ($student->status == 'ACTIVE') ? 'checked' : '';
+            $rowClass = $student->campus_id == 0 ? 'style="background-color: red;"' : '';
+            $content .= '
+            <tr '. $rowClass .'>
+            <td style="width: 1%">
+            '. $key+1 .'
+            </td>
+            <td>
+            '. $student->name .'
+            </td>
+            <td>
+            '. $student->gender .'
+            </td>
+            <td>
+            '. $student->ic .'
+            </td>
+            <td>
+            '. $student->no_matric .'
+            </td>
+            <td>
+            '. $student->progcode .'
+            </td>
+            <td>
+            '. $student->intake .'
+            </td>
+            <td>
+            '. $student->session .'
+            </td>
+            <td>
+            '. $student->semester .'
+            </td>
+            <td>
+            '. $sponsor[$key] .'
+            </td>
+            <td>
+            '. $student->status .'
+            </td>
+            <td>
+            '. $student->no_tel .'
+            </td>
+            <td>
+            '. $student_status[$key] .'
+            </td>
+            <td>
+            '. $student->qualification .'
+            </td>';
+            
 
-        foreach ($students as $key => $student) {
-            // Determine if this row should be marked red
-            $marker = ($student->campus_id == 0) ? 'red' : '';
-
-            // Open the <tr> tag, conditionally apply inline red background
-            $content .= '<tr ' . ($student->campus_id == 0 ? 'style="background-color: red;"' : '') . '>';
-
-            // Hidden marker cell
-            $content .= '<td style="display:none;">' . $marker . '</td>';
-
-            // "No." column
-            $content .= '<td style="width: 1%">' . ($key + 1) . '</td>';
-
-            // Other columns
-            $content .= '<td>' . $student->name . '</td>';
-            $content .= '<td>' . $student->gender . '</td>';
-            $content .= '<td>' . $student->ic . '</td>';
-            $content .= '<td>' . $student->no_matric . '</td>';
-            $content .= '<td>' . $student->progcode . '</td>';
-            $content .= '<td>' . $student->intake . '</td>';
-            $content .= '<td>' . $student->session . '</td>';
-            $content .= '<td>' . $student->semester . '</td>';
-            $content .= '<td>' . $sponsor[$key] . '</td>';
-            $content .= '<td>' . $student->status . '</td>';
-            $content .= '<td>' . $student->no_tel . '</td>';
-            $content .= '<td>' . $student_status[$key] . '</td>';
-            $content .= '<td>' . $student->qualification . '</td>';
-            $content .= '<td>' . $student->race . '</td>';
-            $content .= '<td>' . $student->religion . '</td>';
-
-            // Action buttons
             if (isset($request->edit)) {
-                $content .= '<td class="project-actions text-right">
-                                <a class="btn btn-info btn-sm mr-2 mb-2" href="/pendaftar/view/' . $student->ic . '">
-                                    <i class="ti-pencil-alt"></i> View
-                                </a>
-                                <a class="btn btn-info btn-sm mr-2 mb-2" href="/pendaftar/edit/' . $student->ic . '">
-                                    <i class="ti-pencil-alt"></i> Edit
-                                </a>
-                                <a class="btn btn-primary btn-sm mr-2 mb-2" href="/pendaftar/spm/' . $student->ic . '">
-                                    <i class="ti-ruler-pencil"></i> SPM/SVM/SKM
-                                </a>
-                                <a class="btn btn-secondary btn-sm mr-2 mb-2" href="#" onclick="getProgram(\'' . $student->ic . '\')">
-                                    <i class="ti-eye"></i> Program History
-                                </a>
-                                <a class="btn btn-secondary btn-sm mr-2 mb-2" target="_blank" href="/AR/student/getSlipExam?student=' . $student->ic . '">
-                                    <i class="fa fa-info"></i> Slip Exam
-                                </a>
-                            </td>';
-            } else {
-                $content .= '<td class="project-actions text-right">
-                                <a class="btn btn-secondary btn-sm mr-2" href="#" onclick="getProgram(\'' . $student->ic . '\')">
-                                    <i class="ti-eye"></i> Program History
-                                </a>
-                            </td>';
+                $content .= '<td class="project-actions text-right" >
+                    <a class="btn btn-info btn-sm btn-sm mr-2 mb-2" href="/pendaftar/view/'. $student->ic .'">
+                        <i class="ti-pencil-alt">
+                        </i>
+                        View
+                    </a>
+                    <a class="btn btn-info btn-sm btn-sm mr-2 mb-2" href="/pendaftar/edit/'. $student->ic .'">
+                        <i class="ti-pencil-alt">
+                        </i>
+                        Edit
+                    </a>
+                    <a class="btn btn-primary btn-sm btn-sm mr-2 mb-2" href="/pendaftar/spm/'. $student->ic .'">
+                        <i class="ti-ruler-pencil">
+                        </i>
+                        SPM/SVM/SKM
+                    </a>
+                    <a class="btn btn-secondary btn-sm btn-sm mr-2 mb-2" href="#" onclick="getProgram(\''. $student->ic .'\')">
+                        <i class="ti-eye">
+                        </i>
+                        Program History
+                    </a>
+                    <a class="btn btn-secondary btn-sm btn-sm mr-2 mb-2" target="_blank" href="/AR/student/getSlipExam?student='. $student->ic .'">
+                        <i class="fa fa-info">
+                        </i>
+                        Slip Exam
+                    </a>
+                    <!-- <a class="btn btn-danger btn-sm" href="#" onclick="deleteMaterial('. $student->ic .')">
+                        <i class="ti-trash">
+                        </i>
+                        Delete
+                    </a> -->
+                    </td>
+                    
+                    ';
+            }else{
+                $content .= '<td class="project-actions text-right" >
+                <a class="btn btn-secondary btn-sm btn-sm mr-2" href="#" onclick="getProgram(\''. $student->ic .'\')">
+                <i class="ti-eye">
+                </i>
+                Program History
+                </a>
+                </td>
+            
+            ';
+
             }
-
-            // Close the row here
-            $content .= '</tr>';
         }
+        
+        $content .= '</tr></tbody>';
 
-        // After the loop, only close the <tbody>
-        $content .= '</tbody>';
-
-        // Return the final HTML
         return $content;
-
 
     }
 
@@ -632,6 +689,7 @@ class PendaftarController extends Controller
                 'status' => 1,
                 'campus_id' => 0,
                 'date_offer' => $request->dol,
+                'date_study' => $request->dos,
                 'student_status' => 1,
                 'stafID_add' => Auth::user()->ic,
                 'date_add' => date('Y-m-d'),
@@ -978,7 +1036,8 @@ class PendaftarController extends Controller
             'intake' => $data['session'],
             'batch' => $data['batch'],
             'program' => $data['program'],
-            'date_offer' => $request->dol
+            'date_offer' => $request->dol,
+            'date_study' => $request->dos,
         ]);
 
         DB::table('tblstudent_personal')->updateOrInsert(
@@ -1093,7 +1152,7 @@ class PendaftarController extends Controller
                   ->where('student_ic', $request->ic)->get();
 
         $batch = DB::table('student_program')
-                 ->join('tblbatch', 'student_program.batch', 'tblbatch.BatchID')
+                 ->join('sessions', 'student_program.batch', 'sessions.SessionID')
                  ->where('student_ic', $request->ic)->get();
                    
 
@@ -2426,6 +2485,28 @@ class PendaftarController extends Controller
                                     ['students.campus_id', 1]
                                     ])->get());
 
+            $data['ms9'][$key] = count(DB::table('students')
+                                    ->join('tblstudent_personal', 'students.ic', 'tblstudent_personal.student_ic')
+                                    ->where([
+                                    ['students.program', $prg->id],
+                                    ['students.semester', 9],
+                                    ['students.status', 2],
+                                    ['students.student_status', 2],
+                                    ['tblstudent_personal.sex_id', 1],
+                                    ['students.campus_id', 1]
+                                    ])->get());
+
+            $data['fs9'][$key] = count(DB::table('students')
+                                    ->join('tblstudent_personal', 'students.ic', 'tblstudent_personal.student_ic')
+                                    ->where([
+                                    ['students.program', $prg->id],
+                                    ['students.semester', 9],
+                                    ['students.status', 2],
+                                    ['students.student_status', 2],
+                                    ['tblstudent_personal.sex_id', 2],
+                                    ['students.campus_id', 1]
+                                    ])->get());
+
             $data['industry'][$key] = count(DB::table('students')
                                     ->where([
                                     ['students.program', $prg->id],
@@ -2597,38 +2678,31 @@ class PendaftarController extends Controller
                     ['student_ic', $std],
                     ['sessionid', $data->session],
                     ['semesterid', $data->semester],
-                    ['group_id', '!=', null]
-                ])
-                ->count() > 0)
+                    ['group_id','!=',null]
+                ])->count() > 0)
                 {
 
                     $total_credit_s = DB::table('student_subjek')->where([
                         ['student_ic', $std],
                         ['sessionid', $data->session],
                         ['semesterid', $data->semester],
-                        ['group_id', '!=', null]
-                    ])
-                    ->whereIn('course_status_id', [1,2,12,15])->sum('credit');
+                        ['group_id','!=',null]
+                    ])->whereIn('course_status_id', [1,2,12,15])->sum('credit');
 
                     $passed_credit_s = DB::table('student_subjek')->where([
                         ['student_ic', $std],
                         ['sessionid', $data->session],
                         ['semesterid', $data->semester],
-                        ['group_id', '!=', null]
-                    ])
-                    ->whereIn('course_status_id', [1])->sum('credit');
+                        ['group_id','!=',null]
+                    ])->whereIn('course_status_id', [1])->sum('credit');
 
                     $grade_pointer_s = DB::table('student_subjek')
                     ->where([
                         ['student_ic', $std],
                         ['sessionid', $data->session],
                         ['semesterid', $data->semester],
-                        ['group_id', '!=', null]
+                        ['group_id','!=',null]
                     ])
-                    // ->where(function($query){
-                    //     $query->where('group_id', '!=', null)
-                    //     ->orWhere('grade', '!=', null);
-                    // })
                     ->whereIn('course_status_id', [1,2,12,15])
                     ->selectRaw('SUM(credit * pointer) as total')
                     ->value('total');
@@ -2638,7 +2712,7 @@ class PendaftarController extends Controller
                         ['student_ic', $std],
                         ['sessionid', $data->session],
                         ['semesterid', $data->semester],
-                        ['group_id', '!=', null]
+                        ['group_id','!=',null]
                     ])
                     ->whereIn('course_status_id', [1,2,12,15])
                     ->selectRaw('SUM(credit * pointer) / SUM(credit) as total')
@@ -2646,23 +2720,21 @@ class PendaftarController extends Controller
 
                     $total_credit_c = DB::table('student_subjek')->where([
                         ['student_ic', $std],
-                        ['group_id', '!=', null]
-                    ])
-                    ->where('semesterid', '<=', $data->semester)
+                        ['group_id','!=',null]
+                    ])->where('semesterid', '<=', $data->semester)
                     ->whereIn('course_status_id', [1,2,12,15])
                     ->sum('credit');
 
                     $passed_credit_c = DB::table('student_subjek')->where([
                         ['student_ic', $std],
-                        ['group_id', '!=', null]
-                    ])
-                    ->where('semesterid', '<=', $data->semester)
+                        ['group_id','!=',null]
+                    ])->where('semesterid', '<=', $data->semester)
                     ->whereIn('course_status_id', [1])->sum('credit');
 
                     $distinct_courses = DB::table('student_subjek')
                     ->where([
                         ['student_ic', $std],
-                        ['group_id', '!=', null]
+                        ['group_id','!=',null]
                     ])
                     ->where('semesterid', '<=', $data->semester)
                     ->whereIn('course_status_id', [1, 2, 12, 15])
@@ -2715,7 +2787,6 @@ class PendaftarController extends Controller
                         ->get();
 
                     $grade_pointer_c = DB::table('student_subjek')
-                        ->whereNotNull('group_id')
                         ->whereIn('id', $grade_pointer->pluck('max_id'))
                         ->selectRaw('SUM(credit * pointer) as total')
                         ->value('total');
@@ -2808,7 +2879,6 @@ class PendaftarController extends Controller
                         ->get();
 
                     $cgpa = DB::table('student_subjek')
-                        ->whereNotNull('group_id')
                         ->whereIn('id', $cgpa_old->pluck('max_id'))
                         ->selectRaw('ROUND(SUM(credit * pointer) / SUM(credit), 2) as total')
                         ->value('total');
@@ -4010,46 +4080,24 @@ class PendaftarController extends Controller
             
 
         $query = DB::table('students')
-        ->leftjoin('tblstudent_personal', 'students.ic', 'tblstudent_personal.student_ic')
-        ->leftjoin('tblsex', 'tblstudent_personal.sex_id', 'tblsex.id')
-        ->leftjoin('tblprogramme', 'students.program', 'tblprogramme.id')
-        ->leftjoin('sessions', 'students.session', 'sessions.SessionID')
-        ->leftjoin('tblstudent_status', 'students.status', 'tblstudent_status.id')
-        ->leftjoin('tblstudent_address', 'students.ic', 'tblstudent_address.student_ic')
-        ->leftjoin('tblstate', 'tblstudent_address.state_id', 'tblstate.id')
-        ->leftjoin('tblstudent_waris', 'students.ic', 'tblstudent_waris.student_ic')
-        ->where([
-            ['students.status', 2],
-            ['students.campus_id', 1],
-            ['tblstudent_waris.status', '!=', 2],
-        ])
-        ->whereIn('students.student_status', [1, 2, 4])
-        ->groupBy('students.ic')
-        ->orderBy('students.name')
-        ->select(
-            'students.*',
-            'tblsex.code',
-            'tblprogramme.progcode',
-            'sessions.SessionName',
-            'tblstudent_status.name AS status',
-            'tblstudent_personal.no_tel',
-            DB::raw('CONCAT_WS(", ", tblstudent_address.address1, tblstudent_address.address2, tblstudent_address.address3, tblstudent_address.city, tblstudent_address.postcode, tblstate.state_name) AS full_address'),
-            'tblstudent_waris.dependent_no',
-            DB::raw('SUM(tblstudent_waris.kasar) AS gajikasar')
-        )
-        ->where(function ($query) {
-            $query->where('tblstudent_waris.dependent_no', '!=', 0)
-                ->orWhere(function ($query) {
-                    $query->where('tblstudent_waris.dependent_no', '=', 0)
-                            ->whereNotExists(function ($subquery) {
-                                $subquery->select(DB::raw(1))
-                                    ->from('tblstudent_waris as inner_waris')
-                                    ->whereColumn('inner_waris.student_ic', 'tblstudent_waris.student_ic')
-                                    ->where('inner_waris.dependent_no', '!=', 0);
-                            });
-                });
-        });
-
+                          ->leftjoin('tblstudent_personal','students.ic','tblstudent_personal.student_ic')
+                          ->leftjoin('tblsex','tblstudent_personal.sex_id','tblsex.id')
+                          ->leftjoin('tblprogramme','students.program','tblprogramme.id')
+                          ->leftjoin('sessions','students.session','sessions.SessionID')
+                          ->leftjoin('tblstudent_status','students.status','tblstudent_status.id')
+                          ->leftjoin('tblstudent_address','students.ic','tblstudent_address.student_ic')
+                          ->leftjoin('tblstate','tblstudent_address.state_id','tblstate.id')
+                          ->leftjoin('tblstudent_waris','students.ic','tblstudent_waris.student_ic')
+                          ->where([
+                            ['students.status', 2],
+                            ['students.campus_id', 1]
+                          ])
+                          ->whereIn('students.student_status', [1,2,4])
+                          ->groupBy('students.ic')
+                          ->orderBy('students.name')
+                          ->select('students.*', 'tblsex.code', 'tblprogramme.progcode', 'sessions.SessionName', 'tblstudent_status.name AS status','tblstudent_personal.no_tel',
+                                    DB::raw('CONCAT_WS(", ", tblstudent_address.address1, tblstudent_address.address2, tblstudent_address.address3, tblstudent_address.city, tblstudent_address.postcode, tblstate.state_name) AS full_address'),
+                                    'tblstudent_waris.dependent_no', DB::raw('SUM(tblstudent_waris.kasar) AS gajikasar'));
 
         if($data['b40'])
         {
@@ -4189,7 +4237,7 @@ class PendaftarController extends Controller
                 ->on('tblstudent_log.id', '=', 'latest_logs.latest_id');
         })
         ->where('tblstudent_log.semester_id', 1)
-        ->select('students.name', 'students.ic', 'students.no_matric', 'tblstudent_log.kuliah_id AS student_status', 'tblsex.code as gender', 
+        ->select('students.name', 'students.ic', 'students.no_matric', 'tblsex.code as gender', 
                 'tblprogramme.progcode', 'sessions.SessionName AS session', 
                 'tblstudent_log.semester_id AS semester', 'tblstudent_log.date', 
                 'tblstudent_log.remark', 'tblstudent_status.name AS status')
@@ -4201,7 +4249,7 @@ class PendaftarController extends Controller
                  ->on('tblstudent_log.id', '=', 'latest_logs.latest_id');
         })
         ->where('tblstudent_log.semester_id', '>', 1)
-        ->select('students.name', 'students.ic', 'students.no_matric', 'tblstudent_log.kuliah_id AS student_status', 'tblsex.code as gender', 'tblprogramme.progcode',
+        ->select('students.name', 'students.ic', 'students.no_matric', 'tblsex.code as gender', 'tblprogramme.progcode',
                 'sessions.SessionName AS session', 'tblstudent_log.semester_id AS semester', 'tblstudent_log.date', 'tblstudent_log.remark',
                 'tblstudent_status.name AS status')
         ->get();

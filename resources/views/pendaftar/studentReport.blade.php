@@ -54,7 +54,7 @@
                           <th style="text-align: center; border: 1px solid black;" colspan="2">6</th>
                           <th style="text-align: center; border: 1px solid black;" colspan="2">2</th>
                           <th style="text-align: center; border: 1px solid black;" colspan="2">0</th>
-                          <th style="text-align: center; border: 1px solid black;" colspan="9"> </th>
+                          <th style="text-align: center; border: 1px solid black;" colspan="11"> </th>
                         </tr>
                         <tr>
                           <th style="text-align: center; width: 1%; border: 1px solid black;" rowspan="2">
@@ -87,6 +87,9 @@
                           <th style="text-align: center; width: 5%; border: 1px solid black;" colspan="2">
                           Sem 8
                           </th>
+                          <th style="text-align: center; width: 5%; border: 1px solid black;" colspan="2">
+                          Sem 9
+                          </th>
                           <th style="width: 10%; text-align: center; border: 1px solid black;" rowspan="2">
                           Industry Training
                           </th>
@@ -104,6 +107,8 @@
                           </th>
                         </tr>
                         <tr>
+                          <th style="border: 1px solid black;">L</th>
+                          <th style="border: 1px solid black;">P</th>
                           <th style="border: 1px solid black;">L</th>
                           <th style="border: 1px solid black;">P</th>
                           <th style="border: 1px solid black;">L</th>
@@ -144,6 +149,8 @@
                         $totalSum_fs7 = 0;
                         $totalSum_ms8 = 0;
                         $totalSum_fs8 = 0;
+                        $totalSum_ms9 = 0;
+                        $totalSum_fs9 = 0;
 
                         @endphp
                         @foreach ($data['program'] as $key=>$prg)
@@ -317,6 +324,24 @@
                                 $totalSum_fs8 += $sum_fs8;
                             @endphp
                           </td>
+                          <td style="border: 1px solid black;">
+                            @foreach ((array) $data['ms9'][$key] as $ms9)
+                            {{ $ms9 }}
+                            @endforeach
+                            @php
+                                $sum_ms9 = array_sum((array) $data['ms9'][$key]);
+                                $totalSum_ms9 += $sum_ms9;
+                            @endphp
+                          </td>
+                          <td style="border: 1px solid black;">
+                            @foreach ((array) $data['fs9'][$key] as $fs9)
+                            {{ $fs9 }}
+                            @endforeach
+                            @php
+                                $sum_fs9 = array_sum((array) $data['fs9'][$key]);
+                                $totalSum_fs9 += $sum_fs9;
+                            @endphp
+                          </td>
                           <td style="text-align: center; border: 1px solid black;">
                             @foreach ((array) $data['industry'][$key] as $industry)
                             {{ $industry }}
@@ -407,6 +432,12 @@
                           </td>
                           <td style="border: 1px solid black;">
                             {{ $totalSum_fs8 }}
+                          </td>
+                          <td style="border: 1px solid black;">
+                            {{ $totalSum_ms9 }}
+                          </td>
+                          <td style="border: 1px solid black;">
+                            {{ $totalSum_fs9 }}
                           </td>
                           <td style="text-align: center; border: 1px solid black;">
                             @php
@@ -555,7 +586,7 @@
                           <td colspan="4" style="text-align: center; border: 1px solid black;">
                             {{ $total }}
                           </td>
-                          <td colspan="14" style="border: 1px solid black;">
+                          <td colspan="16" style="border: 1px solid black;">
 
                           </td>
                           @php
