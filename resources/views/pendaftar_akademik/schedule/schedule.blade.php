@@ -1875,7 +1875,7 @@ function printScheduleTable(name, ic, staffNo, email) {
     // Build half-hour time slots (08:30..18:00)
     let times = [];
     let startHour = 8;
-    let startMinute = 30;
+    let startMinute = 15;
     let endHour = 18;
 
     while (startHour < endHour || (startHour === endHour && startMinute === 0)) {
