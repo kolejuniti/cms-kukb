@@ -1969,449 +1969,233 @@ function initializeTooltips() {
     });
 }
 
-/**
- * Enhanced Timetable Print Functionality
- * 
- * This script adds a print button to the timetable page and handles
- * generating a printable version of the current schedule.
- */
-
-// Add the print button when the DOM is loaded
+// Simple script to add a print button to the timetable
 document.addEventListener('DOMContentLoaded', function() {
     // Find the action buttons container
-    const actionButtonsContainer = document.querySelector('.action-buttons');
+    var actionButtons = document.querySelector('.action-buttons');
     
-    if (actionButtonsContainer) {
-        // Create the print button element
-        const printButton = document.createElement('button');
-        printButton.type = 'button';
-        printButton.className = 'btn btn-info';
-        printButton.id = 'print-schedule-btn';
-        printButton.innerHTML = '<i class="fas fa-print me-2"></i> Print Schedule';
-        printButton.title = 'Print current timetable';
+    if (actionButtons) {
+        // Create print button
+        var printBtn = document.createElement('button');
+        printBtn.type = 'button';
+        printBtn.className = 'btn btn-info';
+        printBtn.id = 'print-schedule-btn';
+        printBtn.innerHTML = '<i class="fas fa-print me-2"></i> Print Schedule';
         
-        // Add the button to the container
-        actionButtonsContainer.appendChild(printButton);
+        // Append to action buttons
+        actionButtons.appendChild(printBtn);
         
-        // Add click event listener
-        printButton.addEventListener('click', function() {
-            generatePrintableSchedule();
-        });
-    } else {
-        console.error('Action buttons container not found');
+        // Add click handler
+        printBtn.addEventListener('click', printTimetable);
     }
 });
 
-/**
- * Generates a printable version of the current schedule in a new window
- */
-function generatePrintableSchedule() {
-    try {
-        // Show feedback to user
-        const notification = document.createElement('div');
-        notification.style.position = 'fixed';
-        notification.style.top = '10px';
-        notification.style.left = '50%';
-        notification.style.transform = 'translateX(-50%)';
-        notification.style.backgroundColor = '#4895ef';
-        notification.style.color = '#fff';
-        notification.style.padding = '12px 20px';
-        notification.style.borderRadius = '8px';
-        notification.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-        notification.style.zIndex = '9999';
-        notification.innerHTML = '<i class="fas fa-info-circle me-2"></i> Generating printable schedule...';
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            // Get lecturer information from the DOM
-            const lecturerNameEl = document.querySelector('.profile-content h1.mb-2');
-            const lecturerICEl = document.querySelector('.profile-content p.mb-0:nth-of-type(1)');
-            const lecturerStaffNoEl = document.querySelector('.profile-content p.mb-0:nth-of-type(2)');
-            const lecturerEmailEl = document.querySelector('.profile-content p.mb-0:nth-of-type(3)');
-            
-            const lecturerName = lecturerNameEl ? lecturerNameEl.textContent.trim() : 'Lecturer Name';
-            const lecturerIC = lecturerICEl ? lecturerICEl.textContent.replace('IC:', '').trim() : '';
-            const lecturerStaffNo = lecturerStaffNoEl ? lecturerStaffNoEl.textContent.replace('Staff No:', '').trim() : '';
-            const lecturerEmail = lecturerEmailEl ? lecturerEmailEl.textContent.replace('Email:', '').trim() : '';
-            
-            // Create a new window for printing
-            const printWindow = window.open('', '_blank');
-            
-            // Get all events from the calendar (uses the global calendar variable)
-            if (typeof calendar === 'undefined') {
-                throw new Error('Calendar object not found');
-            }
-            
-            const events = calendar.getEvents().filter(event => event.title !== 'REHAT');
-            
-            // Create the time slots (30-minute intervals from 08:30 to 19:00)
-            const timeSlots = [];
-            const startTime = 8 * 60 + 30; // 08:30 in minutes
-            const endTime = 19 * 60; // 19:00 in minutes
-            const interval = 30; // 30 minutes
-            
-            for (let time = startTime; time < endTime; time += interval) {
-                const hour = Math.floor(time / 60);
-                const minute = time % 60;
-                const nextHour = Math.floor((time + interval) / 60);
-                const nextMinute = (time + interval) % 60;
-                
-                timeSlots.push({
-                    display: `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')} - ${nextHour.toString().padStart(2, '0')}:${nextMinute.toString().padStart(2, '0')}`,
-                    start: time,
-                    end: time + interval
-                });
-            }
-            
-            // Function to format time from Date object to minutes
-            function timeToMinutes(date) {
-                return date.getHours() * 60 + date.getMinutes();
-            }
-            
-            // Function to check if event occurs on a specific day and time slot
-            function eventInSlot(event, dayIndex, timeSlot) {
-                const eventDay = event.start.getDay();
-                // Convert 0=Sunday to 1=Monday, etc.
-                const adjustedEventDay = eventDay === 0 ? 7 : eventDay;
-                // Convert to 1=Monday, 2=Tuesday, etc. (for our table)
-                const adjustedDayIndex = dayIndex + 1;
-                
-                if (adjustedEventDay !== adjustedDayIndex) return false;
-                
-                const eventStart = timeToMinutes(event.start);
-                const eventEnd = timeToMinutes(event.end);
-                
-                // Check if event overlaps with time slot
-                return (eventStart < timeSlot.end && eventEnd > timeSlot.start);
-            }
-            
-            // Function to format event display for timetable cell
-            function formatEventDisplay(event) {
-                const courseCode = event.title;
-                const description = event.extendedProps.description || '';
-                const roomInfo = event.extendedProps.roomName || '';
-                const studentGroupInfo = event.extendedProps.groupName || '';
-                const studentCount = event.extendedProps.studentCount || '';
-                
-                // Format similar to the example image
-                let html = `<div class="timetable-event">`;
-                html += `<div class="event-title">${courseCode}</div>`;
-                
-                if (description) {
-                    html += `<div class="event-desc">${description}</div>`;
-                }
-                
-                if (roomInfo || studentGroupInfo) {
-                    html += `<div class="event-details">`;
-                    if (studentGroupInfo) {
-                        html += `${studentGroupInfo}`;
-                        if (studentCount) {
-                            html += ` | Total Student: ${studentCount}`;
-                        }
-                    }
-                    html += `<br>Program: ${event.extendedProps.programInfo || 'DPI'}`;
-                    html += `</div>`;
-                }
-                
-                html += `</div>`;
-                
-                return html;
-            }
-            
-            // Prepare the HTML content for the print window
-            let html = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Lecturer Timetable</title>
-                <style>
-                    @media print {
-                        @page {
-                            size: landscape;
-                            margin: 10mm;
-                        }
-                        body {
-                            font-family: Arial, sans-serif;
-                            font-size: 10pt;
-                            line-height: 1.2;
-                        }
-                        .header {
-                            text-align: center;
-                            margin-bottom: 20px;
-                            border-bottom: 1px solid #ddd;
-                            padding-bottom: 10px;
-                        }
-                        .lecturer-info {
-                            margin-bottom: 15px;
-                            font-size: 10pt;
-                        }
-                        .lecturer-info-item {
-                            margin-bottom: 5px;
-                        }
-                        .timetable {
-                            width: 100%;
-                            border-collapse: collapse;
-                            table-layout: fixed;
-                        }
-                        .timetable th, .timetable td {
-                            border: 1px solid #444;
-                            padding: 3px;
-                            vertical-align: top;
-                            font-size: 9pt;
-                        }
-                        .timetable th {
-                            background-color: #073b73;
-                            color: white;
-                            text-align: center;
-                            font-weight: bold;
-                        }
-                        .timetable td {
-                            height: 40px;
-                        }
-                        .timetable .time-column {
-                            width: 80px;
-                            text-align: center;
-                            background-color: #f2f2f2;
-                            font-weight: bold;
-                        }
-                        .rehat-cell {
-                            background-color: #ffcccc;
-                            text-align: center;
-                            font-weight: bold;
-                        }
-                        .timetable-event {
-                            font-size: 8pt;
-                            overflow: hidden;
-                        }
-                        .event-title {
-                            font-weight: bold;
-                            margin-bottom: 2px;
-                        }
-                        .event-desc {
-                            margin-bottom: 2px;
-                        }
-                        .event-details {
-                            font-size: 7pt;
-                        }
-                        .footer {
-                            margin-top: 20px;
-                            text-align: right;
-                            font-size: 8pt;
-                            color: #666;
-                        }
-                    }
-                    /* Same styles for preview */
-                    body {
-                        font-family: Arial, sans-serif;
-                        font-size: 10pt;
-                        line-height: 1.2;
-                        margin: 10mm;
-                    }
-                    .header {
-                        text-align: center;
-                        margin-bottom: 20px;
-                        border-bottom: 1px solid #ddd;
-                        padding-bottom: 10px;
-                    }
-                    .lecturer-info {
-                        margin-bottom: 15px;
-                        font-size: 10pt;
-                    }
-                    .lecturer-info-item {
-                        margin-bottom: 5px;
-                    }
-                    .timetable {
-                        width: 100%;
-                        border-collapse: collapse;
-                        table-layout: fixed;
-                    }
-                    .timetable th, .timetable td {
-                        border: 1px solid #444;
-                        padding: 3px;
-                        vertical-align: top;
-                        font-size: 9pt;
-                    }
-                    .timetable th {
-                        background-color: #073b73;
-                        color: white;
-                        text-align: center;
-                        font-weight: bold;
-                    }
-                    .timetable td {
-                        height: 40px;
-                    }
-                    .timetable .time-column {
-                        width: 80px;
-                        text-align: center;
-                        background-color: #f2f2f2;
-                        font-weight: bold;
-                    }
-                    .rehat-cell {
-                        background-color: #ffcccc;
-                        text-align: center;
-                        font-weight: bold;
-                    }
-                    .timetable-event {
-                        font-size: 8pt;
-                        overflow: hidden;
-                    }
-                    .event-title {
-                        font-weight: bold;
-                        margin-bottom: 2px;
-                    }
-                    .event-desc {
-                        margin-bottom: 2px;
-                    }
-                    .event-details {
-                        font-size: 7pt;
-                    }
-                    .footer {
-                        margin-top: 20px;
-                        text-align: right;
-                        font-size: 8pt;
-                        color: #666;
-                    }
-                    .print-button {
-                        background-color: #4361ee;
-                        color: white;
-                        border: none;
-                        padding: 10px 20px;
-                        border-radius: 5px;
-                        cursor: pointer;
-                        font-weight: bold;
-                        margin-bottom: 20px;
-                    }
-                    .print-button:hover {
-                        background-color: #3a0ca3;
-                    }
-                </style>
-            </head>
-            <body>
-                <button class="print-button" onclick="window.print();">Print Schedule</button>
-                <div class="header">
-                    <h1>Lecturer Timetable</h1>
-                </div>
-                <div class="lecturer-info">
-                    <div class="lecturer-info-item"><strong>Name:</strong> ${lecturerName}</div>
-                    <div class="lecturer-info-item"><strong>IC:</strong> ${lecturerIC}</div>
-                    <div class="lecturer-info-item"><strong>Staff No:</strong> ${lecturerStaffNo}</div>
-                    <div class="lecturer-info-item"><strong>Email:</strong> ${lecturerEmail}</div>
-                </div>
-                <table class="timetable">
-                    <thead>
-                        <tr>
-                            <th class="time-column">Time</th>
-                            <th>Monday</th>
-                            <th>Tuesday</th>
-                            <th>Wednesday</th>
-                            <th>Thursday</th>
-                            <th>Friday</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            
-            // Generate rows for each time slot
-            timeSlots.forEach(timeSlot => {
-                html += `<tr>`;
-                html += `<td class="time-column">${timeSlot.display}</td>`;
-                
-                // Loop through days (0=Monday to 4=Friday)
-                for (let day = 0; day < 5; day++) {
-                    // Check if this is a REHAT cell (13:30-14:00)
-                    const isRehat = (timeSlot.start === 13 * 60 + 30 && timeSlot.end === 14 * 60); 
-                    
-                    if (isRehat) {
-                        html += `<td class="rehat-cell">REHAT</td>`;
-                    } else {
-                        // Find events for this day and time slot
-                        const cellEvents = events.filter(event => 
-                            eventInSlot(event, day, timeSlot)
-                        );
-                        
-                        if (cellEvents.length > 0) {
-                            html += `<td>`;
-                            cellEvents.forEach(event => {
-                                html += formatEventDisplay(event);
-                            });
-                            html += `</td>`;
-                        } else {
-                            html += `<td></td>`;
-                        }
-                    }
-                }
-                
-                html += `</tr>`;
-            });
-            
-            // Add footer and close HTML
-            html += `
-                    </tbody>
-                </table>
-                <div class="footer">
-                    Generated on: ${new Date().toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'})}
-                    <br>
-                    © Timetable Management System
-                </div>
-                <script>
-                    // Auto-print after 1 second
-                    setTimeout(function() {
-                        window.print();
-                    }, 1000);
-                </script>
-            </body>
-            </html>
-            `;
-            
-            // Write to the new window and prepare for printing
-            printWindow.document.open();
-            printWindow.document.write(html);
-            printWindow.document.close();
-            
-            // Remove notification after printing is complete
-            setTimeout(() => {
-                if (document.body.contains(notification)) {
-                    document.body.removeChild(notification);
-                }
-            }, 3000);
-            
-        }, 500); // Short delay to ensure UI feedback
-        
-    } catch (error) {
-        alert('Error generating printable schedule: ' + error.message);
-        console.error('Print schedule error:', error);
-    }
-}
-
-// Also provide a simple function to add the button directly to the page for immediate use
-function addPrintButton() {
-    const actionButtonsContainer = document.querySelector('.action-buttons');
+// Function to print timetable
+function printTimetable() {
+    // Get lecturer information
+    var lecturerName = document.querySelector('.profile-content h1') ? 
+                        document.querySelector('.profile-content h1').textContent.trim() : 'Lecturer';
+    var lecturerIC = document.querySelector('.profile-content p:nth-of-type(1)') ? 
+                     document.querySelector('.profile-content p:nth-of-type(1)').textContent.replace('IC:', '').trim() : '';
+    var lecturerStaffNo = document.querySelector('.profile-content p:nth-of-type(2)') ? 
+                          document.querySelector('.profile-content p:nth-of-type(2)').textContent.replace('Staff No:', '').trim() : '';
+    var lecturerEmail = document.querySelector('.profile-content p:nth-of-type(3)') ? 
+                        document.querySelector('.profile-content p:nth-of-type(3)').textContent.replace('Email:', '').trim() : '';
     
-    if (actionButtonsContainer && !document.getElementById('print-schedule-btn')) {
-        // Create the print button element
-        const printButton = document.createElement('button');
-        printButton.type = 'button';
-        printButton.className = 'btn btn-info';
-        printButton.id = 'print-schedule-btn';
-        printButton.innerHTML = '<i class="fas fa-print me-2"></i> Print Schedule';
-        printButton.title = 'Print current timetable';
-        
-        // Add the button to the container
-        actionButtonsContainer.appendChild(printButton);
-        
-        // Add click event listener
-        printButton.addEventListener('click', function() {
-            generatePrintableSchedule();
-        });
-        
-        return true;
+    // Open new window
+    var printWindow = window.open('', '_blank');
+    if (!printWindow) {
+        alert('Please allow pop-ups to print the schedule');
+        return;
     }
-    return false;
+    
+    // Get events from calendar
+    var events = [];
+    if (typeof calendar !== 'undefined') {
+        events = calendar.getEvents().filter(function(event) {
+            return event.title !== 'REHAT';
+        });
+    }
+    
+    // Create time slots
+    var timeSlots = [];
+    var startHour = 8;
+    var endHour = 19;
+    
+    for (var h = startHour; h < endHour; h++) {
+        for (var m = 0; m < 60; m += 30) {
+            var startTime = h * 60 + m;
+            var endTime = startTime + 30;
+            
+            var startHourStr = Math.floor(startTime / 60).toString().padStart(2, '0');
+            var startMinStr = (startTime % 60).toString().padStart(2, '0');
+            var endHourStr = Math.floor(endTime / 60).toString().padStart(2, '0');
+            var endMinStr = (endTime % 60).toString().padStart(2, '0');
+            
+            timeSlots.push({
+                display: startHourStr + ':' + startMinStr + ' - ' + endHourStr + ':' + endMinStr,
+                start: startTime,
+                end: endTime
+            });
+        }
+    }
+    
+    // Check if event is in a time slot
+    function isEventInSlot(event, day, slot) {
+        if (!event.start || !event.end) return false;
+        
+        var eventDay = event.start.getDay();
+        // Adjust Sunday = 0 to our format
+        if (eventDay === 0) eventDay = 7;
+        
+        // Our days are 0-based where 0 = Monday
+        var tableDay = day + 1;
+        
+        if (eventDay !== tableDay) return false;
+        
+        var eventStartTime = event.start.getHours() * 60 + event.start.getMinutes();
+        var eventEndTime = event.end.getHours() * 60 + event.end.getMinutes();
+        
+        return (eventStartTime < slot.end && eventEndTime > slot.start);
+    }
+    
+    // Format event for display
+    function formatEvent(event) {
+        var title = event.title || '';
+        var group = event.extendedProps && event.extendedProps.groupName ? event.extendedProps.groupName : '';
+        var students = event.extendedProps && event.extendedProps.studentCount ? event.extendedProps.studentCount : '';
+        var program = event.extendedProps && event.extendedProps.programInfo ? event.extendedProps.programInfo : 'DPI';
+        
+        var html = '<div class="event-title">' + title + '</div>';
+        
+        if (group) {
+            html += '<div class="event-details">';
+            html += group;
+            if (students) {
+                html += ' | Total Student: ' + students;
+            }
+            html += '<br>Program: ' + program;
+            html += '</div>';
+        }
+        
+        return html;
+    }
+    
+    // Create HTML
+    var html = '<!DOCTYPE html><html><head><title>Lecturer Timetable</title>';
+    html += '<style>';
+    html += '@media print { @page { size: landscape; margin: 10mm; } }';
+    html += 'body { font-family: Arial, sans-serif; margin: 10mm; }';
+    html += '.header { text-align: center; margin-bottom: 20px; }';
+    html += '.lecturer-info { margin-bottom: 15px; }';
+    html += '.lecturer-info-item { margin-bottom: 5px; }';
+    html += '.timetable { width: 100%; border-collapse: collapse; }';
+    html += '.timetable th, .timetable td { border: 1px solid #444; padding: 3px; vertical-align: top; font-size: 9pt; }';
+    html += '.timetable th { background-color: #073b73; color: white; text-align: center; font-weight: bold; }';
+    html += '.timetable .time-column { width: 80px; text-align: center; background-color: #f2f2f2; font-weight: bold; }';
+    html += '.rehat-cell { background-color: #ffcccc; text-align: center; font-weight: bold; }';
+    html += '.event-title { font-weight: bold; margin-bottom: 2px; }';
+    html += '.event-details { font-size: 7pt; }';
+    html += '.footer { margin-top: 20px; text-align: right; font-size: 8pt; }';
+    html += '.print-button { background-color: #4361ee; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }';
+    html += '</style>';
+    html += '</head><body>';
+    
+    // Print button
+    html += '<button class="print-button" onclick="window.print()">Print Schedule</button>';
+    
+    // Header
+    html += '<div class="header"><h1>Lecturer Timetable</h1></div>';
+    
+    // Lecturer info
+    html += '<div class="lecturer-info">';
+    html += '<div class="lecturer-info-item"><strong>Name:</strong> ' + lecturerName + '</div>';
+    html += '<div class="lecturer-info-item"><strong>IC:</strong> ' + lecturerIC + '</div>';
+    html += '<div class="lecturer-info-item"><strong>Staff No:</strong> ' + lecturerStaffNo + '</div>';
+    html += '<div class="lecturer-info-item"><strong>Email:</strong> ' + lecturerEmail + '</div>';
+    html += '</div>';
+    
+    // Timetable
+    html += '<table class="timetable">';
+    html += '<thead><tr>';
+    html += '<th class="time-column">Time</th>';
+    html += '<th>Monday</th>';
+    html += '<th>Tuesday</th>';
+    html += '<th>Wednesday</th>';
+    html += '<th>Thursday</th>';
+    html += '<th>Friday</th>';
+    html += '</tr></thead>';
+    html += '<tbody>';
+    
+    // Time slots
+    timeSlots.forEach(function(slot) {
+        html += '<tr>';
+        html += '<td class="time-column">' + slot.display + '</td>';
+        
+        // Days (0=Monday, 4=Friday)
+        for (var day = 0; day < 5; day++) {
+            // Check if REHAT cell
+            var isRehat = (slot.start === 13 * 60 + 30 && slot.end === 14 * 60);
+            
+            if (isRehat) {
+                html += '<td class="rehat-cell">REHAT</td>';
+            } else {
+                // Find events for this day and slot
+                var cellEvents = events.filter(function(event) {
+                    return isEventInSlot(event, day, slot);
+                });
+                
+                if (cellEvents.length > 0) {
+                    html += '<td>';
+                    cellEvents.forEach(function(event) {
+                        html += formatEvent(event);
+                    });
+                    html += '</td>';
+                } else {
+                    html += '<td></td>';
+                }
+            }
+        }
+        
+        html += '</tr>';
+    });
+    
+    html += '</tbody></table>';
+    
+    // Footer
+    html += '<div class="footer">';
+    html += 'Generated on: ' + new Date().toLocaleDateString('en-GB', {
+        day: '2-digit', 
+        month: 'short', 
+        year: 'numeric'
+    });
+    html += '<br>© Timetable Management System</div>';
+    
+    // Auto-print script
+    html += '<script>';
+    html += 'setTimeout(function() { window.print(); }, 1000);';
+    html += '</script>';
+    
+    html += '</body></html>';
+    
+    // Write to the window
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
 }
 
-// Try to add the button immediately if the page is already loaded
+// Try to add button if page is already loaded
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    addPrintButton();
+    var actionButtons = document.querySelector('.action-buttons');
+    if (actionButtons && !document.getElementById('print-schedule-btn')) {
+        var printBtn = document.createElement('button');
+        printBtn.type = 'button';
+        printBtn.className = 'btn btn-info';
+        printBtn.id = 'print-schedule-btn';
+        printBtn.innerHTML = '<i class="fas fa-print me-2"></i> Print Schedule';
+        actionButtons.appendChild(printBtn);
+        printBtn.addEventListener('click', printTimetable);
+    }
 }
 </script>
 
