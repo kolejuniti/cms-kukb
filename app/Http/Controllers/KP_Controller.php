@@ -114,6 +114,7 @@ class KP_Controller extends Controller
        $assessment = array(
         "quiz" => "quiz",
         "test" => "test",
+        "test2" => "test2",
         "assignment" => "assignment",
         "midterm" => "midterm",
         "final" => "final",
@@ -881,10 +882,10 @@ $content .= '<tr>
         if(isset($request->student))
         {
 
-            if(count($request->student) > 80)
+            if(count($request->student) > 55)
             {
 
-                return redirect()->back()->withErrors(['The limit for student in a group cannot exceed more than 80 !']);
+                return redirect()->back()->withErrors(['The limit for student in a group cannot exceed more than 55 !']);
 
             }else{
 
