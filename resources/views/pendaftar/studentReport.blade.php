@@ -529,7 +529,7 @@
                           $total_all = $active + $aol + $postpone + $holding;
 
                           @endphp
-                          <td style="text-align: center; border: 1px solid black;" colspan="3">
+                          <td style="text-align: center; border: 1px solid black;" colspan="4">
                             {{ $total_all }}
                           </td>
                           <td style="text-align: center; border: 1px solid black;">
@@ -563,7 +563,7 @@
                           $total_all = $industry + $active + $aol + $postpone + $holding;
 
                           @endphp
-                          <td style="text-align: center; border: 1px solid black;" colspan="4">
+                          <td style="text-align: center; border: 1px solid black;" colspan="5">
                             {{ $total_all }}
                           </td>
                           <td style="text-align: center; border: 1px solid black;">
