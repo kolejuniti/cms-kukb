@@ -1029,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', function () {
             day: 'Day'
         },
         hiddenDays: hiddenDays,
-        slotMinTime: '08:30:00',
+        slotMinTime: '08:15:00',
         slotMaxTime: '18:00:00',
         slotDuration: '00:30:00',
         slotLabelInterval: '00:30:00',
