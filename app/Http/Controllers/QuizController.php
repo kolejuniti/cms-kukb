@@ -859,10 +859,9 @@ class QuizController extends Controller
                     ['student_subjek.courseid', $courseid],
                     ['student_subjek.sessionid', request()->session]
                     ])
-                ->select('user_subjek.id')
                 ->first();
 
-        dd($courseid);
+        dd($group);
 
         $data = DB::table('tblclassquiz')
                 ->join('users', 'tblclassquiz.addby', 'users.ic')
