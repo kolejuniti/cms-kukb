@@ -1867,100 +1867,73 @@ function convertToPhpMyAdminDatetime(dateString) {
 
 // Print schedule table function
 function printScheduleTable(name, ic, staffNo, email) {
-    try {
-        // Show loading notification
-        showNotification('Preparing timetable for printing...', 'info');
-        
-        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
-        const times = generateTimeSlots();
-        const events = calendar.getEvents();
-        
-        // Create a more efficient data structure
-        const scheduleData = processEvents(events, dayNames, times);
-        
-        // Generate HTML in chunks
-        const htmlChunks = [
-            generateHeader(name, ic, staffNo, email),
-            generateTableStart(dayNames),
-            generateTableBody(times, dayNames, scheduleData),
-            generateFooter()
-        ];
-        
-        // Combine chunks and print
-        openPrintWindow(htmlChunks.join(''));
-        
-    } catch (error) {
-        console.error('Print error:', error);
-        showNotification('Error preparing print layout: ' + error.message, 'error');
-    }
-}
+    // Show loading notification
+    showNotification('Preparing timetable for printing...', 'info');
+    
+    const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
 
-// Helper function to generate time slots
-function generateTimeSlots() {
-    const times = [];
+    // Build half-hour time slots (08:30..18:00)
+    let times = [];
     let startHour = 8;
-    let startMinute = 15;
-    let endHour = 17;
-    let endMinute = 45;
+    let startMinute = 30;
+    let endHour = 18;
 
-    while (startHour < endHour || (startHour === endHour && startMinute <= endMinute)) {
-        times.push(`${String(startHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}`);
+    while (startHour < endHour || (startHour === endHour && startMinute === 0)) {
+        let hh = String(startHour).padStart(2, '0');
+        let mm = String(startMinute).padStart(2, '0');
+        times.push(`${hh}:${mm}`);
         startMinute += 30;
         if (startMinute === 60) {
             startMinute = 0;
             startHour++;
         }
     }
-    return times;
-}
 
-// Helper function to process events
-function processEvents(events, dayNames, times) {
-    const scheduleData = {};
-    
-    // Initialize data structure
-    dayNames.forEach((day, dayIndex) => {
-        scheduleData[dayIndex] = {};
-        times.forEach((time, timeIndex) => {
-            scheduleData[dayIndex][timeIndex] = [];
-        });
-    });
-    
-    // Process events
+    // Get events from FullCalendar
+    const events = calendar.getEvents();
+
+    // Build a 2D array scheduleData[dayIndex][timeIndex] = [events]
+    // Changed to store arrays of events instead of single events
+    let scheduleData = [];
+    for (let d = 0; d < dayNames.length; d++) {
+        scheduleData[d] = [];
+        for (let t = 0; t < times.length; t++) {
+            scheduleData[d][t] = []; // Initialize with empty array
+        }
+    }
+
     events.forEach(event => {
-        const start = event.start;
-        const end = event.end || new Date(start.getTime() + 60 * 60 * 1000);
-        const dayIndex = start.getDay();
-        
-        if (dayIndex > 4) return; // Skip Fri/Sat
-        
-        const startTimeStr = toHHMM(start);
-        const endTimeStr = toHHMM(end);
-        const startIndex = times.indexOf(startTimeStr);
-        
+        let start = event.start;
+        let end = event.end || new Date(start.getTime() + 60 * 60 * 1000);
+
+        // Convert day-of-week (Mon=1..Fri=5 => index 0..4)
+        let dayIndex = start.getDay() - 1; 
+        if (dayIndex < 0 || dayIndex > 4) return; // skip Sat/Sun
+
+        let startTimeStr = toHHMM(start);
+        let endTimeStr = toHHMM(end);
+
+        let startIndex = times.indexOf(startTimeStr);
         if (startIndex === -1) return;
-        
-        const endIndex = times.indexOf(endTimeStr);
-        const lastIndex = endIndex === -1 ? times.length : endIndex;
-        
-        // Store event reference
-        for (let i = startIndex; i < lastIndex; i++) {
-            scheduleData[dayIndex][i].push({
-                title: event.title,
-                description: event.extendedProps?.description,
-                programInfo: event.extendedProps?.programInfo,
-                start: start,
-                end: end
-            });
+
+        let endIndex = times.indexOf(endTimeStr);
+        if (endIndex === -1) endIndex = times.length;
+
+        // Fill each half-hour slot with the event
+        for (let i = startIndex; i < endIndex; i++) {
+            scheduleData[dayIndex][i].push(event); // Push to array instead of overwriting
         }
     });
-    
-    return scheduleData;
-}
 
-// Helper function to generate header HTML
-function generateHeader(name, ic, staffNo, email) {
-    return `
+    // Create processed tracking arrays
+    let processedEvents = new Set();
+    let skip = [];
+    for (let d = 0; d < dayNames.length; d++) {
+        skip[d] = new Array(times.length).fill(false);
+    }
+
+    // Build HTML with modern styling
+    let html = `
     <html>
     <head>
         <title>Timetable - ${name}</title>
@@ -1977,25 +1950,159 @@ function generateHeader(name, ic, staffNo, email) {
                 font-size: 9px;
                 font-weight: 500;
             }
-            .container { max-width: 100%; margin: 0 auto; padding: 10px; }
-            .header { text-align: center; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #4361ee; }
-            h1 { color: #4361ee; margin: 0; font-size: 16px; font-weight: 600; }
-            .lecturer-info { background-color: #f8f9fa; border-radius: 4px; padding: 5px; margin-bottom: 10px; border: 1px solid #e0e0e0; }
-            .lecturer-info p { margin: 2px 0; font-size: 9px; font-weight: 600; color: #000000; }
-            .lecturer-info strong { color: #000000; font-weight: 700; }
-            table { width: 100%; border-collapse: collapse; box-shadow: none; border-radius: 0; font-size: 9px; }
-            th { background-color: #1e40af !important; color: white !important; padding: 5px; text-align: center; font-weight: 700; font-size: 10px; border: 1px solid #000000 !important; }
-            td { border: 1px solid #000000 !important; padding: 4px; text-align: center; vertical-align: middle; background-color: #f8f8f8 !important; }
-            .time-column { background-color: #e0e0e0 !important; font-weight: 700; color: #000000 !important; width: 70px; }
-            .event-cell { background-color: #d1e4ff !important; border: 1.5px solid #000000 !important; }
-            .event-title { font-weight: 700 !important; color: #000000; margin-bottom: 2px; }
-            .event-description { color: #333333; font-size: 8px; font-weight: 500; }
-            .rehat-cell { background-color: #ffcccf !important; border: 1.5px solid #000000 !important; color: #c62828 !important; font-weight: 700 !important; }
-            .print-date { text-align: right; color: #999; font-size: 8px; margin-top: 5px; }
-            footer { text-align: center; margin-top: 5px; font-size: 8px; color: #999; }
+            .container {
+                max-width: 100%;
+                margin: 0 auto;
+                padding: 10px;
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 10px;
+                padding-bottom: 5px;
+                border-bottom: 1px solid #4361ee;
+            }
+            h1 {
+                color: #4361ee;
+                margin: 0;
+                font-size: 16px;
+                font-weight: 600;
+            }
+            .lecturer-info {
+                background-color: #f8f9fa;
+                border-radius: 4px;
+                padding: 5px;
+                margin-bottom: 10px;
+                border: 1px solid #e0e0e0;
+            }
+            .lecturer-info p {
+                margin: 2px 0;
+                font-size: 9px;
+                font-weight: 600;
+                color: #000000;
+            }
+            .lecturer-info strong {
+                color: #000000;
+                font-weight: 700;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                box-shadow: none;
+                border-radius: 0;
+                font-size: 9px;
+            }
+            th {
+                background-color: #1e40af;
+                color: white;
+                padding: 5px;
+                text-align: center;
+                font-weight: 700;
+                font-size: 10px;
+            }
+            
+            /* Style for time header in the top row */
+            th.time-column {
+                background-color: #1e40af;
+                color: white;
+                font-weight: 700;
+            }
+            td {
+                border: 1px solid #000000;
+                padding: 4px;
+                text-align: center;
+                vertical-align: middle;
+                background-color: #f8f8f8;
+            }
+            .time-column {
+                background-color: #e0e0e0;
+                font-weight: 700;
+                color: #000000;
+                width: 70px;
+            }
+            .event-cell {
+                background-color: #d1e4ff;
+                border: 1.5px solid #000000;
+            }
+            .event-title {
+                font-weight: 700;
+                color: #000000;
+                margin-bottom: 2px;
+            }
+            .event-description {
+                color: #333333;
+                font-size: 8px;
+                font-weight: 500;
+            }
+            .rehat-cell {
+                background-color: #ffcccf;
+                border: 1.5px solid #000000;
+                color: #c62828;
+                font-weight: 700;
+            }
+            .multi-event-container {
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
+            }
+            .event-divider {
+                border-top: 1px dashed #ccc;
+                margin: 2px 0;
+            }
+            .print-date {
+                text-align: right;
+                color: #999;
+                font-size: 8px;
+                margin-top: 5px;
+            }
+            footer {
+                text-align: center;
+                margin-top: 5px;
+                font-size: 8px;
+                color: #999;
+            }
             @media print {
-                body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                .container { padding: 0; }
+                body {
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+                .container {
+                    padding: 0;
+                }
+                /* Ensure text is dark enough for printing */
+                * {
+                    color: #000000 !important;
+                }
+                th {
+                    background-color: #1e40af !important;
+                    color: white !important;
+                    font-weight: 800 !important;
+                    border: 1px solid #000000 !important;
+                }
+                td {
+                    background-color: #f8f8f8 !important;
+                    border: 1px solid #000000 !important;
+                }
+                .time-column {
+                    background-color: #e0e0e0 !important;
+                    color: #000000 !important;
+                    font-weight: 700 !important;
+                }
+                .event-cell {
+                    background-color: #d1e4ff !important;
+                    border: 1.5px solid #000000 !important;
+                }
+                .rehat-cell {
+                    background-color: #ffcccf !important;
+                    color: #c62828 !important;
+                    font-weight: 700 !important;
+                    border: 1.5px solid #000000 !important;
+                }
+                .event-title {
+                    font-weight: 700 !important;
+                }
+                .event-description {
+                    font-weight: 600 !important;
+                }
             }
         </style>
     </head>
@@ -2004,111 +2111,189 @@ function generateHeader(name, ic, staffNo, email) {
             <div class="header">
                 <h1>Lecturer Timetable</h1>
             </div>
+            
             <div class="lecturer-info">
                 <p><strong>Name:</strong> ${name}</p>
                 <p><strong>IC:</strong> ${ic}</p>
                 <p><strong>Staff No:</strong> ${staffNo}</p>
                 <p><strong>Email:</strong> ${email}</p>
-            </div>`;
-}
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th class="time-column">Time</th>`;
 
-// Helper function to generate table start HTML
-function generateTableStart(dayNames) {
-    let html = `
-        <table>
-            <thead>
-                <tr>
-                    <th class="time-column">Time</th>`;
-    
+    // Column headers for days
     dayNames.forEach(day => {
         html += `<th>${day}</th>`;
     });
-    
+
     html += `</tr></thead><tbody>`;
-    return html;
-}
 
-// Helper function to generate table body HTML
-function generateTableBody(times, dayNames, scheduleData) {
-    let html = '';
-    const processedEvents = new Set();
-    const skip = {};
-    
-    dayNames.forEach((_, dayIndex) => {
-        skip[dayIndex] = new Array(times.length).fill(false);
-    });
-    
-    times.forEach((time, timeIndex) => {
-        if (timeIndex >= times.length - 1) return;
-        
-        const timeLabel = `${time} - ${times[timeIndex + 1]}`;
-        html += `<tr><td class="time-column">${timeLabel}</td>`;
-        
-        dayNames.forEach((_, dayIndex) => {
-            if (skip[dayIndex][timeIndex]) return;
-            
-            const events = scheduleData[dayIndex][timeIndex];
-            if (events.length === 0) {
-                html += '<td></td>';
-                return;
+    // For each timeslot row
+    for (let t = 0; t < times.length; t++) {
+        // Build the time label, e.g. "08:30 - 09:00"
+        let timeLabel = times[t];
+        if (t < times.length - 1) {
+            timeLabel += ' - ' + times[t + 1];
+        } else {
+            timeLabel += ' - 18:00';
+        }
+
+        // Start a row
+        html += `<tr>`;
+
+        // Left column: time label
+        html += `<td class="time-column">${timeLabel}</td>`;
+
+        // For each day column
+        for (let d = 0; d < dayNames.length; d++) {
+            // If this slot is marked skip => do nothing
+            if (skip[d][t]) {
+                continue; 
             }
+
+            let eventList = scheduleData[d][t];
             
-            // Handle events in cell
-            html += generateCellContent(events, dayIndex, timeIndex, times, skip, processedEvents);
-        });
-        
-        html += '</tr>';
-    });
-    
-    return html;
-}
+            if (eventList.length > 0) {
+                // Check if there's a REHAT event in this cell
+                let hasRehat = eventList.some(event => event.title === 'REHAT');
+                
+                // If there's a REHAT event, give it priority
+                if (hasRehat) {
+                    let rehatEvent = eventList.find(event => event.title === 'REHAT');
+                    
+                    let start = rehatEvent.start;
+                    let end = rehatEvent.end || new Date(start.getTime() + 60 * 60 * 1000);
+                    
+                    let startTimeStr = toHHMM(start);
+                    let endTimeStr = toHHMM(end);
+                    
+                    let startIndex = times.indexOf(startTimeStr);
+                    let endIndex = times.indexOf(endTimeStr);
+                    if (endIndex === -1) endIndex = times.length;
+                    
+                    let rowSpan = endIndex - startIndex;
+                    
+                    // Mark future slots to skip
+                    for (let k = 1; k < rowSpan; k++) {
+                        if (t + k < times.length) {
+                            skip[d][t + k] = true;
+                        }
+                    }
+                    
+                    // Create cell with REHAT
+                    html += `<td rowspan="${rowSpan}" class="rehat-cell">
+                                <div class="event-title">REHAT</div>
+                            </td>`;
+                    
+                    // Skip processing other events in this cell
+                    continue;
+                }
+                
+                // Group non-REHAT events by their full time span
+                let eventGroups = {};
+                
+                eventList.forEach(event => {
+                    // Skip if we already processed this event
+                    if (processedEvents.has(event.id)) return;
+                    
+                    let start = event.start;
+                    let end = event.end || new Date(start.getTime() + 60 * 60 * 1000);
+                    
+                    let startTimeStr = toHHMM(start);
+                    let endTimeStr = toHHMM(end);
+                    
+                    let startIndex = times.indexOf(startTimeStr);
+                    let endIndex = times.indexOf(endTimeStr);
+                    if (endIndex === -1) endIndex = times.length;
+                    
+                    // Create a unique key for this time span
+                    let timeSpanKey = `${startIndex}-${endIndex}`;
+                    
+                    // Initialize group if not exists
+                    if (!eventGroups[timeSpanKey]) {
+                        eventGroups[timeSpanKey] = {
+                            events: [],
+                            rowSpan: endIndex - startIndex
+                        };
+                    }
+                    
+                    // Add event to the group
+                    eventGroups[timeSpanKey].events.push(event);
+                    
+                    // Mark event as processed
+                    processedEvents.add(event.id);
+                });
+                
+                // Get the keys sorted by start time
+                let timeSpanKeys = Object.keys(eventGroups).sort();
+                
+                // Only process if we have groups and this is the starting row for a group
+                if (timeSpanKeys.length > 0) {
+                    let firstGroup = eventGroups[timeSpanKeys[0]];
+                    let rowSpan = firstGroup.rowSpan;
+                    let events = firstGroup.events;
+                    
+                    // Mark future slots to skip
+                    for (let k = 1; k < rowSpan; k++) {
+                        if (t + k < times.length) {
+                            skip[d][t + k] = true;
+                        }
+                    }
+                    
+                    // Create cell with rowspan
+                    html += `<td rowspan="${rowSpan}" class="event-cell">`;
+                    
+                    // Now just display the events without REHAT check (handled earlier)
+                    {
+                        // Start multi-event container if we have multiple events
+                        if (events.length > 1) {
+                            html += `<div class="multi-event-container">`;
+                        }
+                        
+                        // Add each event
+                        events.forEach((event, index) => {
+                            if (index > 0) {
+                                html += `<div class="event-divider"></div>`;
+                            }
+                            
+                            html += `<div class="event-title">${event.title || '(No Title)'}</div>`;
+                            
+                            // Add description if available
+                            if (event.extendedProps && event.extendedProps.description) {
+                                html += `<div class="event-description">${event.extendedProps.description}</div>`;
+                            }
+                            
+                            // Add program info if available
+                            if (event.extendedProps && event.extendedProps.programInfo) {
+                                html += `<div class="event-description">Program: ${event.extendedProps.programInfo}</div>`;
+                            }
+                        });
+                        
+                        // Close multi-event container if needed
+                        if (events.length > 1) {
+                            html += `</div>`;
+                        }
+                    }
+                    
+                    html += `</td>`;
+                } else {
+                    // No unprocessed events => empty cell
+                    html += `<td></td>`;
+                }
+            } else {
+                // No events => just a normal empty cell
+                html += `<td></td>`;
+            }
+        }
 
-// Helper function to generate cell content
-function generateCellContent(events, dayIndex, timeIndex, times, skip, processedEvents) {
-    // Check for REHAT event first
-    const rehatEvent = events.find(e => e.title === 'REHAT');
-    if (rehatEvent) {
-        const rowSpan = calculateRowSpan(rehatEvent.start, rehatEvent.end, times);
-        markSkipSlots(dayIndex, timeIndex, rowSpan, skip);
-        return `<td rowspan="${rowSpan}" class="rehat-cell"><div class="event-title">REHAT</div></td>`;
+        // Close row
+        html += `</tr>`;
     }
-    
-    // Handle regular events
-    const unprocessedEvents = events.filter(e => !processedEvents.has(e.title));
-    if (unprocessedEvents.length === 0) return '';
-    
-    const rowSpan = calculateRowSpan(unprocessedEvents[0].start, unprocessedEvents[0].end, times);
-    markSkipSlots(dayIndex, timeIndex, rowSpan, skip);
-    
-    let cellContent = `<td rowspan="${rowSpan}" class="event-cell">`;
-    if (unprocessedEvents.length > 1) cellContent += '<div class="multi-event-container">';
-    
-    unprocessedEvents.forEach((event, index) => {
-        if (index > 0) cellContent += '<div class="event-divider"></div>';
-        cellContent += generateEventContent(event);
-        processedEvents.add(event.title);
-    });
-    
-    if (unprocessedEvents.length > 1) cellContent += '</div>';
-    cellContent += '</td>';
-    
-    return cellContent;
-}
 
-// Helper function to generate event content
-function generateEventContent(event) {
-    let content = `<div class="event-title">${event.title || '(No Title)'}</div>`;
-    if (event.description) {
-        content += `<div class="event-description">${event.description}</div>`;
-    }
-    if (event.programInfo) {
-        content += `<div class="event-description">Program: ${event.programInfo}</div>`;
-    }
-    return content;
-}
-
-// Helper function to generate footer HTML
-function generateFooter() {
+    // Add current date and footer
     const currentDate = new Date().toLocaleDateString('en-GB', {
         day: '2-digit', 
         month: 'short', 
@@ -2117,49 +2302,39 @@ function generateFooter() {
         minute: '2-digit'
     });
     
-    return `
+    html += `
             </tbody>
         </table>
-        <div class="print-date">Generated on: ${currentDate}</div>
-        <footer>© Timetable Management System</footer>
+        
+        <div class="print-date">
+            Generated on: ${currentDate}
         </div>
+        
+        <footer>
+            © Timetable Management System
+        </footer>
+    </div>
     </body>
     </html>`;
-}
 
-// Helper function to calculate row span
-function calculateRowSpan(start, end, times) {
-    const startIndex = times.indexOf(toHHMM(start));
-    const endIndex = times.indexOf(toHHMM(end));
-    return endIndex === -1 ? times.length - startIndex : endIndex - startIndex;
-}
-
-// Helper function to mark skip slots
-function markSkipSlots(dayIndex, startIndex, rowSpan, skip) {
-    for (let i = 1; i < rowSpan; i++) {
-        if (startIndex + i < skip[dayIndex].length) {
-            skip[dayIndex][startIndex + i] = true;
-        }
-    }
-}
-
-// Helper function to open print window
-function openPrintWindow(html) {
-    const printWindow = window.open('', '_blank', 'width=1100,height=800');
-    if (!printWindow) {
-        showNotification('Please allow pop-ups to print the schedule', 'warning');
-        return;
-    }
-    
+    // Open print window
+    let printWindow = window.open('', '_blank', 'width=1100,height=800');
     printWindow.document.open();
     printWindow.document.write(html);
     printWindow.document.close();
     
-    // Wait for content and styles to load
+    // Wait for content to load before printing
     setTimeout(() => {
         printWindow.focus();
         printWindow.print();
     }, 1000);
+}
+
+// Helper to convert Date -> "HH:MM"
+function toHHMM(dateObj) {
+    let hh = String(dateObj.getHours()).padStart(2, '0');
+    let mm = String(dateObj.getMinutes()).padStart(2, '0');
+    return hh + ':' + mm;
 }
 
 function showNotification(message, type = 'info', autoHide = true) {
