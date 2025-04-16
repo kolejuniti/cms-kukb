@@ -874,12 +874,9 @@ class QuizController extends Controller
                 ->join('user_subjek', 'tblclassquiz_group.groupid', 'user_subjek.id')
                 ->select('tblclassquiz.*', 'tblclassquiz_group.groupname', 'users.name AS addby')
                 ->where([
-                    ['user_subjek.id', $group->id],
+               
                     ['tblclassquiz.sessionid', Session::get('SessionIDS')],
                     ['student_subjek.student_ic', $student->ic],
-                    ['tblclassquiz.content','!=', null],
-                    ['tblclassquiz.status','!=', 3],
-                    ['tblclassquiz.date_from','!=', null]
                 ])->get();
 
         //dd($data);
