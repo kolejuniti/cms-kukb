@@ -1014,7 +1014,7 @@ var calendar;
 // Initialize FullCalendar
 document.addEventListener('DOMContentLoaded', function () {
     var calendarEl = document.getElementById('calendar');
-    var hiddenDays = [0, 6]; // Hide Sunday(0) & Saturday(6)
+    var hiddenDays = [5, 6]; // Hide Sunday(0) & Saturday(6)
 
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'timeGridWeek',
@@ -1029,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', function () {
             day: 'Day'
         },
         hiddenDays: hiddenDays,
-        slotMinTime: '08:30:00',
+        slotMinTime: '08:15:00',
         slotMaxTime: '18:00:00',
         slotDuration: '00:30:00',
         slotLabelInterval: '00:30:00',
@@ -1056,7 +1056,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var date = new Date(fetchInfo.start);
             while (date < fetchInfo.end) {
                 var dayOfWeek = date.getDay(); 
-                if (dayOfWeek >= 1 && dayOfWeek <= 4) {
+                if (dayOfWeek >= 0 && dayOfWeek <= 4) {
                     // Monday-Thursday => 13:30 to 14:00
                     rehatEvents.push({
                         title: 'REHAT',
