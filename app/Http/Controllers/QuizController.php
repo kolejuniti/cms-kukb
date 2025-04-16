@@ -862,7 +862,7 @@ class QuizController extends Controller
                 ->select('user_subjek.id')
                 ->first();
 
-        dd(request()->session);
+        dd($courseid);
 
         $data = DB::table('tblclassquiz')
                 ->join('users', 'tblclassquiz.addby', 'users.ic')
