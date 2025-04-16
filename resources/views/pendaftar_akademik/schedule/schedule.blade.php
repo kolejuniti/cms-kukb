@@ -1910,9 +1910,9 @@ function printScheduleTable(name, ic, staffNo, email) {
         let start = event.start;
         let end = event.end || new Date(start.getTime() + 60 * 60 * 1000);
 
-        // Convert day-of-week (Mon=1..Fri=5 => index 0..4)
-        let dayIndex = start.getDay() - 1; 
-        if (dayIndex < 0 || dayIndex > 4) return; // skip Sat/Sun
+        // Convert day-of-week (Sun=0..Thu=4 => index 0..4)
+        let dayIndex = start.getDay();
+        if (dayIndex > 4) return; // skip Fri/Sat
 
         // Find nearest time slots
         let startTimeStr = toHHMM(start);
