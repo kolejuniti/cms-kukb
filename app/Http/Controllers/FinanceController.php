@@ -12211,9 +12211,10 @@ class FinanceController extends Controller
                     ->leftjoin('tblstudentclaim', 'tblclaimdtl.claim_package_id', '=', 'tblstudentclaim.id')
                     ->where([
                         ['tblclaim.process_status_id', '=', 2],
-                        ['tblstudentclaim.groupid', '=', 1],
+                        // ['tblstudentclaim.groupid', '=', 1],
                         ['tblclaim.student_ic', '=', $std->ic]
                     ])
+                    ->whereIn('tblstudentclaim.groupid', [1,4,5])
                     ->select(DB::raw("IFNULL(SUM(tblclaimdtl.amount), 0) AS claim"), DB::raw('0 as payment'));
 
                     // Define the second part of the union
@@ -12222,9 +12223,10 @@ class FinanceController extends Controller
                     ->leftjoin('tblstudentclaim', 'tblpaymentdtl.claim_type_id', '=', 'tblstudentclaim.id')
                     ->where([
                         ['tblpayment.process_status_id', '=', 2],
-                        ['tblstudentclaim.groupid', '=', 1],
+                        // ['tblstudentclaim.groupid', '=', 1],
                         ['tblpayment.student_ic', '=', $std->ic]
                     ])
+                    ->whereIn('tblstudentclaim.groupid', [1,4,5])
                     ->select(DB::raw('0 as claim'), DB::raw("IFNULL(SUM(tblpaymentdtl.amount), 0) AS payment"))
                     ->unionAll($query); // Here, use the Query Builder instance directly
 
