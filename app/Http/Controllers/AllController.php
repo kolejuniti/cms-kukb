@@ -246,7 +246,6 @@ class AllController extends Controller
                     ->join('sessions', 'students.session', 'sessions.SessionID')
                     ->join('sessions AS b', 'students.intake', 'b.SessionID')
                     ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
-                    ->whereIn('students.status', [2,6])
                     ->select('students.*', 'sessions.SessionName', 'tblstudent_status.name AS status');
 
         if($request->program != '')
@@ -257,7 +256,7 @@ class AllController extends Controller
 
         if($request->year != '')
         {
-            $query->where('sessions.Year', $request->year);
+            $query->where('b.Year', $request->year);
 
         }
 
@@ -290,11 +289,11 @@ class AllController extends Controller
             $data['spm'][$key] = $firstFour->merge($randomSubjects);
 
 
-            // Check if the fetched data is less than 10
+            // Check if the fetched data is less than 11
             $fetchedDataCount = count($data['spm'][$key]);
-            if ($fetchedDataCount < 10) {
+            if ($fetchedDataCount < 11) {
                 // Fill the remaining elements with null
-                for ($i = $fetchedDataCount; $i < 10; $i++) {
+                for ($i = $fetchedDataCount; $i < 11; $i++) {
                     $data['spm'][$key][] = null;
                 }
             }
@@ -321,6 +320,24 @@ class AllController extends Controller
 
             // Sum the two counts to get the final result
             $data['result'][$key] = $firstFourCount + $randomCount;
+
+            $data['total_grade'][$key] = DB::table('tblspm_dtl')
+            ->join('tblgrade_spm', 'tblspm_dtl.grade_spm_id', 'tblgrade_spm.id')
+            ->join('tblsubject_spm', 'tblspm_dtl.subject_spm_id', 'tblsubject_spm.id')
+            ->where('tblspm_dtl.student_spm_ic', $std->ic)
+            ->whereNotNull('tblgrade_spm.grade_value')
+            ->select(DB::raw('SUM(tblgrade_spm.grade_value) AS total_grade_value'))
+            ->value('total_grade_value') ?? 0;
+
+            $data['total_grade_overall'][$key] = DB::table('tblspm_dtl')
+            ->join('tblgrade_spm', 'tblspm_dtl.grade_spm_id', 'tblgrade_spm.id')
+            ->join('tblsubject_spm', 'tblspm_dtl.subject_spm_id', 'tblsubject_spm.id')
+            ->where('tblspm_dtl.student_spm_ic', $std->ic)
+            ->whereNotNull('tblgrade_spm.grade_value')
+            ->orderBy('tblgrade_spm.grade_value', 'asc')
+            ->limit(3)
+            ->pluck('tblgrade_spm.grade_value')
+            ->sum();
 
 
             $data['spmv'][$key] = DB::table('tblstudent_spmv')
@@ -402,6 +419,103 @@ class AllController extends Controller
             }
 
         }
+
+        $content = "";
+        $content .= '<thead>
+                        <tr>
+                            <th style="width: 1%">
+                                No.
+                            </th>
+                            <th>
+                                Name
+                            </th>
+                            <th>
+                                No. IC
+                            </th>
+                            <th>
+                                No. Matric
+                            </th>
+                            <th>
+                                Program
+                            </th>
+                            <th>
+                                Intake
+                            </th>
+                            <th>
+                                Current Session
+                            </th>
+                            <th>
+                                Semester
+                            </th>
+                            <th>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="table">';
+                    
+        foreach($students as $key => $student){
+            //$registered = ($student->status == 'ACTIVE') ? 'checked' : '';
+            $content .= '
+            <tr>
+                <td style="width: 1%">
+                '. $key+1 .'
+                </td>
+                <td>
+                '. $student->name .'
+                </td>
+                <td>
+                '. $student->ic .'
+                </td>
+                <td>
+                '. $student->no_matric .'
+                </td>
+                <td>
+                '. $student->progname .'
+                </td>
+                <td>
+                '. $student->intake .'
+                </td>
+                <td>
+                '. $student->session .'
+                </td>
+                <td>
+                '. $student->semester .'
+                </td>';
+                
+
+            
+                $content .= '<td class="project-actions text-right" >
+                                <a class="btn btn-secondary btn-sm btn-sm mr-2 mb-2" href="#" onclick="getMessage(\''. $student->ic .'\')">
+                                    <i class="ti-eye">
+                                    </i>
+                                    Massage
+                                </a>
+                            </td>
+                        
+                        ';
+           
+            }
+            $content .= '</tr></tbody>';
+
+            return $content;
+
+    }
+
+    public function getStudentNewMassage(Request $request)
+    {
+
+        $students = DB::table('students')
+            ->join('tblprogramme', 'students.program', 'tblprogramme.id')
+            ->join('sessions AS a', 'students.intake', 'a.SessionID')
+            ->join('sessions AS b', 'students.session', 'b.SessionID')
+            ->join('tblmessage_dtl', 'students.ic', 'tblmessage_dtl.sender')
+            ->join('tblmessage', 'tblmessage_dtl.message_id', 'tblmessage.id')
+            ->select('students.*', 'tblprogramme.progname', 'a.SessionName AS intake', 
+                     'b.SessionName AS session')
+            ->where('tblmessage_dtl.status', 'NEW')
+            ->where('tblmessage.user_type', Auth::user()->usrtype)
+            ->distinct('students.ic')
+            ->get();
 
         $content = "";
         $content .= '<thead>
@@ -575,15 +689,14 @@ class AllController extends Controller
                     'status' => 'READ'
                 ]);
 
-            // Fetch messages and their details
             $messages = DB::table('tblmessage')
-                ->join('tblmessage_dtl', 'tblmessage.id', '=', 'tblmessage_dtl.message_id')
-                ->where('tblmessage.user_type', $request->type)
-                ->where('tblmessage.recipient', $request->ic)
-                // If you want to include messages where the user is the recipient, uncomment the line below:
-                //->orWhere('tblmessage.recipient', Auth::user()->ic)
-                ->select('tblmessage_dtl.*', 'tblmessage_dtl.user_type', 'tblmessage.recipient', 'tblmessage.datetime as message_datetime')
-                ->get();
+            ->join('tblmessage_dtl', 'tblmessage.id', '=', 'tblmessage_dtl.message_id')
+            ->where('tblmessage.user_type', $request->type)
+            ->where('tblmessage.recipient', $request->ic)
+            // If you want to include messages where the user is the recipient, uncomment the line below:
+            //->orWhere('tblmessage.recipient', Auth::user()->ic)
+            ->select('tblmessage_dtl.*', 'tblmessage_dtl.user_type', 'tblmessage.recipient', 'tblmessage.datetime as message_datetime')
+            ->get();
 
         }else{
 
@@ -626,5 +739,123 @@ class AllController extends Controller
 
     }
 
+    public function countMassageAdmin(Request $request)
+    {
+
+        $count = DB::table('tblmessage')
+        ->where('user_type', Auth::user()->usrtype)
+        ->whereExists(function ($query) {
+            $query->select(DB::raw(1))
+                ->from('tblmessage_dtl')
+                ->whereColumn('tblmessage_dtl.message_id', 'tblmessage.id')
+                ->where('tblmessage_dtl.status', 'NEW')
+                ->where('tblmessage_dtl.user_type', '!=', Auth::user()->usrtype);
+        })
+        ->count();
+
+
+        return response()->json(['count' => $count]);
+
+    }
+
+
+    // Display a listing of the announcements
+    public function indexAnnouncements()
+    {
+        $userRole = Auth::user()->usrtype;
+
+        if ($userRole === 'ADM') {
+            $type = 'Admin';
+        } else if ($userRole === 'FN') {
+            $type = 'Finance';
+        } else if ($userRole === 'AR') {
+            $type = 'Pendaftar Akademik';
+        } else if ($userRole === 'RGS') {
+            $type = 'Pendaftar';
+        }
+
+        $announcements = DB::table('tblstdannoucement')->where('department', $type)->get();
+
+        // Debugging: Check the data being fetched
+        error_log($announcements);
+
+        return response()->json($announcements);
+    }
+
+
+    // Store a newly created announcement
+    public function storeAnnouncements(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'department' => 'required|string|max:100',
+            'priority' => 'required|string|in:low,medium,high',
+        ]);
+
+        $id = DB::table('tblstdannoucement')->insertGetId($validated);
+
+        return response()->json(['message' => 'Announcement created successfully', 'id' => $id]);
+    }
+
+    // Display the specified announcement
+    public function showAnnouncements($id)
+    {
+        $announcement = DB::table('tblstdannoucement')->where('id', $id)->first();
+
+        if (!$announcement) {
+            return response()->json(['message' => 'Announcement not found'], 404);
+        }
+
+        return response()->json($announcement);
+    }
+
+    // Update the specified announcement
+    public function updateAnnouncements(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'title' => 'sometimes|required|string|max:255',
+            'content' => 'sometimes|required|string',
+            'start_date' => 'sometimes|required|date',
+            'end_date' => 'sometimes|required|date|after_or_equal:start_date',
+            'department' => 'sometimes|required|string|max:100',
+            'priority' => 'sometimes|required|string|in:low,medium,high',
+        ]);
+
+        $updated = DB::table('tblstdannoucement')->where('id', $id)->update($validated);
+
+        if ($updated) {
+            return response()->json(['message' => 'Announcement updated successfully']);
+        }
+
+        return response()->json(['message' => 'No changes made or announcement not found'], 404);
+    }
+
+    // Remove the specified announcement
+    public function destroyAnnouncements($id)
+    {
+        $deleted = DB::table('tblstdannoucement')->where('id', $id)->delete();
+
+        if ($deleted) {
+            return response()->json(['message' => 'Announcement deleted successfully']);
+        }
+
+        return response()->json(['message' => 'Announcement not found'], 404);
+    }
+
+    public function getBannerAnnouncement()
+    {
+        $announcements = DB::table('tblstdannoucement')
+        ->whereDate('start_date', '<=', now()) // Fetch rows where start_date is before or equal to today
+        ->whereDate('end_date', '>=', now())   // Fetch rows where end_date is after or equal to today
+        ->orderByRaw("FIELD(priority, 'high', 'medium', 'low')") // Sort by priority
+        ->orderBy('created_at', 'desc') // Optional: Further sort by creation date
+        ->get();
+
+
+        return response()->json($announcements);
+    }
 
 }
