@@ -55,12 +55,12 @@
     <div class="content-header">
         <div class="d-flex align-items-center">
             <div class="me-auto">
-                <h4 class="page-title">Schedule</h4>
+                <h4 class="page-title">Timetable</h4>
                 <div class="d-inline-block align-items-center">
                     <nav>
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="#"><i class="mdi mdi-home-outline"></i></a></li>
-                            <li class="breadcrumb-item" aria-current="page">Schedule</li>
+                            <li class="breadcrumb-item" aria-current="page">Timetable</li>
                         </ol>
                     </nav>
                 </div>
@@ -75,7 +75,7 @@
             <div class="col-xl-12 col-12">
                 <div class="box">
                     <div class="box-body">
-                        <h4 class="box-title fw-500">Lecturer Schedule</h4>	
+                        <h4 class="box-title fw-500">Lecturer Timetable</h4>	
                         {{-- <hr> --}}
                         {{-- <div class="mb-4">
                             <div class="box bg-success">
