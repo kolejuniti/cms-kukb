@@ -252,10 +252,10 @@
 					<a href="{{ route('student') }}" class="{{ (route('student') == Request::url()) ? 'active' : ''}}"><i data-feather="bookmark"></i><span>Course</span></a>
 				</li> 
 				<li>
-					<a href="{{ Storage::disk('linode')->url('classschedule/index.htm') }}" target="_blank"><i data-feather="layout"></i><span>Old Schedule</span></a>
+					<a href="{{ Storage::disk('linode')->url('classschedule/index.htm') }}" target="_blank"><i data-feather="layout"></i><span>Old Timetable</span></a>
 				</li>
 				<li>
-					<a href="AR/schedule/scheduleTable/{{ Auth::guard('student')->user()->ic }}?type=std" target="_blank"><i data-feather="layout"></i><span>Schedule</span></a>
+					<a href="AR/schedule/scheduleTable/{{ Auth::guard('student')->user()->ic }}?type=std" target="_blank"><i data-feather="layout"></i><span>Timetable</span></a>
 				</li>
 				<li class="treeview">
 					<a href="#"><i data-feather="users"></i><span>Student Affair</span>
@@ -349,7 +349,7 @@
 					<a href="/yuran-pengajian" class=""><i data-feather="shopping-bag"></i><span>Payment</span></a>
 				</li> --}}
 				<li>
-					<a href="{{ asset('storage/finals_schedule/Jadual Pengawasan Peperiksaan Akhir UNITI Kemasukan Julai 20242025-I.pdf') }}" target="_blank"><i data-feather="layout"></i><span>Finals Schedule</span></a>
+					<a href="{{ asset('storage/finals_schedule/Jadual Pengawasan Peperiksaan Akhir UNITI Kemasukan Julai 20242025-I.pdf') }}" target="_blank"><i data-feather="layout"></i><span>Finals Timetable</span></a>
 				</li> 
 			  </ul>
 			  <div class="sidebar-widgets">
