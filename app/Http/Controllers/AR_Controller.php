@@ -1380,6 +1380,12 @@ class AR_Controller extends Controller
 
     public function updateSemester(Request $request)
     {
+        //check if sponsor exists
+        if(!DB::table('tblpackage_sponsorship')->where('student_ic', $request->ic)->exists())
+        {
+            return response()->json([
+                'message' => 'Student has no sponsor package! Please make sure student sponsor is created first!'], 404);
+        }
 
         $student = DB::table('students')->where('no_matric', $request->no_matric)->first();
 
@@ -1493,8 +1499,21 @@ class AR_Controller extends Controller
                 'mod_date' => date('Y-m-d')
             ]);
 
+            $sponsor = DB::table('tblpackage_sponsorship')
+            ->join('tblpayment_type', 'tblpackage_sponsorship.payment_type_id', 'tblpayment_type.id')
+            ->where('tblpackage_sponsorship.student_ic', $student->ic)
+            ->select('tblpayment_type.name AS payment_type')
+            ->first();
+
+            $hotel = !str_contains(strtoupper($sponsor->payment_type), 'TIADA KEDIAMAN');
+
             foreach($claim as $clm)
             {
+
+                if(!$hotel && $clm->id == 28)
+                {
+                    continue;
+                }
 
                 DB::table('tblclaimdtl')->insert([
                     'claim_id' => $id,
