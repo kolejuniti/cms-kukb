@@ -102,7 +102,11 @@ function getStudent(search)
             method   : 'POST',
             data 	 : {search: search},
             error:function(err){
-                alert("Error");
+                if (err.responseJSON && err.responseJSON.message) {
+                    alert(err.responseJSON.message);
+                } else {
+                    alert("An error occurred");
+                }
                 console.log(err);
             },
             success  : function(data){
@@ -122,7 +126,11 @@ function getStudInfo(student)
             method   : 'POST',
             data 	 : {student: student},
             error:function(err){
-                alert("Error");
+                if (err.responseJSON && err.responseJSON.message) {
+                    alert(err.responseJSON.message);
+                } else {
+                    alert("An error occurred");
+                }
                 console.log(err);
             },
             success  : function(data){
@@ -183,7 +191,11 @@ function register(ic)
       method   : 'POST',
       data 	 : {ic: ic},
       error:function(err){
-          alert("Error");
+          if (err.responseJSON && err.responseJSON.message) {
+              alert(err.responseJSON.message);
+          } else {
+              alert("An error occurred");
+          }
           console.log(err);
       },
       success  : function(data){
@@ -236,6 +248,11 @@ function add(ic)
           processData: false,
           contentType: false,
           error:function(err){
+              if (err.responseJSON && err.responseJSON.message) {
+                  alert(err.responseJSON.message);
+              } else {
+                  alert("An error occurred");
+              }
               console.log(err);
           },
           success:function(res){
@@ -291,7 +308,11 @@ function deletedtl(dtl,id)
                   method   : 'POST',
                   data 	 : {dtl:dtl, id:id},
                   error:function(err){
-                      alert("Error");
+                      if (err.responseJSON && err.responseJSON.message) {
+                          alert(err.responseJSON.message);
+                      } else {
+                          alert("An error occurred");
+                      }
                       console.log(err);
                   },
                   success  : function(data){
@@ -316,7 +337,11 @@ function confirm()
       method   : 'POST',
       data 	 : {id: id},
       error:function(err){
-          alert("Error");
+          if (err.responseJSON && err.responseJSON.message) {
+              alert(err.responseJSON.message);
+          } else {
+              alert("An error occurred");
+          }
           console.log(err);
       },
       success  : function(data){
