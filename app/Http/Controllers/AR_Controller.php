@@ -1438,7 +1438,16 @@ class AR_Controller extends Controller
                     ]);
 
 
-                    $alert = $this->getRegisterClaim($student->ic);
+                    if($request->withheld != 1)
+                    {
+
+                        $alert = $this->getRegisterClaim($student->ic);
+
+                    }else{
+
+                        return ['message' => 'Success! Not charged for on hold student!'];
+
+                    }
 
                 }else{
 
