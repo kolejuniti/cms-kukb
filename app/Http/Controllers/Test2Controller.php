@@ -17,7 +17,7 @@ use Smalot\PdfParser\Parser;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
-use App\Notifications\MyCustomNotification;
+// use App\Notifications\MyCustomNotification;
 use App\Models\UserStudent;
 
 class Test2Controller extends Controller
@@ -502,7 +502,7 @@ class Test2Controller extends Controller
         $icon = "fa-puzzle-piece fa-lg";
         $iconColor = "#8803a0"; // Example: set to a bright orange
 
-        Notification::send($allUsers, new MyCustomNotification($message, $url, $icon, $iconColor));
+        // Notification::send($allUsers, new MyCustomNotification($message, $url, $icon, $iconColor));
 
 
         return true;
@@ -863,7 +863,7 @@ class Test2Controller extends Controller
 
         $participant = UserStudent::where('ic', $participant)->first();
 
-        Notification::send($participant, new MyCustomNotification($message, $url, $icon, $iconColor));
+        // Notification::send($participant, new MyCustomNotification($message, $url, $icon, $iconColor));
     
         
         return true;
@@ -1589,7 +1589,7 @@ class Test2Controller extends Controller
             $icon = "fa-puzzle-piece fa-lg";
             $iconColor = "#8803a0"; // Example: set to a bright orange
 
-            Notification::send($allUsers, new MyCustomNotification($message, $url, $icon, $iconColor));
+            // Notification::send($allUsers, new MyCustomNotification($message, $url, $icon, $iconColor));
 
 
         }else{
@@ -1832,7 +1832,7 @@ class Test2Controller extends Controller
 
             $participant = UserStudent::where('ic', $ics[$key])->first();
 
-            Notification::send($participant, new MyCustomNotification($message, $url, $icon, $iconColor));
+            // Notification::send($participant, new MyCustomNotification($message, $url, $icon, $iconColor));
             }
         }
 
