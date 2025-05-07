@@ -169,7 +169,7 @@ $(document).ready( function () {
     if (res.isConfirmed){
               $.ajax({
                   headers: {'X-CSRF-TOKEN':  $('meta[name="csrf-token"]').attr('content')},
-                  url      : "{{ url('lecturer/test/deletetest') }}",
+                  url      : "{{ url('lecturer/test3/deletetest') }}",
                   method   : 'POST',
                   data 	 : {id:id},
                   error:function(err){
