@@ -3750,6 +3750,8 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
         $data['session'] = DB::table('sessions')->get();
 
+        $data['EA'] = DB::table('tbledu_advisor')->get();
+
         return view('pendaftar_akademik.reportR.reportR', compact('data'));
 
     }
