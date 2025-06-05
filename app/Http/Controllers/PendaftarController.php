@@ -3747,9 +3747,6 @@ class PendaftarController extends Controller
 
         if($request->from && $request->to)
         {
-
-            $fromDate = '15-06-2024'; // Example from date
-            $toDate = '15-07-2024';   // Example to date
     
             $start = Carbon::parse($request->from);
             $end = Carbon::parse($request->to);
@@ -3758,19 +3755,24 @@ class PendaftarController extends Controller
             if($end <= $end2)
             {
 
-                $data['totalAll'] = DB::table('tblpayment')
-                                    ->join('students', 'tblpayment.student_ic', '=', 'students.ic')
+                $data['totalAll'] = DB::table('tblpayment as p1')
+                                    ->join('students', 'p1.student_ic', '=', 'students.ic')
+                                    ->join(DB::raw('(SELECT student_ic, MIN(date) as first_payment_date 
+                                            FROM tblpayment 
+                                            GROUP BY student_ic) as p2'), function($join) {
+                                        $join->on('p1.student_ic', '=', 'p2.student_ic')
+                                             ->on('p1.date', '=', 'p2.first_payment_date');
+                                    })
                                     ->where([
-                                        ['tblpayment.process_status_id', '=', 2],
-                                        ['tblpayment.process_type_id', '=', 1],
-                                        ['tblpayment.semester_id', '=', 1]
+                                        ['p1.process_status_id', '=', 2],
+                                        ['p1.process_type_id', '=', 1],
+                                        ['p1.semester_id', '=', 1]
                                     ])
-                                    ->whereColumn('tblpayment.date', '=', 'students.date_add')  // Use whereColumn for comparing two columns
-                                    ->whereBetween('tblpayment.date', [$start, $end])
-                                    ->select('tblpayment.id')
-                                    ->groupBy('tblpayment.student_ic')
+                                    ->whereBetween('p1.date', [$start, $end])
+                                    ->select('p1.id')
+                                    ->groupBy('p1.student_ic')
                                     ->get()
-                                    ->count();  // Use count() to get the count directly
+                                    ->count();
 
 
                 $totalStudentCount = $data['totalAll'] ? $data['totalAll'] : 0;
@@ -3784,6 +3786,21 @@ class PendaftarController extends Controller
                 $currentWeekNumber = $start->diffInWeeks($currentMonthStart) + 1;
                 $alreadyCountedStudents = [];
                 $alreadyCountedStudents2 = [];
+                $data['countedPerWeek'] = [];
+                $data['totalConvert'] = [];
+                $data['registeredPerWeek'] = [];
+                $data['rejectedPerWeek'] = [];
+                $data['offeredPerWeek'] = [];
+                $data['KIVPerWeek'] = [];
+                $data['othersPerWeek'] = [];
+
+                $data['countedPerDay'] = [];
+                $data['totalConvert2'] = [];
+                $data['registeredPerDay'] = [];
+                $data['rejectedPerDay'] = [];
+                $data['offeredPerDay'] = [];
+                $data['KIVPerDay'] = [];
+                $data['othersPerDay'] = [];
 
                 while ($start <= $end) {
                     // Check if the current date is in a new month
@@ -3832,77 +3849,207 @@ class PendaftarController extends Controller
                     $startDate = reset($week['days']); // Get the first date of the week
                     $endDate = end($week['days']);     // Get the last date of the week
                 
-                    // Fetch the student_ic values for the current week, excluding already counted ones
-                    $currentWeekStudents = DB::table('tblpayment')
-                                            ->join('students', 'tblpayment.student_ic', '=', 'students.ic')
-                                            ->where([
-                                                ['tblpayment.process_status_id', 2],
-                                                ['tblpayment.process_type_id', 1], 
-                                                ['tblpayment.semester_id', 1]
-                                            ])
-                                            ->whereColumn('tblpayment.date', '=', 'students.date_add')  // Use whereColumn for comparing two columns
-                                            ->whereBetween('tblpayment.add_date', [$startDate, $endDate])
-                                            ->whereNotIn('tblpayment.student_ic', $alreadyCountedStudents)
-                                            ->pluck('tblpayment.student_ic')
-                                            ->unique()
-                                            ->toArray();
+                    // Combined query to fetch both total and converted students in one go
+                    $weeklyStudents = DB::table('tblpayment as p1')
+                        ->select([
+                            'p1.student_ic',
+                            'students.status',
+                            'students.date_offer',
+                            'students.semester'
+                        ])
+                        ->join('students', 'p1.student_ic', '=', 'students.ic')
+                        ->join(DB::raw('(
+                            SELECT student_ic, MIN(date) as first_payment_date 
+                            FROM tblpayment 
+                            WHERE process_status_id = 2 
+                            AND process_type_id = 1 
+                            AND semester_id = 1
+                            GROUP BY student_ic
+                        ) as p2'), function($join) {
+                            $join->on('p1.student_ic', '=', 'p2.student_ic')
+                                 ->on('p1.date', '=', 'p2.first_payment_date');
+                        })
+                        ->where([
+                            ['p1.process_status_id', 2],
+                            ['p1.process_type_id', 1], 
+                            ['p1.semester_id', 1]
+                        ])
+                        ->whereBetween('p1.add_date', [$startDate, $endDate])
+                        ->whereNotIn('p1.student_ic', $alreadyCountedStudents)
+                        ->get();
 
-                    // Count the number of unique student_ic values for the current week
+                    // Process results in memory instead of making separate queries
+                    $currentWeekStudents = $weeklyStudents->pluck('student_ic')->unique()->values()->toArray();
+                    $currentConvertStudents = $weeklyStudents->where('status', '!=', 1)
+                        ->where('status', '!=', 14)
+                        ->pluck('student_ic')
+                        ->unique()
+                        ->values()
+                        ->toArray();
+                    $currentRegisteredStudents = $weeklyStudents->where('status', 2)
+                        ->pluck('student_ic')
+                        ->unique()
+                        ->values()
+                        ->toArray();
+                    $currentRejectedStudents = $weeklyStudents->where('status', 14)
+                        ->pluck('student_ic')
+                        ->unique()
+                        ->values()
+                        ->toArray();
+                    $currentOfferedStudents = $weeklyStudents->where('status', 1)
+                        ->filter(function($student) {
+                            return \Carbon\Carbon::parse($student->date_offer)->gt(now());
+                        })
+                        ->pluck('student_ic')
+                        ->unique()
+                        ->values()
+                        ->toArray();
+                    $currentKIVStudents = $weeklyStudents->where('status', 1)
+                        ->filter(function($student) {
+                            return \Carbon\Carbon::parse($student->date_offer)->lte(now());
+                        })
+                        ->pluck('student_ic')
+                        ->unique()
+                        ->values()
+                        ->toArray();
+
+                    $currentOthersStudents = $weeklyStudents->where('status', '!=', 1)
+                        ->where('status', '!=', 2)
+                        ->where('status', '!=', 14)
+                        ->pluck('student_ic')
+                        ->unique()
+                        ->values()
+                        ->toArray();
+                        
+                        
+
                     $totalWeekCount = count($currentWeekStudents);
-
-                    // Update the already counted students set
-                    $alreadyCountedStudents = array_merge($alreadyCountedStudents, $currentWeekStudents);
-
+                    
+                    // Update data arrays
+                    $data['totalConvert'][$key] = count($currentConvertStudents);
                     $data['totalWeek'][$key] = (object) ['total_week' => $totalWeekCount];
                     $data['week'][$key] = $week['days'];
-
-                    // $totalStudentCount2 = $data['totalWeek'][$key] ? $data['totalWeek'][$key] : 0;
-                    // $data['totalWeek'][$key] = (object) ['total_week' => $totalStudentCount2];
                     
+                    // Update already counted students
+                    $alreadyCountedStudents = array_merge($alreadyCountedStudents, $currentWeekStudents);
+                    $data['countedPerWeek'][$key] = count($alreadyCountedStudents);
+
+                    $data['registeredPerWeek'][$key] = count($currentRegisteredStudents);
+                    $data['rejectedPerWeek'][$key] = count($currentRejectedStudents);
+                    $data['offeredPerWeek'][$key] = count($currentOfferedStudents);
+                    $data['KIVPerWeek'][$key] = count($currentKIVStudents);
+                    $data['othersPerWeek'][$key] = count($currentOthersStudents);
+
                     $data['week'][$key] = $week['days'];
 
                     foreach($data['week'][$key] AS $key2 => $day)
                     {
 
-                        $data['totalDay'][$key][$key2] = count(DB::table('tblpayment')
-                                                        ->join('students', 'tblpayment.student_ic', '=', 'students.ic')
+                        $data['totalDay'][$key][$key2] = count(DB::table('tblpayment as p1')
+                                                        ->join('students', 'p1.student_ic', '=', 'students.ic')
+                                                        ->join(DB::raw('(SELECT student_ic, MIN(date) as first_payment_date 
+                                                                FROM tblpayment 
+                                                                GROUP BY student_ic) as p2'), function($join) {
+                                                            $join->on('p1.student_ic', '=', 'p2.student_ic')
+                                                                 ->on('p1.date', '=', 'p2.first_payment_date');
+                                                        })
                                                         ->where([
-                                                            ['tblpayment.process_status_id', 2],
-                                                            ['tblpayment.process_type_id', 1], 
-                                                            ['tblpayment.semester_id', 1]
+                                                            ['p1.process_status_id', 2],
+                                                            ['p1.process_type_id', 1], 
+                                                            ['p1.semester_id', 1]
                                                         ])
-                                                        ->whereColumn('tblpayment.date', '=', 'students.date_add')  // Use whereColumn for comparing two columns
-                                                        ->where('tblpayment.date', $day)
-                                                        ->select('tblpayment.id')
-                                                        ->groupBy('tblpayment.student_ic')
+                                                        ->where('p1.date', $day)
+                                                        ->select('p1.id')
+                                                        ->groupBy('p1.student_ic')
                                                         ->get());
 
-                        // Fetch the student_ic values for the current week, excluding already counted ones
-                        $currentWeekStudents2 = DB::table('tblpayment')
-                                        ->join('students', 'tblpayment.student_ic', '=', 'students.ic')
-                                        ->where([
-                                            ['tblpayment.process_status_id', 2],
-                                            ['tblpayment.process_type_id', 1], 
-                                            ['tblpayment.semester_id', 1]
+                        // Fetch the student data for the current day
+                        $dailyStudents = DB::table('tblpayment as p1')
+                                        ->select([
+                                            'p1.student_ic',
+                                            'students.status',
+                                            'students.date_offer'
                                         ])
-                                        ->whereColumn('tblpayment.date', '=', 'students.date_add')  // Use whereColumn for comparing two columns
-                                        ->where('tblpayment.date', $day)
-                                        ->whereNotIn('tblpayment.student_ic', $alreadyCountedStudents2)
-                                        ->pluck('tblpayment.student_ic')
-                                        ->unique()
-                                        ->toArray();
+                                        ->join('students', 'p1.student_ic', '=', 'students.ic')
+                                        ->join(DB::raw('(SELECT student_ic, MIN(date) as first_payment_date 
+                                                FROM tblpayment 
+                                                GROUP BY student_ic) as p2'), function($join) {
+                                            $join->on('p1.student_ic', '=', 'p2.student_ic')
+                                                 ->on('p1.date', '=', 'p2.first_payment_date');
+                                        })
+                                        ->where([
+                                            ['p1.process_status_id', 2],
+                                            ['p1.process_type_id', 1], 
+                                            ['p1.semester_id', 1]
+                                        ])
+                                        ->where('p1.date', $day)
+                                        ->whereNotIn('p1.student_ic', $alreadyCountedStudents2)
+                                        ->get();
 
-                        // Count the number of unique student_ic values for the current week
-                        $totalDaysCount = count($currentWeekStudents2);
+                        // Process results for converted students
+                        $currentDayStudents = $dailyStudents->pluck('student_ic')->unique()->values()->toArray();
+                        $currentDayConvertStudents = $dailyStudents->where('status', '!=', 1)
+                            ->where('status', '!=', 14)
+                            ->pluck('student_ic')
+                            ->unique()
+                            ->values()
+                            ->toArray();
+
+                        $currentDayRegisteredStudents = $dailyStudents->where('status', 2)
+                            ->pluck('student_ic')
+                            ->unique()
+                            ->values()
+                            ->toArray();
+
+                        $currentDayRejectedStudents = $dailyStudents->where('status', 14)
+                            ->pluck('student_ic')
+                            ->unique()
+                            ->values()
+                            ->toArray();
+
+                        $currentDayOfferedStudents = $dailyStudents->where('status', 1)
+                            ->filter(function($student) {
+                                return \Carbon\Carbon::parse($student->date_offer)->gt(now());
+                            })
+                            ->pluck('student_ic')
+                            ->unique()
+                            ->values()
+                            ->toArray();
+
+                        $currentDayKIVStudents = $dailyStudents->where('status', 1)
+                            ->filter(function($student) {
+                                return \Carbon\Carbon::parse($student->date_offer)->lte(now());
+                            })
+                            ->pluck('student_ic')
+                            ->unique()
+                            ->values()
+                            ->toArray();
+
+                        $currentDayOthersStudents = $dailyStudents->where('status', '!=', 1)
+                            ->where('status', '!=', 2)
+                            ->where('status', '!=', 14)
+                            ->pluck('student_ic')
+                            ->unique()
+                            ->values()
+                            ->toArray();
+                            
+                        // Update converted students count for this day
+                        $data['totalConvert2'][$key][$key2] = count($currentDayConvertStudents);
+
+                        // Count the number of unique student_ic values for the current day
+                        $totalDaysCount = count($currentDayStudents);
 
                         // Update the already counted students set
-                        $alreadyCountedStudents2 = array_merge($alreadyCountedStudents2, $currentWeekStudents2);
+                        $alreadyCountedStudents2 = array_merge($alreadyCountedStudents2, $currentDayStudents);
+                        $data['countedPerDay'][$key][$key2] = count($alreadyCountedStudents2);
 
+                        $data['registeredPerDay'][$key][$key2] = count($currentDayRegisteredStudents);
+                        $data['rejectedPerDay'][$key][$key2] = count($currentDayRejectedStudents);
+                        $data['offeredPerDay'][$key][$key2] = count($currentDayOfferedStudents);
+                        $data['KIVPerDay'][$key][$key2] = count($currentDayKIVStudents);
+                        $data['othersPerDay'][$key][$key2] = count($currentDayOthersStudents);
+                        
                         $data['totalDay'][$key][$key2] = (object) ['total_day' => $totalDaysCount];                        
-
-                        // $totalStudentCount3 = $data['totalDay'][$key][$key2] ? $data['totalDay'][$key][$key2] : 0;
-                        // $data['totalDay'][$key][$key2] = (object) ['total_day' => $totalStudentCount3];
-
                     }
                 }
 
@@ -3917,7 +4064,11 @@ class PendaftarController extends Controller
 
                 } elseif (isset($request->excel)) {
 
-                    return $this->exportToExcel($data);
+                    $data['from'] = Carbon::createFromFormat('Y-m-d', $request->from)->translatedFormat('d F Y'); ;
+                    $data['to'] = Carbon::createFromFormat('Y-m-d', $request->to)->translatedFormat('d F Y');
+
+
+                    return $this->exportToExcelRA2($data);
 
                 }else{
 
