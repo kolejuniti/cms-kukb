@@ -457,7 +457,7 @@
                                       ->first() != null)
                                         @foreach ((array) $overalltest2[$ky][$key] as $ag)
                                         <td style="background-color: #677ee2">
-                                          <span >{{ $ag }}</span>
+                                          <span >{{ $ag }}sss</span>
                                         </td> 
                                         @endforeach
                                       @else
