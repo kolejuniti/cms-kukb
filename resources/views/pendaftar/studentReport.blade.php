@@ -54,7 +54,7 @@
                           <th style="text-align: center; border: 1px solid black;" colspan="2">6</th>
                           <th style="text-align: center; border: 1px solid black;" colspan="2">2</th>
                           <th style="text-align: center; border: 1px solid black;" colspan="2">0</th>
-                          <th style="text-align: center; border: 1px solid black;" colspan="12"> </th>
+                          <th style="text-align: center; border: 1px solid black;" colspan="9"> </th>
                         </tr>
                         <tr>
                           <th style="text-align: center; width: 1%; border: 1px solid black;" rowspan="2">
@@ -87,9 +87,6 @@
                           <th style="text-align: center; width: 5%; border: 1px solid black;" colspan="2">
                           Sem 8
                           </th>
-                          <th style="text-align: center; width: 5%; border: 1px solid black;" colspan="2">
-                          Sem 9
-                          </th>
                           <th style="width: 10%; text-align: center; border: 1px solid black;" rowspan="2">
                           Industry Training
                           </th>
@@ -103,15 +100,10 @@
                           Postpone
                           </th>
                           <th style="width: 10%; text-align: center; border: 1px solid black;" rowspan="2">
-                          Suspend
-                          </th>
-                          <th style="width: 10%; text-align: center; border: 1px solid black;" rowspan="2">
                           Dismissed
                           </th>
                         </tr>
                         <tr>
-                          <th style="border: 1px solid black;">L</th>
-                          <th style="border: 1px solid black;">P</th>
                           <th style="border: 1px solid black;">L</th>
                           <th style="border: 1px solid black;">P</th>
                           <th style="border: 1px solid black;">L</th>
@@ -152,15 +144,14 @@
                         $totalSum_fs7 = 0;
                         $totalSum_ms8 = 0;
                         $totalSum_fs8 = 0;
-                        $totalSum_ms9 = 0;
-                        $totalSum_fs9 = 0;
 
                         @endphp
                         @foreach ($data['program'] as $key=>$prg)
                         <tr>
                           <td style="text-align: center; border: 1px solid black;">
                           {{ $prg->facultycode }} <br>
-                          {{ $data['sum'][$key] }}
+                          {{ $data['sum'][$key] }} (ACTIVE)<br>
+                          {{ $data['sum2'][$key] }} (TOTAL ALL)
                           </td>
                           <td style="text-align: center; border: 1px solid black;">
                           {{ $prg->progcode }}
@@ -327,24 +318,6 @@
                                 $totalSum_fs8 += $sum_fs8;
                             @endphp
                           </td>
-                          <td style="border: 1px solid black;">
-                            @foreach ((array) $data['ms9'][$key] as $ms9)
-                            {{ $ms9 }}
-                            @endforeach
-                            @php
-                                $sum_ms9 = array_sum((array) $data['ms9'][$key]);
-                                $totalSum_ms9 += $sum_ms9;
-                            @endphp
-                          </td>
-                          <td style="border: 1px solid black;">
-                            @foreach ((array) $data['fs9'][$key] as $fs9)
-                            {{ $fs9 }}
-                            @endforeach
-                            @php
-                                $sum_fs9 = array_sum((array) $data['fs9'][$key]);
-                                $totalSum_fs9 += $sum_fs9;
-                            @endphp
-                          </td>
                           <td style="text-align: center; border: 1px solid black;">
                             @foreach ((array) $data['industry'][$key] as $industry)
                             {{ $industry }}
@@ -363,11 +336,6 @@
                           <td style="text-align: center; border: 1px solid black;">
                             @foreach ((array) $data['postpone'][$key] as $postpone)
                             {{ $postpone }}
-                            @endforeach
-                          </td>
-                          <td style="text-align: center; border: 1px solid black;">
-                            @foreach ((array) $data['suspend'][$key] as $suspend)
-                            {{ $suspend }}
                             @endforeach
                           </td>
                           <td style="text-align: center; border: 1px solid black;">
@@ -441,12 +409,6 @@
                           <td style="border: 1px solid black;">
                             {{ $totalSum_fs8 }}
                           </td>
-                          <td style="border: 1px solid black;">
-                            {{ $totalSum_ms9 }}
-                          </td>
-                          <td style="border: 1px solid black;">
-                            {{ $totalSum_fs9 }}
-                          </td>
                           <td style="text-align: center; border: 1px solid black;">
                             @php
                               $industry = count(DB::table('students')->where([
@@ -485,14 +447,6 @@
                                     ])->get());
                             @endphp
                             {{ $postpone }}
-                          </td>
-                          <td style="text-align: center; border: 1px solid black;">
-                            @php
-                              $suspend = count(DB::table('students')->where([
-                                    ['students.status', 15]
-                                    ])->get());
-                            @endphp
-                            {{ $suspend }}
                           </td>
                           <td style="text-align: center; border: 1px solid black;">
                             @php
@@ -573,10 +527,10 @@
                           </td>
                           @php
 
-                          $total_all = $active + $aol + $postpone + $suspend + $holding;
+                          $total_all = $active + $aol + $postpone + $holding;
 
                           @endphp
-                          <td style="text-align: center; border: 1px solid black;" colspan="4">
+                          <td style="text-align: center; border: 1px solid black;" colspan="3">
                             {{ $total_all }}
                           </td>
                           <td style="text-align: center; border: 1px solid black;">
@@ -602,15 +556,15 @@
                           <td colspan="4" style="text-align: center; border: 1px solid black;">
                             {{ $total }}
                           </td>
-                          <td colspan="16" style="border: 1px solid black;">
+                          <td colspan="14" style="border: 1px solid black;">
 
                           </td>
                           @php
 
-                          $total_all = $industry + $active + $aol + $postpone + $suspend + $holding;
+                          $total_all = $industry + $active + $aol + $postpone + $holding;
 
                           @endphp
-                          <td style="text-align: center; border: 1px solid black;" colspan="5">
+                          <td style="text-align: center; border: 1px solid black;" colspan="4">
                             {{ $total_all }}
                           </td>
                           <td style="text-align: center; border: 1px solid black;">
