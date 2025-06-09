@@ -577,11 +577,13 @@
 
                           @endphp
                           <td style="text-align: center; border: 1px solid black;" colspan="3">
-                            {{ $total_all }}ssss
+                            {{ $total_all }}
                           </td>
                           <td style="text-align: center; border: 1px solid black;">
+
                           </td>
                           <td style="text-align: center; border: 1px solid black;">
+                            
                           </td>
                         </tr>
                         <tr>
