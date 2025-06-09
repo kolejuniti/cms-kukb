@@ -506,7 +506,7 @@
                                             ['campus_id', 1]
                                           ])->get());
 
-                                $total = count(DB::table('students')
+                                $total2 = count(DB::table('students')
                                           ->where([
                                             ['semester', $sem->id],
                                             ['status', 2],
@@ -522,7 +522,12 @@
                                 {{ $total }}
                               </td>
                             @else
-                             
+                              <td colspan="2" style="text-align: center; border: 1px solid black;">
+                                {{ $holding }}
+                              </td>
+                              <td colspan="2" style="text-align: center; border: 1px solid black;">
+                                {{ $total2 }}
+                              </td>
                             @endif
                           @endforeach
                           <td style="text-align: center; border: 1px solid black;">
