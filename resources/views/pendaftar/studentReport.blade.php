@@ -579,11 +579,7 @@
                           <td style="text-align: center; border: 1px solid black;" colspan="3">
                             {{ $total_all }}
                           </td>
-                          <td style="text-align: center; border: 1px solid black;">
-
-                          </td>
-                          <td style="text-align: center; border: 1px solid black;">
-                            
+                          <td style="text-align: center; border: 1px solid black;" colspan="2">
                           </td>
                         </tr>
                         <tr>
