@@ -602,7 +602,7 @@
                           <td colspan="4" style="text-align: center; border: 1px solid black;">
                             {{ $total }}
                           </td>
-                          <td colspan="14" style="border: 1px solid black;">
+                          <td colspan="16" style="border: 1px solid black;">
 
                           </td>
                           @php
