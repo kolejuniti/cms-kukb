@@ -519,14 +519,14 @@
 
                             @if($sem->id != 1)
                               <td colspan="{{ ($sem->id == 1) ? '4' : '2' }}" style="text-align: center; border: 1px solid black;">
-                                {{ $total }}
+                                {{ $total }} {{ $sem->id }}
                               </td>
                             @else
                               <td colspan="2" style="text-align: center; border: 1px solid black;">
-                                {{ $holding }}
+                                {{ $holding }}1
                               </td>
                               <td colspan="2" style="text-align: center; border: 1px solid black;">
-                                {{ $total2 }}
+                                {{ $total2 }}1
                               </td>
                             @endif
                           @endforeach
