@@ -522,12 +522,7 @@
                                 {{ $total }}
                               </td>
                             @else
-                              <td colspan="2" style="text-align: center; border: 1px solid black;">
-                                {{ $holding }}
-                              </td>
-                              <td colspan="2" style="text-align: center; border: 1px solid black;">
-                                {{ $total }}
-                              </td>
+                             
                             @endif
                           @endforeach
                           <td style="text-align: center; border: 1px solid black;">
