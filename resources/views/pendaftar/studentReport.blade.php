@@ -550,14 +550,14 @@
 
                             @if($sem->id != 1)
                               <td colspan="{{ ($sem->id == 1) ? '4' : '2' }}" style="text-align: center; border: 1px solid black;">
-                                {{ $total }} {{ $sem->id }}
+                                {{ $total }}
                               </td>
                             @else
                               <td colspan="2" style="text-align: center; border: 1px solid black;">
-                                {{ $holding }}1
+                                {{ $holding }}
                               </td>
                               <td colspan="2" style="text-align: center; border: 1px solid black;">
-                                {{ $total2 }}1
+                                {{ $total2 }}
                               </td>
                             @endif
                           @endforeach
@@ -578,6 +578,10 @@
                           @endphp
                           <td style="text-align: center; border: 1px solid black;" colspan="3">
                             {{ $total_all }}
+                          </td>
+                          <td style="text-align: center; border: 1px solid black;">
+                          </td>
+                          <td style="text-align: center; border: 1px solid black;">
                           </td>
                           <td style="text-align: center; border: 1px solid black;">
                           </td>
