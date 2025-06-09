@@ -54,7 +54,7 @@
                           <th style="text-align: center; border: 1px solid black;" colspan="2">6</th>
                           <th style="text-align: center; border: 1px solid black;" colspan="2">2</th>
                           <th style="text-align: center; border: 1px solid black;" colspan="2">0</th>
-                          <th style="text-align: center; border: 1px solid black;" colspan="9"> </th>
+                          <th style="text-align: center; border: 1px solid black;" colspan="10"> </th>
                         </tr>
                         <tr>
                           <th style="text-align: center; width: 1%; border: 1px solid black;" rowspan="2">
@@ -102,6 +102,9 @@
                           <th style="width: 10%; text-align: center; border: 1px solid black;" rowspan="2">
                           Dismissed
                           </th>
+                          <th style="width: 10%; text-align: center; border: 1px solid black;" rowspan="2">
+                          Suspended
+                          </th>
                         </tr>
                         <tr>
                           <th style="border: 1px solid black;">L</th>
@@ -144,7 +147,6 @@
                         $totalSum_fs7 = 0;
                         $totalSum_ms8 = 0;
                         $totalSum_fs8 = 0;
-
                         @endphp
                         @foreach ($data['program'] as $key=>$prg)
                         <tr>
@@ -343,6 +345,11 @@
                             {{ $dismissed }}
                             @endforeach
                           </td>
+                          <td style="text-align: center; border: 1px solid black;">
+                            @foreach ((array) $data['suspended'][$key] as $suspended)
+                            {{ $suspended }}
+                            @endforeach
+                          </td>
                         </tr>
                         @endforeach
                         
@@ -456,6 +463,14 @@
                                     ])->get());
                             @endphp
                             {{ $dismissed }}
+                          </td>
+                          <td style="text-align: center; border: 1px solid black;">
+                            @php
+                              $suspended = count(DB::table('students')->where([
+                                    ['students.status', 15]
+                                    ])->get());
+                            @endphp
+                            {{ $suspended }}
                           </td>
                         </tr>
                         <tr>
