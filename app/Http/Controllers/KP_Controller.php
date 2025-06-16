@@ -609,7 +609,7 @@ $content .= '<tr>
                             ['subjek_structure.program_id', $request->program]
                             ])
                             ->groupBy('user_subjek.id')
-                           ->select('users.name', 'users.no_staf','user_subjek.id','user_subjek.amali_ic', 'subjek.course_name', 'subjek.course_code', 'sessions.SessionName')
+                           ->select('users.name', 'users.no_staf','user_subjek.id','user_subjek.user_ic','user_subjek.amali_ic', 'subjek.course_name', 'subjek.course_code', 'sessions.SessionName')
                            ->get();
 
         $content = "";
@@ -618,7 +618,7 @@ $content .= '<tr>
         <table id="table_registerstudent" class="w-100 table text-fade table-bordered table-hover display nowrap margin-top-10 w-p100">
             <thead class="thead-themed">
             <th>No.</th>
-            <th>Name</th>
+            <th>Main Lecturer</th>
             <th>Staff No.</th>
             <th>Lecturer Amali</th>
             <th>Course</th>
@@ -635,7 +635,15 @@ $content .= '<tr>
                     '. $i+1 .'
                 </td>
                 <td>
-                    '. $sbj->name .'
+                    <div class="form-group">
+                          <select class="form-select" id="main-'. $sbj->id .'" name="main-'. $sbj->id .'">
+                              <option value="-" selected disabled>-</option>';
+                              foreach($user as $usr)
+                              {
+                                $content .= '<option value="'. $usr->ic .'" '. (($sbj->user_ic == $usr->ic) ? 'selected' : '') .'>'. $usr->name  .'</option>';
+                              }
+              $content .= '</select>
+                      </div>
                 </td>
                 <td>
                     '. $sbj->no_staf .'
@@ -783,17 +791,262 @@ $content .= '<tr>
 
     public function updateLecturer(Request $request)
     {
+        if($request->main != '' && $request->main != DB::table('user_subjek')->where('id', $request->id)->first()->user_ic)
+        {
 
-        if($request->ic)
+            $old = DB::table('user_subjek')->where('id', $request->id)->first();
+
+            //Change Course Content Lecturer
+
+            // First, get the lecturer_dir record before updating
+            $lecturer_dir = DB::table('lecturer_dir')
+                         ->where([
+                            'CourseID' => $old->course_id,
+                            'SessionID' => $old->session_id,
+                            'Addby' => $old->user_ic
+                         ])
+                         ->first();
+
+            if($lecturer_dir)
+            {
+                // Update the lecturer_dir record
+                DB::table('lecturer_dir')
+                  ->where('id', $lecturer_dir->id)
+                  ->update(['Addby' => $request->main]);
+
+                // Get material_dir records before updating
+                $material_dirs = DB::table('material_dir')
+                     ->where([
+                        'LecturerDirID' => $lecturer_dir->id,
+                        'Addby' => $old->user_ic
+                     ])
+                     ->get();
+
+                if($material_dirs->isNotEmpty())
+                {
+                    // Update material_dir records
+                    DB::table('material_dir')
+                     ->where([
+                        'LecturerDirID' => $lecturer_dir->id,
+                        'Addby' => $old->user_ic
+                     ])
+                     ->update(['Addby' => $request->main]);
+
+                    // Process each material_dir record
+                    foreach($material_dirs as $material_dir)
+                    {
+                        // Update materialsub_dir
+                        DB::table('materialsub_dir')
+                         ->where([
+                            'MaterialDirID' => $material_dir->id,
+                            'Addby' => $old->user_ic
+                         ])
+                         ->update(['Addby' => $request->main]);
+
+                        // Update materialsub_url (direct MaterialDirID reference)
+                        DB::table('materialsub_url')
+                         ->where([
+                            'MaterialDirID' => $material_dir->id,
+                            'Addby' => $old->user_ic
+                         ])
+                         ->update(['Addby' => $request->main]);
+
+                        // Get materialsub_dir records for this material_dir
+                        $materialsub_dirs = DB::table('materialsub_dir')
+                                          ->where([
+                                            'MaterialDirID' => $material_dir->id,
+                                            'Addby' => $request->main // Use new addby since we just updated it
+                                          ])
+                                          ->get();
+
+                        // Update materialsub_url records that reference materialsub_dir
+                        foreach($materialsub_dirs as $materialsub_dir)
+                        {
+                            DB::table('materialsub_url')
+                            ->where([
+                                'MaterialSubDirID' => $materialsub_dir->id,
+                                'Addby' => $old->user_ic
+                            ])
+                            ->update(['Addby' => $request->main]);
+                        }
+                    }
+                }
+                     
+            }
+
+            $id = DB::table('subjek')->where('sub_id', $old->course_id)->first()->id;
+
+            //Change Quiz Lecturer
+
+            DB::table('tblclassquiz')
+                     ->where([
+                        'classid' => $id,
+                        'sessionid' => $old->session_id,
+                        'addby' => $old->user_ic
+                     ])
+                     ->update([
+                        'addby' => $request->main
+                     ]);
+
+            //Change Test Lecturer
+
+            DB::table('tblclasstest')
+                     ->where([
+                        'classid' => $id,
+                        'sessionid' => $old->session_id,
+                        'addby' => $old->user_ic
+                     ])
+                     ->update([
+                        'addby' => $request->main
+                     ]);
+
+            //Change Test2 Lecturer
+
+            DB::table('tblclasstest2')
+                     ->where([
+                        'classid' => $id,
+                        'sessionid' => $old->session_id,
+                        'addby' => $old->user_ic
+                     ])
+                     ->update([
+                        'addby' => $request->main
+                     ]);
+
+            //Change Assignment Lecturer
+
+            DB::table('tblclassassign')
+                     ->where([
+                        'classid' => $id,
+                        'sessionid' => $old->session_id,
+                        'addby' => $old->user_ic
+                     ])
+                     ->update([
+                        'addby' => $request->main
+                     ]);
+
+            //Change Midterm Lecturer
+
+            DB::table('tblclassmidterm')
+                     ->where([
+                        'classid' => $id,
+                        'sessionid' => $old->session_id,
+                        'addby' => $old->user_ic
+                     ])
+                     ->update([
+                        'addby' => $request->main
+                     ]);
+
+            //Change Final Lecturer
+
+            DB::table('tblclassfinal')
+                     ->where([
+                        'classid' => $id,
+                        'sessionid' => $old->session_id,
+                        'addby' => $old->user_ic
+                     ])
+                     ->update([
+                        'addby' => $request->main
+                     ]);
+                     
+            //Change Practical Lecturer
+
+            DB::table('tblclasspractical')
+                     ->where([
+                        'classid' => $id,
+                        'sessionid' => $old->session_id,
+                        'addby' => $old->user_ic
+                     ])
+                     ->update([
+                        'addby' => $request->main
+                     ]);
+                     
+            //Change Other Lecturer
+
+            DB::table('tblclassother')
+                     ->where([
+                        'classid' => $id,
+                        'sessionid' => $old->session_id,
+                        'addby' => $old->user_ic
+                     ])
+                     ->update([
+                        'addby' => $request->main
+                     ]);  
+                    
+            //Change Extra Lecturer
+
+            DB::table('tblclassextra')
+                     ->where([
+                        'classid' => $id,
+                        'sessionid' => $old->session_id,
+                        'addby' => $old->user_ic
+                     ])
+                     ->update([
+                        'addby' => $request->main
+                     ]);  
+
+
+            //Change Forum Lecturer
+
+            DB::table('tblforum_topic')
+                     ->where([
+                        'CourseID' => $id,
+                        'SessionID' => $old->session_id,
+                        'Addby' => $old->user_ic
+                     ])
+                     ->update([
+                        'Addby' => $request->main
+                     ]);
+
+
+            //Change Event Lecturer
+
+            DB::table('tblevents')
+                     ->where([
+                        'user_ic' => $old->user_ic,
+                        'group_id' => $old->id,
+                        'session_id' => $old->session_id
+                     ])
+                     ->update([
+                        'user_ic' => $request->main
+                     ]);
+
+            DB::table('tblevents_second')
+                     ->where([
+                        'user_ic' => $old->user_ic,
+                        'group_id' => $old->id,
+                        'session_id' => $old->session_id
+                     ])
+                     ->update([
+                        'user_ic' => $request->main
+                     ]);
+
+            DB::table('tblevents_log')
+                     ->where([
+                        'user_ic' => $old->user_ic,
+                        'group_id' => $old->id,
+                        'session_id' => $old->session_id
+                     ])
+                     ->update([
+                        'user_ic' => $request->main
+                     ]);
+                     
+            //Finally Change User Subjek Lecturer
+
+            DB::table('user_subjek')->where('id', $request->id)->update([
+                'user_ic' => $request->main
+            ]);
+        }
+
+        if($request->ic != '')
         {
 
             DB::table('user_subjek')->where('id', $request->id)->update([
                 'amali_ic' => $request->ic
             ]);
 
-            return response()->json(['message' => 'success']);
-
         }
+
+        return response()->json(['message' => 'success']);
 
     }
 
