@@ -47,7 +47,7 @@
                 page-break-inside: avoid;
             }
             .custom-table, .custom-table th, .custom-table td {
-                border: 1px solid white;
+                border: none;
             }
             
             .custom-table {
@@ -80,11 +80,64 @@
         
         @else
         <style>
-            body {
-                background-image: url('{{ asset("assets/images/letter_head/letter_head.jpg") }}');
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
+            /* Screen version */
+            @media screen {
+                body {
+                    background-image: url('{{ asset("assets/images/letter_head/letter_head_transcript.jpg") }}');
+                    background-size: cover;
+                    background-position: center;
+                    background-repeat: no-repeat;
+                    background-attachment: fixed;
+                }
+            }
+            
+            /* Print version - definitive solution */
+            @media print {
+                /* Reset everything */
+                * {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
+                
+                /* Force the root elements to have no margins */
+                html {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                }
+                
+                /* Create absolute positioned background that covers entire page */
+                html::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-image: url('{{ asset("assets/images/letter_head/letter_head_transcript.jpg") }}');
+                    background-size: cover;
+                    background-position: center;
+                    background-repeat: no-repeat;
+                    z-index: -999;
+                    pointer-events: none;
+                }
+                
+                /* Reset body and allow normal content flow */
+                body {
+                    background: transparent !important;
+                    position: relative;
+                    z-index: 1;
+                    /* Restore the original page margins for content with extra top margin */
+                    margin: 3cm 1cm 1cm 1cm !important;
+                    padding: 0 !important;
+                }
+                
+                /* Override the global @page rule for this specific case */
+                @page {
+                    margin: 0 !important;
+                    size: A4;
+                }
             }
         </style>
         @endif
@@ -95,27 +148,27 @@
                 <table>
                     <tr>
                         <td style="padding-right: 10px;">PROGRAM</td>
-                        <td>:</td>
+                        <td>&nbsp;&nbsp;:&nbsp;&nbsp;</td>
                         <td style="padding-left: 10px;">{{ $data['student']->program }}</td>
                     </tr>
                     <tr>
                         <td style="padding-right: 10px;">NO. RUJUKAN MQA</td>
-                        <td>:</td>
+                        <td>&nbsp;&nbsp;:&nbsp;&nbsp;</td>
                         <td style="padding-left: 10px;">{{ $data['student']->mqa }}</td>
                     </tr>
                     <tr>
                         <td style="padding-right: 10px;">NAMA</td>
-                        <td>:</td>
+                        <td>&nbsp;&nbsp;:&nbsp;&nbsp;</td>
                         <td style="padding-left: 10px;">{{ $data['student']->name }}</td>
                     </tr>
                     <tr>
                         <td style="padding-right: 10px;">NO. MATRIKS</td>
-                        <td>:</td>
+                        <td>&nbsp;&nbsp;:&nbsp;&nbsp;</td>
                         <td style="padding-left: 10px;">{{ $data['student']->no_matric }}</td>
                     </tr>
                     <tr>
                         <td style="padding-right: 10px;">NO. K.P. / NO. PASSPORT</td>
-                        <td>:</td>
+                        <td>&nbsp;&nbsp;:&nbsp;&nbsp;</td>
                         <td style="padding-left: 10px;">{{ $data['student']->ic }}</td>
                     </tr>
                 </table>
@@ -142,8 +195,8 @@
                 <table class="custom-table">
                     <thead>
                         <tr class="line">
-                            <th class="text-center" style="width: 2%">KOD</th>
-                            <th style="width: 15%">KURSUS</th>
+                            <th class="text-center" style="width: 5%">KOD</th>
+                            <th style="width: 16%">KURSUS</th>
                             <th class="text-center" style="width: 1%">KR</th>
                             <th style="width: 1%">GR</th>
                         </tr>
@@ -159,6 +212,7 @@
             $total_credit = 0;
             @endphp
             @foreach($data['semesters'] as $key => $sm)
+            @if(isset($data['detail'][$key]))
             <div class="col-md-6 mt-3">
                 <div class="text-center"><b><u>SESI {{ $data['detail'][$key]->session }} SEMESTER {{ $sm }}</u></b></div>
                 <table class="custom-table">
@@ -166,7 +220,7 @@
                         @foreach($data['course'][$key] as $key2 => $crs)
                         <tr class="line">
                             <td style="width: 5%">{{ $crs->course_code }}</td>
-                            <td style="width: 25%">{{ $crs->course_name }}</td>
+                            <td style="width: 26%">{{ $crs->course_name }}</td>
                             <td class="text-center" style="width: 1%">{{ $crs->credit }}</td>
                             <td style="width: 1%">{{ $crs->grade }}</td>
                         </tr>
@@ -179,16 +233,18 @@
                         <tr class="line">
                             <td colspan="2"></td>
                             <td>PNGS :</td>
-                            <td>{{ $data['detail'][$key]->gpa }}</td>
+                            <td>&nbsp;{{ $data['detail'][$key]->gpa }}</td>
                         </tr>
                         <tr class="line">
                             <td colspan="2"></td>
                             <td>PNGK :</td>
-                            <td>{{ $data['detail'][$key]->cgpa }}</td>
+                            <td>&nbsp;{{ $data['detail'][$key]->cgpa }}</td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            @endif
             @endforeach  
         </div>
 
@@ -197,12 +253,12 @@
             <table style="float: right;">
                 <tr>
                 <td style="padding-right: 10px;"><b>PURATA TIMBUNAN MATA NILAIAN</b></td>
-                <td><b>:</b></td>
+                <td><b>&nbsp;:&nbsp;</b></td>
                 <td style="padding-left: 10px;"><b>{{ $data['lastCGPA'] }}</b></td>
                 </tr>
                 <tr>
                 <td style="padding-right: 10px;"><b>JUMLAH KREDIT KESELURUHAN</b></td>
-                <td><b>:</b></td>
+                <td><b>&nbsp;:&nbsp;</b></td>
                 <td style="padding-left: 10px;"><b>{{ $total_credit }}</b></td>
                 </tr>
             </table>
