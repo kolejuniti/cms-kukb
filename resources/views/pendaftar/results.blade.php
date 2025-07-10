@@ -118,10 +118,11 @@
                      <address>
                         <div class="b3">
                         <strong>KOLEJ UNITI</strong><br>
-                        PERSIARAN UNITI VILLAGE, TANJUNG AGAS<br>
-                        71250, PORT DICKSON, NEGERI SEMBILAN.<br>
-                        <abbr title="Phone">Tel:</abbr> 06-649 0350 | <abbr title="Phone">Fax:</abbr> 06-661 0509<br>
-                        http://www.uniti.edu.my | <abbr title="Email">Email:</abbr> info@uniti.edu.my
+                        KAMPUS KIJANG, LOT 1911<br>
+JALAN PANTAI, CAHAYA BULAN<br>
+                        KELANTAN, 15350, KOTA BHARU.<br>
+                        <abbr title="Phone">Tel:</abbr> 09-774 7449 
+                        https://unitikotabharu.edu.my/ | <abbr title="Email">Email:</abbr> info@kukb.edu.my
                         </div>
                      </address>
                   </div>
