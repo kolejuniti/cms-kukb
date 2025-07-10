@@ -121,7 +121,7 @@
                         KAMPUS KIJANG, LOT 1911<br>
 JALAN PANTAI, CAHAYA BULAN<br>
                         KELANTAN, 15350, KOTA BHARU.<br>
-                        <abbr title="Phone">Tel:</abbr> 09-774 7449 
+                        <abbr title="Phone">Tel:</abbr> 09-774 7449<br>
                         https://unitikotabharu.edu.my/ | <abbr title="Email">Email:</abbr> info@kukb.edu.my
                         </div>
                      </address>
