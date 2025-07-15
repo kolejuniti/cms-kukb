@@ -387,6 +387,7 @@ li a {
 						{{-- <li><a href="{{ route('pendaftar_akademik.resultOverall') }}" class="{{ (route('pendaftar_akademik.resultOverall') == Request::url()) ? 'active' : ''}}">Result Filter</a></li> --}}
 						<li><a href="{{ route('pendaftar_akademik.assessmentFilter') }}" class="{{ (route('pendaftar_akademik.assessmentFilter') == Request::url()) ? 'active' : ''}}">Assessment Filter</a></li>
 						<li><a href="{{ route('pendaftar_akademik.student.certificate') }}" class="{{ (route('pendaftar_akademik.student.certificate') == Request::url()) ? 'active' : ''}}">Student Certificate</a></li>
+						<li><a href="{{ route('pendaftar_akademik.student.certificate.bulk') }}" class="{{ (route('pendaftar_akademik.student.certificate.bulk') == Request::url()) ? 'active' : ''}}">Bulk Student Cert</a></li>
 					</ul>
 				</li>
 				<li class="treeview">
