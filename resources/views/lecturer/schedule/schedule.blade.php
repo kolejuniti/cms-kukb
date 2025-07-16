@@ -814,7 +814,7 @@
     const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const hiddenDays = [];
 
-    // Build time slots with 30-minute intervals, except 13:00-14:30 which uses 15-minute intervals
+    // Build time slots with proper 15-minute intervals during lunch period
     let times = [];
     let currentHour = 7; // From 7:00 as per calendar config
     let currentMinute = 0;
@@ -825,15 +825,16 @@
         let mm = String(currentMinute).padStart(2, '0');
         times.push(`${hh}:${mm}`);
         
-        // Special handling for 13:00-14:30 period (15-minute intervals)
+        // Special handling for 13:00-15:00 period (15-minute intervals)
         if (currentHour === 13 && currentMinute === 0) {
-            // Add 13:15, 13:30, 13:45, 14:00, 14:15, 14:30
+            // Add all 15-minute intervals from 13:00 to 15:00
             times.push('13:15');
             times.push('13:30');
             times.push('13:45');
             times.push('14:00');
             times.push('14:15');
             times.push('14:30');
+            times.push('14:45');
             // Jump to 15:00 for next iteration
             currentHour = 15;
             currentMinute = 0;
@@ -868,6 +869,7 @@
 
     // Helper function to find the appropriate time slot index for any time
     function findTimeSlotIndex(timeStr, times, isEndTime = false) {
+        // First try exact match
         let exactIndex = times.indexOf(timeStr);
         if (exactIndex !== -1) {
             return exactIndex;
@@ -877,32 +879,36 @@
         let [hours, minutes] = timeStr.split(':').map(Number);
         let totalMinutes = hours * 60 + minutes;
 
-        // Find the appropriate slot
+        // Find the closest appropriate slot
         for (let i = 0; i < times.length; i++) {
             let [slotHours, slotMinutes] = times[i].split(':').map(Number);
             let slotTotalMinutes = slotHours * 60 + slotMinutes;
             
             if (isEndTime) {
-                // For end times, find the slot that the time falls within or the next slot
-                if (i === times.length - 1) {
-                    return i + 1; // Beyond the last slot
-                }
-                
-                let [nextSlotHours, nextSlotMinutes] = times[i + 1].split(':').map(Number);
-                let nextSlotTotalMinutes = nextSlotHours * 60 + nextSlotMinutes;
-                
-                if (totalMinutes > slotTotalMinutes && totalMinutes <= nextSlotTotalMinutes) {
-                    return i + 1;
-                }
-            } else {
-                // For start times, find the slot that contains this time
+                // For end times, find the slot that contains or comes after this time
                 if (totalMinutes <= slotTotalMinutes) {
                     return i;
+                }
+            } else {
+                // For start times, find the slot that contains this time or comes before
+                if (totalMinutes <= slotTotalMinutes) {
+                    return i;
+                }
+                
+                // Check if time falls between current and next slot
+                if (i < times.length - 1) {
+                    let [nextSlotHours, nextSlotMinutes] = times[i + 1].split(':').map(Number);
+                    let nextSlotTotalMinutes = nextSlotHours * 60 + nextSlotMinutes;
+                    
+                    if (totalMinutes > slotTotalMinutes && totalMinutes < nextSlotTotalMinutes) {
+                        return i;
+                    }
                 }
             }
         }
 
-        return isEndTime ? times.length : 0;
+        // Fallback: return appropriate boundary
+        return isEndTime ? times.length : times.length - 1;
     }
 
     // Fill the scheduleData with events
@@ -918,12 +924,29 @@
         let startTimeStr = toHHMM(start);
         let endTimeStr = toHHMM(end);
 
-        let startIndex = findTimeSlotIndex(startTimeStr, times, false);
-        let endIndex = findTimeSlotIndex(endTimeStr, times, true);
+        // Find start and end indices - prioritize exact matches for REHAT events
+        let startIndex = times.indexOf(startTimeStr);
+        let endIndex = times.indexOf(endTimeStr);
+        
+        if (startIndex === -1) {
+            startIndex = findTimeSlotIndex(startTimeStr, times, false);
+        }
+        if (endIndex === -1) {
+            endIndex = findTimeSlotIndex(endTimeStr, times, true);
+        }
 
-        // Fill each half-hour slot with the event
-        for (let i = startIndex; i < endIndex; i++) {
-            scheduleData[dayIndex][i].push(event);
+        // For REHAT events, only place in the starting time slot to avoid duplication
+        if (event.title === 'REHAT') {
+            if (startIndex >= 0 && startIndex < times.length) {
+                scheduleData[dayIndex][startIndex].push(event);
+            }
+        } else {
+            // Fill each time slot with regular events
+            for (let i = startIndex; i < endIndex && i < times.length; i++) {
+                if (i >= 0) {
+                    scheduleData[dayIndex][i].push(event);
+                }
+            }
         }
     });
 
@@ -1221,22 +1244,22 @@
     for (let t = 0; t < times.length; t++) {
         let currentTime = times[t];
         
-        // Determine if this is a major slot (30-minute boundary) or minor slot (15-minute mark)
-        let isMinorSlot = false;
+        // Generate time label consistently
         let timeLabel = '';
+        let isMinorSlot = false;
         
-        // Check if this is a 15-minute mark within the 13:00-14:30 period
-        if (currentTime === '13:15' || currentTime === '13:45' || currentTime === '14:15') {
-            isMinorSlot = true;
-            timeLabel = currentTime; // Just show the time
+        // Check if this is a 15-minute interval during lunch period (13:00-15:00)
+        let [hour, minute] = currentTime.split(':').map(Number);
+        if (hour >= 13 && hour < 15) {
+            // All slots in lunch period are treated as 15-minute intervals
+            isMinorSlot = (minute === 15 || minute === 45);
+        }
+        
+        // Generate time range label
+        if (t + 1 < times.length) {
+            timeLabel = currentTime + ' - ' + times[t + 1];
         } else {
-            // Major time slot - show range
-            timeLabel = currentTime;
-            if (t + 1 < times.length) {
-                timeLabel += ' - ' + times[t + 1];
-            } else {
-                timeLabel += ' - 20:00';
-            }
+            timeLabel = currentTime + ' - 20:00';
         }
 
         // Start a row
@@ -1272,24 +1295,44 @@
                     let startTimeStr = toHHMM(start);
                     let endTimeStr = toHHMM(end);
 
-                    let startIndex = findTimeSlotIndex(startTimeStr, times, false);
-                    let endIndex = findTimeSlotIndex(endTimeStr, times, true);
-
-                    let rowSpan = endIndex - startIndex;
-
-                    // Mark future slots to skip
-                    for (let k = 1; k < rowSpan; k++) {
-                        if (t + k < times.length) {
-                            skip[d][t + k] = true;
-                        }
+                    // Find the exact time slots for start and end
+                    let startIndex = times.indexOf(startTimeStr);
+                    let endIndex = times.indexOf(endTimeStr);
+                    
+                    // If exact match not found, find closest slots
+                    if (startIndex === -1) {
+                        startIndex = findTimeSlotIndex(startTimeStr, times, false);
+                    }
+                    if (endIndex === -1) {
+                        endIndex = findTimeSlotIndex(endTimeStr, times, true);
                     }
 
-                    // Create cell with REHAT showing actual times
-                    let rehatTimeDisplay = `${toHHMM(start)} - ${toHHMM(end)}`;
-                    html += `<td rowspan="${rowSpan}" class="rehat-cell">
-                                <div class="event-title">REHAT</div>
-                                <div class="event-time-display">${rehatTimeDisplay}</div>
-                            </td>`;
+                    // Only create REHAT cell if this is the actual starting time slot
+                    if (t === startIndex) {
+                        let rowSpan = endIndex - startIndex;
+                        
+                        // Ensure minimum rowspan of 1
+                        if (rowSpan < 1) {
+                            rowSpan = 1;
+                        }
+
+                        // Mark future slots to skip
+                        for (let k = 1; k < rowSpan; k++) {
+                            if (t + k < times.length) {
+                                skip[d][t + k] = true;
+                            }
+                        }
+
+                        // Create cell with REHAT showing actual times
+                        let rehatTimeDisplay = `${startTimeStr} - ${endTimeStr}`;
+                        html += `<td rowspan="${rowSpan}" class="rehat-cell">
+                                    <div class="event-title">REHAT</div>
+                                    <div class="event-time-display">${rehatTimeDisplay}</div>
+                                </td>`;
+                    } else {
+                        // This time slot is part of a REHAT that started earlier, skip it
+                        continue;
+                    }
 
                     // Skip processing other events in this cell
                     continue;
