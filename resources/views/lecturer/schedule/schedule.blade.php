@@ -624,17 +624,17 @@
                 var date = new Date(fetchInfo.start);
                 while (date < fetchInfo.end) {
                     var dayOfWeek = date.getDay(); 
-                    if (dayOfWeek >= 0 && dayOfWeek <= 4) {
-                        // Monday-Thursday => 13:30 to 14:00
-                        rehatEvents.push({
-                            title: 'REHAT',
-                            start: new Date(date.getFullYear(), date.getMonth(), date.getDate(), 13, 15, 0),
-                            end: new Date(date.getFullYear(), date.getMonth(), date.getDate(), 14, 15, 0),
-                            allDay: false,
-                            color: '#e63946',
-                            textColor: '#ffffff',
-                            borderColor: '#e63946'
-                        });
+                                    if (dayOfWeek >= 1 && dayOfWeek <= 4) {
+                    // Monday-Thursday => 13:15 to 14:15
+                    rehatEvents.push({
+                        title: 'REHAT',
+                        start: new Date(date.getFullYear(), date.getMonth(), date.getDate(), 13, 15, 0),
+                        end: new Date(date.getFullYear(), date.getMonth(), date.getDate(), 14, 15, 0),
+                        allDay: false,
+                        color: '#e63946',
+                        textColor: '#ffffff',
+                        borderColor: '#e63946'
+                    });
                     } else if (dayOfWeek === 5) {
                         // Friday => 12:30 to 14:30
                         rehatEvents.push({
@@ -814,20 +814,36 @@
     const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const hiddenDays = [];
 
-    // Build half-hour time slots
+    // Build time slots with 30-minute intervals, except 13:00-14:30 which uses 15-minute intervals
     let times = [];
-    let startHour = 7; // From 7:00 as per calendar config
-    let startMinute = 0;
+    let currentHour = 7; // From 7:00 as per calendar config
+    let currentMinute = 0;
     let endHour = 20; // Until 20:00 as per calendar config
 
-    while (startHour < endHour || (startHour === endHour && startMinute === 0)) {
-        let hh = String(startHour).padStart(2, '0');
-        let mm = String(startMinute).padStart(2, '0');
+    while (currentHour < endHour || (currentHour === endHour && currentMinute === 0)) {
+        let hh = String(currentHour).padStart(2, '0');
+        let mm = String(currentMinute).padStart(2, '0');
         times.push(`${hh}:${mm}`);
-        startMinute += 30;
-        if (startMinute === 60) {
-            startMinute = 0;
-            startHour++;
+        
+        // Special handling for 13:00-14:30 period (15-minute intervals)
+        if (currentHour === 13 && currentMinute === 0) {
+            // Add 13:15, 13:30, 13:45, 14:00, 14:15, 14:30
+            times.push('13:15');
+            times.push('13:30');
+            times.push('13:45');
+            times.push('14:00');
+            times.push('14:15');
+            times.push('14:30');
+            // Jump to 15:00 for next iteration
+            currentHour = 15;
+            currentMinute = 0;
+        } else {
+            // Regular 30-minute increment
+            currentMinute += 30;
+            if (currentMinute === 60) {
+                currentMinute = 0;
+                currentHour++;
+            }
         }
     }
 
@@ -850,6 +866,45 @@
         return hh + ':' + mm;
     }
 
+    // Helper function to find the appropriate time slot index for any time
+    function findTimeSlotIndex(timeStr, times, isEndTime = false) {
+        let exactIndex = times.indexOf(timeStr);
+        if (exactIndex !== -1) {
+            return exactIndex;
+        }
+
+        // Parse the time string
+        let [hours, minutes] = timeStr.split(':').map(Number);
+        let totalMinutes = hours * 60 + minutes;
+
+        // Find the appropriate slot
+        for (let i = 0; i < times.length; i++) {
+            let [slotHours, slotMinutes] = times[i].split(':').map(Number);
+            let slotTotalMinutes = slotHours * 60 + slotMinutes;
+            
+            if (isEndTime) {
+                // For end times, find the slot that the time falls within or the next slot
+                if (i === times.length - 1) {
+                    return i + 1; // Beyond the last slot
+                }
+                
+                let [nextSlotHours, nextSlotMinutes] = times[i + 1].split(':').map(Number);
+                let nextSlotTotalMinutes = nextSlotHours * 60 + nextSlotMinutes;
+                
+                if (totalMinutes > slotTotalMinutes && totalMinutes <= nextSlotTotalMinutes) {
+                    return i + 1;
+                }
+            } else {
+                // For start times, find the slot that contains this time
+                if (totalMinutes <= slotTotalMinutes) {
+                    return i;
+                }
+            }
+        }
+
+        return isEndTime ? times.length : 0;
+    }
+
     // Fill the scheduleData with events
     events.forEach(event => {
         let start = event.start;
@@ -863,11 +918,8 @@
         let startTimeStr = toHHMM(start);
         let endTimeStr = toHHMM(end);
 
-        let startIndex = times.indexOf(startTimeStr);
-        if (startIndex === -1) return;
-
-        let endIndex = times.indexOf(endTimeStr);
-        if (endIndex === -1) endIndex = times.length;
+        let startIndex = findTimeSlotIndex(startTimeStr, times, false);
+        let endIndex = findTimeSlotIndex(endTimeStr, times, true);
 
         // Fill each half-hour slot with the event
         for (let i = startIndex; i < endIndex; i++) {
@@ -991,6 +1043,7 @@
                     text-align: center;
                     vertical-align: middle;
                     background-color: #f8f8f8;
+                    height: 20px; /* Slightly reduced height for mixed intervals */
                 }
 
                 .time-column {
@@ -998,6 +1051,13 @@
                     font-weight: 700;
                     color: #000000;
                     width: 60px;
+                }
+
+                .time-column.minor-slot {
+                    background-color: #f0f0f0;
+                    font-weight: 500;
+                    font-size: 7px;
+                    color: #666666;
                 }
 
                 .event-cell {
@@ -1017,6 +1077,15 @@
                     font-size: 7px;
                     font-weight: 500;
                     line-height: 1.2;
+                    margin: 1px 0;
+                }
+
+                .event-time-display {
+                    color: #000000;
+                    font-size: 7px;
+                    font-weight: 600;
+                    line-height: 1.2;
+                    margin: 1px 0;
                 }
 
                 .rehat-cell {
@@ -1092,6 +1161,13 @@
                         font-weight: 700 !important;
                     }
 
+                    .time-column.minor-slot {
+                        background-color: #f0f0f0 !important;
+                        color: #666666 !important;
+                        font-weight: 500 !important;
+                        font-size: 7px !important;
+                    }
+
                     .event-cell {
                         background-color: #d1e4ff !important;
                         border: 1.5px solid #000000 !important;
@@ -1143,19 +1219,32 @@
 
     // For each timeslot row
     for (let t = 0; t < times.length; t++) {
-        // Build the time label, e.g. "08:30 - 09:00"
-        let timeLabel = times[t];
-        if (t < times.length - 1) {
-            timeLabel += ' - ' + times[t + 1];
+        let currentTime = times[t];
+        
+        // Determine if this is a major slot (30-minute boundary) or minor slot (15-minute mark)
+        let isMinorSlot = false;
+        let timeLabel = '';
+        
+        // Check if this is a 15-minute mark within the 13:00-14:30 period
+        if (currentTime === '13:15' || currentTime === '13:45' || currentTime === '14:15') {
+            isMinorSlot = true;
+            timeLabel = currentTime; // Just show the time
         } else {
-            timeLabel += ' - 20:00';
+            // Major time slot - show range
+            timeLabel = currentTime;
+            if (t + 1 < times.length) {
+                timeLabel += ' - ' + times[t + 1];
+            } else {
+                timeLabel += ' - 20:00';
+            }
         }
 
         // Start a row
         html += `<tr>`;
 
-        // Left column: time label
-        html += `<td class="time-column">${timeLabel}</td>`;
+        // Left column: time label with appropriate styling
+        let timeColumnClass = isMinorSlot ? "time-column minor-slot" : "time-column";
+        html += `<td class="${timeColumnClass}">${timeLabel}</td>`;
 
         // For each day column
         for (let d = 0; d < 7; d++) {
@@ -1183,9 +1272,8 @@
                     let startTimeStr = toHHMM(start);
                     let endTimeStr = toHHMM(end);
 
-                    let startIndex = times.indexOf(startTimeStr);
-                    let endIndex = times.indexOf(endTimeStr);
-                    if (endIndex === -1) endIndex = times.length;
+                    let startIndex = findTimeSlotIndex(startTimeStr, times, false);
+                    let endIndex = findTimeSlotIndex(endTimeStr, times, true);
 
                     let rowSpan = endIndex - startIndex;
 
@@ -1196,9 +1284,11 @@
                         }
                     }
 
-                    // Create cell with REHAT
+                    // Create cell with REHAT showing actual times
+                    let rehatTimeDisplay = `${toHHMM(start)} - ${toHHMM(end)}`;
                     html += `<td rowspan="${rowSpan}" class="rehat-cell">
                                 <div class="event-title">REHAT</div>
+                                <div class="event-time-display">${rehatTimeDisplay}</div>
                             </td>`;
 
                     // Skip processing other events in this cell
@@ -1218,9 +1308,8 @@
                     let startTimeStr = toHHMM(start);
                     let endTimeStr = toHHMM(end);
 
-                    let startIndex = times.indexOf(startTimeStr);
-                    let endIndex = times.indexOf(endTimeStr);
-                    if (endIndex === -1) endIndex = times.length;
+                    let startIndex = findTimeSlotIndex(startTimeStr, times, false);
+                    let endIndex = findTimeSlotIndex(endTimeStr, times, true);
 
                     // Create a unique key for this time span
                     let timeSpanKey = `${startIndex}-${endIndex}`;
@@ -1272,6 +1361,12 @@
 
                         // Title
                         html += `<div class="event-title">${event.title || '(No Title)'}</div>`;
+
+                        // Add actual event times
+                        let eventStart = event.start;
+                        let eventEnd = event.end || new Date(eventStart.getTime() + 60 * 60 * 1000);
+                        let eventTimeDisplay = `${toHHMM(eventStart)} - ${toHHMM(eventEnd)}`;
+                        html += `<div class="event-time-display">${eventTimeDisplay}</div>`;
 
                         // Add description if available
                         if (event.extendedProps && event.extendedProps.description) {
