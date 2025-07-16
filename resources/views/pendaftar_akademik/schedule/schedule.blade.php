@@ -1,4 +1,22 @@
-@extends(Auth::user()->usrtype == 'AR' ? 'layouts.pendaftar_akademik' : (Auth::user()->usrtype == 'OTR' ? 'layouts.other_user' : (Auth::user()->usrtype == 'ADM' ? 'layouts.admin' : 'layouts.ketua_program')));
+@php
+    $layoutMap = [
+        'AR' => 'layouts.pendaftar_akademik',
+        'LCT' => 'layouts.ketua_program',
+        'PL' => 'layouts.ketua_program',
+        'AO' => 'layouts.ketua_program',
+        'OTR' => 'layouts.other_user',
+        'ADM' => 'layouts.admin',
+        'HEA' => 'layouts.hea'
+    ];
+    
+    $layout = 'layouts.student';
+    
+    if (isset(Auth::user()->usrtype) && array_key_exists(Auth::user()->usrtype, $layoutMap)) {
+        $layout = $layoutMap[Auth::user()->usrtype];
+    }
+@endphp
+
+@extends($layout)
 
 @section('main')
 
@@ -1014,7 +1032,7 @@ var calendar;
 // Initialize FullCalendar
 document.addEventListener('DOMContentLoaded', function () {
     var calendarEl = document.getElementById('calendar');
-    var hiddenDays = [5, 6]; // Hide Sunday(0) & Saturday(6)
+    var hiddenDays = [0, 6]; // Hide Sunday(0) & Saturday(6)
 
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'timeGridWeek',
@@ -1029,7 +1047,7 @@ document.addEventListener('DOMContentLoaded', function () {
             day: 'Day'
         },
         hiddenDays: hiddenDays,
-        slotMinTime: '08:15:00',
+        slotMinTime: '08:30:00',
         slotMaxTime: '18:00:00',
         slotDuration: '00:30:00',
         slotLabelInterval: '00:30:00',
@@ -1056,7 +1074,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var date = new Date(fetchInfo.start);
             while (date < fetchInfo.end) {
                 var dayOfWeek = date.getDay(); 
-                if (dayOfWeek >= 0 && dayOfWeek <= 4) {
+                if (dayOfWeek >= 1 && dayOfWeek <= 4) {
                     // Monday-Thursday => 13:30 to 14:00
                     rehatEvents.push({
                         title: 'REHAT',
@@ -1870,34 +1888,46 @@ function printScheduleTable(name, ic, staffNo, email) {
     // Show loading notification
     showNotification('Preparing timetable for printing...', 'info');
     
-    const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday'];
+    const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
 
-    // Build time slots (08:15..18:00)
+    // Build time slots (08:30..18:00) with 15-minute intervals during break time
     let times = [];
     let startHour = 8;
-    let startMinute = 15;
+    let startMinute = 30;
     let endHour = 18;
-    let endMinute = 0;
-    
-    // Generate consistent 15-minute slots
-    let timeSlotDate = new Date();
-    timeSlotDate.setHours(startHour, startMinute, 0, 0);
-    let endDate = new Date();
-    endDate.setHours(endHour, endMinute, 0, 0);
-    
-    while (timeSlotDate <= endDate) {
-        let hh = String(timeSlotDate.getHours()).padStart(2, '0');
-        let mm = String(timeSlotDate.getMinutes()).padStart(2, '0');
+
+    while (startHour < endHour || (startHour === endHour && startMinute === 0)) {
+        let hh = String(startHour).padStart(2, '0');
+        let mm = String(startMinute).padStart(2, '0');
         times.push(`${hh}:${mm}`);
         
-        // Add 15 minutes
-        timeSlotDate.setMinutes(timeSlotDate.getMinutes() + 15);
+        // Special handling for break time (13:00-14:30) - use 15-minute intervals
+        if (startHour === 13 && startMinute === 0) {
+            // Add 15-minute intervals during break time
+            times.push('13:15');
+            times.push('13:30');
+            times.push('13:45');
+            times.push('14:00');
+            times.push('14:15');
+            times.push('14:30');
+            // Jump to 15:00 (next 30-minute slot after break)
+            startHour = 15;
+            startMinute = 0;
+        } else {
+            // Regular 30-minute intervals
+            startMinute += 30;
+            if (startMinute === 60) {
+                startMinute = 0;
+                startHour++;
+            }
+        }
     }
 
     // Get events from FullCalendar
     const events = calendar.getEvents();
 
     // Build a 2D array scheduleData[dayIndex][timeIndex] = [events]
+    // Changed to store arrays of events instead of single events
     let scheduleData = [];
     for (let d = 0; d < dayNames.length; d++) {
         scheduleData[d] = [];
@@ -1910,59 +1940,24 @@ function printScheduleTable(name, ic, staffNo, email) {
         let start = event.start;
         let end = event.end || new Date(start.getTime() + 60 * 60 * 1000);
 
-        // Convert day-of-week (Sun=0..Thu=4 => index 0..4)
-        let dayIndex = start.getDay();
-        if (dayIndex > 4) return; // skip Fri/Sat
+        // Convert day-of-week (Mon=1..Fri=5 => index 0..4)
+        let dayIndex = start.getDay() - 1; 
+        if (dayIndex < 0 || dayIndex > 4) return; // skip Sat/Sun
 
-        // Find nearest time slots
         let startTimeStr = toHHMM(start);
         let endTimeStr = toHHMM(end);
-        
-        // Find the closest matching time slot
-        let startIndex = times.indexOf(startTimeStr);
-        if (startIndex === -1) {
-            // Find the nearest time slot if exact match not found
-            for (let i = 0; i < times.length - 1; i++) {
-                let currentTime = parseTimeString(times[i]);
-                let nextTime = parseTimeString(times[i + 1]);
-                let eventTime = parseTimeString(startTimeStr);
-                
-                if (eventTime >= currentTime && eventTime < nextTime) {
-                    startIndex = i;
-                    break;
-                }
-            }
-            // If still not found, try the first slot
-            if (startIndex === -1) startIndex = 0;
-        }
-        
-        let endIndex = times.indexOf(endTimeStr);
-        if (endIndex === -1) {
-            // Find the nearest time slot if exact match not found
-            for (let i = 0; i < times.length; i++) {
-                let currentTime = parseTimeString(times[i]);
-                let eventTime = parseTimeString(endTimeStr);
-                
-                if (eventTime <= currentTime) {
-                    endIndex = i;
-                    break;
-                }
-            }
-            // If still not found, use the last slot
-            if (endIndex === -1) endIndex = times.length;
-        }
 
-        // Fill each slot with the event
+        let startIndex = times.indexOf(startTimeStr);
+        if (startIndex === -1) return;
+
+        let endIndex = times.indexOf(endTimeStr);
+        if (endIndex === -1) endIndex = times.length;
+
+        // Fill each half-hour slot with the event
         for (let i = startIndex; i < endIndex; i++) {
-            scheduleData[dayIndex][i].push(event);
+            scheduleData[dayIndex][i].push(event); // Push to array instead of overwriting
         }
     });
-
-    // Helper function to parse time string "HH:MM" to minutes
-    function parseTimeString(timeStr) {
-        const [hours, minutes] = timeStr.split(':').map(Number);
-        return hours * 60 + minutes;
-    }
 
     // Create processed tracking arrays
     let processedEvents = new Set();
@@ -2170,22 +2165,15 @@ function printScheduleTable(name, ic, staffNo, email) {
 
     html += `</tr></thead><tbody>`;
 
-    // Group time slots by 30 minutes for display (while keeping the 15-min resolution in the data)
-    let displayTimes = [];
-    for (let i = 0; i < times.length; i += 2) {
-        // Handle the edge case at the end
-        if (i + 1 < times.length) {
-            displayTimes.push({start: times[i], end: times[i+2] || '18:00'});
+    // For each timeslot row
+    for (let t = 0; t < times.length; t++) {
+        // Build the time label, e.g. "08:30 - 09:00"
+        let timeLabel = times[t];
+        if (t < times.length - 1) {
+            timeLabel += ' - ' + times[t + 1];
+        } else {
+            timeLabel += ' - 18:00';
         }
-    }
-
-    // For each display timeslot (30 min intervals)
-    for (let t = 0; t < displayTimes.length; t++) {
-        // Build the time label, e.g. "08:15 - 08:45"
-        let timeLabel = `${displayTimes[t].start} - ${displayTimes[t].end}`;
-        
-        // Data index (2 slots per display slot)
-        let dataIndex = t * 2;
 
         // Start a row
         html += `<tr>`;
@@ -2196,18 +2184,11 @@ function printScheduleTable(name, ic, staffNo, email) {
         // For each day column
         for (let d = 0; d < dayNames.length; d++) {
             // If this slot is marked skip => do nothing
-            if (skip[d][dataIndex]) {
+            if (skip[d][t]) {
                 continue; 
             }
 
-            let eventList = scheduleData[d][dataIndex] || [];
-            
-            // Combine with events from the next 15-min slot (if available)
-            if (dataIndex + 1 < times.length && scheduleData[d][dataIndex + 1]) {
-                eventList = [...eventList, ...scheduleData[d][dataIndex + 1].filter(e => 
-                    !eventList.some(existingEvent => existingEvent.id === e.id)
-                )];
-            }
+            let eventList = scheduleData[d][t];
             
             if (eventList.length > 0) {
                 // Check if there's a REHAT event in this cell
@@ -2223,23 +2204,16 @@ function printScheduleTable(name, ic, staffNo, email) {
                     let startTimeStr = toHHMM(start);
                     let endTimeStr = toHHMM(end);
                     
-                    // Calculate corresponding display indices for the time slots
-                    let startIndex = Math.floor(times.indexOf(startTimeStr) / 2);
-                    if (startIndex === -1) startIndex = dataIndex;
-                    
-                    let endIndex = Math.ceil(times.indexOf(endTimeStr) / 2);
-                    if (endIndex === -1) endIndex = displayTimes.length;
+                    let startIndex = times.indexOf(startTimeStr);
+                    let endIndex = times.indexOf(endTimeStr);
+                    if (endIndex === -1) endIndex = times.length;
                     
                     let rowSpan = endIndex - startIndex;
-                    if (rowSpan < 1) rowSpan = 1;
                     
                     // Mark future slots to skip
                     for (let k = 1; k < rowSpan; k++) {
-                        if (dataIndex + (k * 2) < times.length) {
-                            skip[d][dataIndex + (k * 2)] = true;
-                            if (dataIndex + (k * 2) + 1 < times.length) {
-                                skip[d][dataIndex + (k * 2) + 1] = true;
-                            }
+                        if (t + k < times.length) {
+                            skip[d][t + k] = true;
                         }
                     }
                     
@@ -2265,32 +2239,9 @@ function printScheduleTable(name, ic, staffNo, email) {
                     let startTimeStr = toHHMM(start);
                     let endTimeStr = toHHMM(end);
                     
-                    // Calculate corresponding display indices
-                    let startIndex = Math.floor(times.indexOf(startTimeStr) / 2);
-                    if (startIndex === -1) {
-                        // Find the nearest slot
-                        let startMinutes = parseTimeString(startTimeStr);
-                        for (let i = 0; i < times.length; i++) {
-                            if (parseTimeString(times[i]) >= startMinutes) {
-                                startIndex = Math.floor(i / 2);
-                                break;
-                            }
-                        }
-                        if (startIndex === -1) startIndex = 0;
-                    }
-                    
-                    let endIndex = Math.ceil(times.indexOf(endTimeStr) / 2);
-                    if (endIndex === -1) {
-                        // Find the nearest slot
-                        let endMinutes = parseTimeString(endTimeStr);
-                        for (let i = times.length - 1; i >= 0; i--) {
-                            if (parseTimeString(times[i]) <= endMinutes) {
-                                endIndex = Math.ceil((i + 1) / 2);
-                                break;
-                            }
-                        }
-                        if (endIndex === -1) endIndex = displayTimes.length;
-                    }
+                    let startIndex = times.indexOf(startTimeStr);
+                    let endIndex = times.indexOf(endTimeStr);
+                    if (endIndex === -1) endIndex = times.length;
                     
                     // Create a unique key for this time span
                     let timeSpanKey = `${startIndex}-${endIndex}`;
@@ -2317,16 +2268,12 @@ function printScheduleTable(name, ic, staffNo, email) {
                 if (timeSpanKeys.length > 0) {
                     let firstGroup = eventGroups[timeSpanKeys[0]];
                     let rowSpan = firstGroup.rowSpan;
-                    if (rowSpan < 1) rowSpan = 1;
                     let events = firstGroup.events;
                     
                     // Mark future slots to skip
                     for (let k = 1; k < rowSpan; k++) {
-                        if (dataIndex + (k * 2) < times.length) {
-                            skip[d][dataIndex + (k * 2)] = true;
-                            if (dataIndex + (k * 2) + 1 < times.length) {
-                                skip[d][dataIndex + (k * 2) + 1] = true;
-                            }
+                        if (t + k < times.length) {
+                            skip[d][t + k] = true;
                         }
                     }
                     

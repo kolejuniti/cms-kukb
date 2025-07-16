@@ -5,7 +5,8 @@
         'PL' => 'layouts.ketua_program',
         'AO' => 'layouts.ketua_program',
         'OTR' => 'layouts.other_user',
-        'ADM' => 'layouts.admin'
+        'ADM' => 'layouts.admin',
+        'HEA' => 'layouts.hea'
     ];
     
     $layout = 'layouts.student';
@@ -820,7 +821,7 @@ function setupCalendar() {
     var calendarEl = document.getElementById('calendar');
     if (!calendarEl) return;
     
-    var hiddenDays = [5, 6]; // Hide Friday(5) & Saturday(6)
+    var hiddenDays = [0, 6]; // Hide Sunday(0) & Saturday(6)
 
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'timeGridWeek',
@@ -835,7 +836,7 @@ function setupCalendar() {
             day: 'Day'
         },
         hiddenDays: hiddenDays,
-        slotMinTime: '08:15:00',
+        slotMinTime: '08:30:00',
         slotMaxTime: '18:00:00',
         slotDuration: '00:30:00',
         slotLabelInterval: '00:30:00',
@@ -862,7 +863,7 @@ function setupCalendar() {
             var date = new Date(fetchInfo.start);
             while (date < fetchInfo.end) {
                 var dayOfWeek = date.getDay(); 
-                if (dayOfWeek >= 0 && dayOfWeek <= 4) {
+                if (dayOfWeek >= 1 && dayOfWeek <= 4) {
                     // Monday-Thursday => 13:30 to 14:00
                     rehatEvents.push({
                         title: 'REHAT',
@@ -1442,34 +1443,46 @@ function printScheduleTable(name, ic, staffNo, email) {
     // Show loading notification
     showNotification('Preparing timetable for printing...', 'info');
     
-    const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday'];
+    const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
 
-    // Build time slots (08:15..18:00)
+    // Build time slots (08:30..18:00) with 15-minute intervals during break time
     let times = [];
     let startHour = 8;
-    let startMinute = 15;
+    let startMinute = 30;
     let endHour = 18;
-    let endMinute = 0;
-    
-    // Generate consistent 15-minute slots
-    let timeSlotDate = new Date();
-    timeSlotDate.setHours(startHour, startMinute, 0, 0);
-    let endDate = new Date();
-    endDate.setHours(endHour, endMinute, 0, 0);
-    
-    while (timeSlotDate <= endDate) {
-        let hh = String(timeSlotDate.getHours()).padStart(2, '0');
-        let mm = String(timeSlotDate.getMinutes()).padStart(2, '0');
+
+    while (startHour < endHour || (startHour === endHour && startMinute === 0)) {
+        let hh = String(startHour).padStart(2, '0');
+        let mm = String(startMinute).padStart(2, '0');
         times.push(`${hh}:${mm}`);
         
-        // Add 15 minutes
-        timeSlotDate.setMinutes(timeSlotDate.getMinutes() + 15);
+        // Special handling for break time (13:00-14:30) - use 15-minute intervals
+        if (startHour === 13 && startMinute === 0) {
+            // Add 15-minute intervals during break time
+            times.push('13:15');
+            times.push('13:30');
+            times.push('13:45');
+            times.push('14:00');
+            times.push('14:15');
+            times.push('14:30');
+            // Jump to 15:00 (next 30-minute slot after break)
+            startHour = 15;
+            startMinute = 0;
+        } else {
+            // Regular 30-minute intervals
+            startMinute += 30;
+            if (startMinute === 60) {
+                startMinute = 0;
+                startHour++;
+            }
+        }
     }
 
     // Get events from FullCalendar
     const events = calendar.getEvents();
 
     // Build a 2D array scheduleData[dayIndex][timeIndex] = [events]
+    // Changed to store arrays of events instead of single events
     let scheduleData = [];
     for (let d = 0; d < dayNames.length; d++) {
         scheduleData[d] = [];
@@ -1482,59 +1495,24 @@ function printScheduleTable(name, ic, staffNo, email) {
         let start = event.start;
         let end = event.end || new Date(start.getTime() + 60 * 60 * 1000);
 
-        // Convert day-of-week (Sun=0..Thu=4 => index 0..4)
-        let dayIndex = start.getDay();
-        if (dayIndex > 4) return; // skip Fri/Sat
+        // Convert day-of-week (Mon=1..Fri=5 => index 0..4)
+        let dayIndex = start.getDay() - 1; 
+        if (dayIndex < 0 || dayIndex > 4) return; // skip Sat/Sun
 
-        // Find nearest time slots
         let startTimeStr = toHHMM(start);
         let endTimeStr = toHHMM(end);
-        
-        // Find the closest matching time slot
-        let startIndex = times.indexOf(startTimeStr);
-        if (startIndex === -1) {
-            // Find the nearest time slot if exact match not found
-            for (let i = 0; i < times.length - 1; i++) {
-                let currentTime = parseTimeString(times[i]);
-                let nextTime = parseTimeString(times[i + 1]);
-                let eventTime = parseTimeString(startTimeStr);
-                
-                if (eventTime >= currentTime && eventTime < nextTime) {
-                    startIndex = i;
-                    break;
-                }
-            }
-            // If still not found, try the first slot
-            if (startIndex === -1) startIndex = 0;
-        }
-        
-        let endIndex = times.indexOf(endTimeStr);
-        if (endIndex === -1) {
-            // Find the nearest time slot if exact match not found
-            for (let i = 0; i < times.length; i++) {
-                let currentTime = parseTimeString(times[i]);
-                let eventTime = parseTimeString(endTimeStr);
-                
-                if (eventTime <= currentTime) {
-                    endIndex = i;
-                    break;
-                }
-            }
-            // If still not found, use the last slot
-            if (endIndex === -1) endIndex = times.length;
-        }
 
-        // Fill each slot with the event
+        let startIndex = times.indexOf(startTimeStr);
+        if (startIndex === -1) return;
+
+        let endIndex = times.indexOf(endTimeStr);
+        if (endIndex === -1) endIndex = times.length;
+
+        // Fill each half-hour slot with the event
         for (let i = startIndex; i < endIndex; i++) {
-            scheduleData[dayIndex][i].push(event);
+            scheduleData[dayIndex][i].push(event); // Push to array instead of overwriting
         }
     });
-
-    // Helper function to parse time string "HH:MM" to minutes
-    function parseTimeString(timeStr) {
-        const [hours, minutes] = timeStr.split(':').map(Number);
-        return hours * 60 + minutes;
-    }
 
     // Create processed tracking arrays
     let processedEvents = new Set();
@@ -1543,16 +1521,27 @@ function printScheduleTable(name, ic, staffNo, email) {
         skip[d] = new Array(times.length).fill(false);
     }
 
+    // Add current date for footer
+    const currentDate = new Date().toLocaleDateString('en-GB', {
+        day: '2-digit', 
+        month: 'short', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
     // Build HTML with modern styling
     let html = `
     <html>
     <head>
         <title>Timetable - ${name}</title>
         <style>
+            /* Control page breaks */
             @page {
                 size: A4 landscape;
                 margin: 0.5cm;
             }
+            
             body {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 margin: 0;
@@ -1561,23 +1550,27 @@ function printScheduleTable(name, ic, staffNo, email) {
                 font-size: 9px;
                 font-weight: 500;
             }
+            
             .container {
                 max-width: 100%;
                 margin: 0 auto;
                 padding: 10px;
             }
+            
             .header {
                 text-align: center;
                 margin-bottom: 10px;
                 padding-bottom: 5px;
                 border-bottom: 1px solid #4361ee;
             }
+            
             h1 {
                 color: #4361ee;
                 margin: 0;
                 font-size: 16px;
                 font-weight: 600;
             }
+            
             .lecturer-info {
                 background-color: #f8f9fa;
                 border-radius: 4px;
@@ -1585,30 +1578,52 @@ function printScheduleTable(name, ic, staffNo, email) {
                 margin-bottom: 10px;
                 border: 1px solid #e0e0e0;
             }
+            
             .lecturer-info p {
                 margin: 2px 0;
                 font-size: 9px;
                 font-weight: 600;
                 color: #000000;
             }
+            
             .lecturer-info strong {
                 color: #000000;
                 font-weight: 700;
             }
+            
+            /* Table layout across pages */
             table {
                 width: 100%;
                 border-collapse: collapse;
                 box-shadow: none;
                 border-radius: 0;
-                font-size: 9px;
+                font-size: 8px;
+                page-break-inside: auto;
             }
+            
+            /* Keep rows together where possible */
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            
+            /* Add table header repeat for second page */
+            thead {
+                display: table-header-group;
+            }
+            
+            /* Prevent orphaned footer */
+            tfoot {
+                display: table-footer-group;
+            }
+            
             th {
                 background-color: #1e40af;
                 color: white;
-                padding: 5px;
+                padding: 3px;
                 text-align: center;
                 font-weight: 700;
-                font-size: 10px;
+                font-size: 9px;
             }
             
             /* Style for time header in the top row */
@@ -1617,102 +1632,168 @@ function printScheduleTable(name, ic, staffNo, email) {
                 color: white;
                 font-weight: 700;
             }
+            
             td {
                 border: 1px solid #000000;
-                padding: 4px;
+                padding: 2px;
                 text-align: center;
                 vertical-align: middle;
                 background-color: #f8f8f8;
             }
+            
             .time-column {
                 background-color: #e0e0e0;
                 font-weight: 700;
                 color: #000000;
-                width: 70px;
+                width: 60px;
             }
+            
             .event-cell {
                 background-color: #d1e4ff;
                 border: 1.5px solid #000000;
             }
+            
             .event-title {
                 font-weight: 700;
                 color: #000000;
-                margin-bottom: 2px;
+                margin-bottom: 1px;
+                font-size: 8px;
             }
+            
             .event-description {
                 color: #333333;
-                font-size: 8px;
+                font-size: 7px;
                 font-weight: 500;
+                line-height: 1.2;
             }
+            
             .rehat-cell {
                 background-color: #ffcccf;
                 border: 1.5px solid #000000;
                 color: #c62828;
                 font-weight: 700;
             }
+            
             .multi-event-container {
                 display: flex;
                 flex-direction: column;
                 gap: 2px;
             }
+            
             .event-divider {
                 border-top: 1px dashed #ccc;
-                margin: 2px 0;
+                margin: 1px 0;
             }
+            
             .print-date {
                 text-align: right;
                 color: #999;
                 font-size: 8px;
                 margin-top: 5px;
             }
+            
             footer {
                 text-align: center;
                 margin-top: 5px;
                 font-size: 8px;
                 color: #999;
             }
+            
+            /* New classes for program and lecturer info */
+            .event-description.program-info {
+                font-weight: 600;
+                background-color: rgba(0, 0, 0, 0.05);
+                padding: 1px 2px;
+                border-radius: 2px;
+                margin-top: 1px;
+                font-size: 7px;
+            }
+            
+            .event-description.lecturer-info {
+                font-weight: 600;
+                background-color: rgba(255, 255, 255, 0.3);
+                border: 1px solid rgba(0, 0, 0, 0.1);
+                padding: 1px 2px;
+                border-radius: 2px;
+                margin-top: 1px;
+                font-size: 7px;
+            }
+            
+            /* Table footer for page number */
+            .table-footer {
+                text-align: center;
+                font-size: 7px;
+                border: none !important;
+                background: transparent !important;
+            }
+            
             @media print {
                 body {
                     -webkit-print-color-adjust: exact;
                     print-color-adjust: exact;
                 }
+                
                 .container {
                     padding: 0;
                 }
+                
                 /* Ensure text is dark enough for printing */
                 * {
                     color: #000000 !important;
                 }
+                
                 th {
                     background-color: #1e40af !important;
                     color: white !important;
                     font-weight: 800 !important;
                     border: 1px solid #000000 !important;
                 }
+                
                 td {
                     background-color: #f8f8f8 !important;
                     border: 1px solid #000000 !important;
                 }
+                
                 .time-column {
                     background-color: #e0e0e0 !important;
                     color: #000000 !important;
                     font-weight: 700 !important;
                 }
+                
                 .event-cell {
                     background-color: #d1e4ff !important;
                     border: 1.5px solid #000000 !important;
                 }
+                
                 .rehat-cell {
                     background-color: #ffcccf !important;
                     color: #c62828 !important;
                     font-weight: 700 !important;
                     border: 1.5px solid #000000 !important;
                 }
+                
                 .event-title {
                     font-weight: 700 !important;
                 }
+                
                 .event-description {
                     font-weight: 600 !important;
+                }
+                
+                .event-description.program-info {
+                    background-color: rgba(0, 0, 0, 0.05) !important;
+                    font-weight: 700 !important;
+                }
+                
+                .event-description.lecturer-info {
+                    background-color: rgba(255, 255, 255, 0.3) !important;
+                    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+                    font-weight: 700 !important;
+                }
+                
+                .table-footer {
+                    background: transparent !important;
+                    border: none !important;
                 }
             }
         </style>
@@ -1731,6 +1812,7 @@ function printScheduleTable(name, ic, staffNo, email) {
             </div>
             
             <table>
+                <!-- Table Header (repeats on each page) -->
                 <thead>
                     <tr>
                         <th class="time-column">Time</th>`;
@@ -1740,24 +1822,28 @@ function printScheduleTable(name, ic, staffNo, email) {
         html += `<th>${day}</th>`;
     });
 
-    html += `</tr></thead><tbody>`;
+    html += `</tr></thead>
+                
+                <!-- Table Footer (repeats on each page) -->
+                <tfoot>
+                    <tr>
+                        <td colspan="${dayNames.length + 1}" class="table-footer">
+                            ${name} - Timetable - Generated on: ${currentDate}
+                        </td>
+                    </tr>
+                </tfoot>
+                
+                <tbody>`;
 
-    // Group time slots by 30 minutes for display (while keeping the 15-min resolution in the data)
-    let displayTimes = [];
-    for (let i = 0; i < times.length; i += 2) {
-        // Handle the edge case at the end
-        if (i + 1 < times.length) {
-            displayTimes.push({start: times[i], end: times[i+2] || '18:00'});
+    // For each timeslot row
+    for (let t = 0; t < times.length; t++) {
+        // Build the time label, e.g. "08:30 - 09:00"
+        let timeLabel = times[t];
+        if (t < times.length - 1) {
+            timeLabel += ' - ' + times[t + 1];
+        } else {
+            timeLabel += ' - 18:00';
         }
-    }
-
-    // For each display timeslot (30 min intervals)
-    for (let t = 0; t < displayTimes.length; t++) {
-        // Build the time label, e.g. "08:15 - 08:45"
-        let timeLabel = `${displayTimes[t].start} - ${displayTimes[t].end}`;
-        
-        // Data index (2 slots per display slot)
-        let dataIndex = t * 2;
 
         // Start a row
         html += `<tr>`;
@@ -1768,18 +1854,11 @@ function printScheduleTable(name, ic, staffNo, email) {
         // For each day column
         for (let d = 0; d < dayNames.length; d++) {
             // If this slot is marked skip => do nothing
-            if (skip[d][dataIndex]) {
+            if (skip[d][t]) {
                 continue; 
             }
 
-            let eventList = scheduleData[d][dataIndex] || [];
-            
-            // Combine with events from the next 15-min slot (if available)
-            if (dataIndex + 1 < times.length && scheduleData[d][dataIndex + 1]) {
-                eventList = [...eventList, ...scheduleData[d][dataIndex + 1].filter(e => 
-                    !eventList.some(existingEvent => existingEvent.id === e.id)
-                )];
-            }
+            let eventList = scheduleData[d][t];
             
             if (eventList.length > 0) {
                 // Check if there's a REHAT event in this cell
@@ -1795,23 +1874,16 @@ function printScheduleTable(name, ic, staffNo, email) {
                     let startTimeStr = toHHMM(start);
                     let endTimeStr = toHHMM(end);
                     
-                    // Calculate corresponding display indices for the time slots
-                    let startIndex = Math.floor(times.indexOf(startTimeStr) / 2);
-                    if (startIndex === -1) startIndex = dataIndex;
-                    
-                    let endIndex = Math.ceil(times.indexOf(endTimeStr) / 2);
-                    if (endIndex === -1) endIndex = displayTimes.length;
+                    let startIndex = times.indexOf(startTimeStr);
+                    let endIndex = times.indexOf(endTimeStr);
+                    if (endIndex === -1) endIndex = times.length;
                     
                     let rowSpan = endIndex - startIndex;
-                    if (rowSpan < 1) rowSpan = 1;
                     
                     // Mark future slots to skip
                     for (let k = 1; k < rowSpan; k++) {
-                        if (dataIndex + (k * 2) < times.length) {
-                            skip[d][dataIndex + (k * 2)] = true;
-                            if (dataIndex + (k * 2) + 1 < times.length) {
-                                skip[d][dataIndex + (k * 2) + 1] = true;
-                            }
+                        if (t + k < times.length) {
+                            skip[d][t + k] = true;
                         }
                     }
                     
@@ -1837,32 +1909,9 @@ function printScheduleTable(name, ic, staffNo, email) {
                     let startTimeStr = toHHMM(start);
                     let endTimeStr = toHHMM(end);
                     
-                    // Calculate corresponding display indices
-                    let startIndex = Math.floor(times.indexOf(startTimeStr) / 2);
-                    if (startIndex === -1) {
-                        // Find the nearest slot
-                        let startMinutes = parseTimeString(startTimeStr);
-                        for (let i = 0; i < times.length; i++) {
-                            if (parseTimeString(times[i]) >= startMinutes) {
-                                startIndex = Math.floor(i / 2);
-                                break;
-                            }
-                        }
-                        if (startIndex === -1) startIndex = 0;
-                    }
-                    
-                    let endIndex = Math.ceil(times.indexOf(endTimeStr) / 2);
-                    if (endIndex === -1) {
-                        // Find the nearest slot
-                        let endMinutes = parseTimeString(endTimeStr);
-                        for (let i = times.length - 1; i >= 0; i--) {
-                            if (parseTimeString(times[i]) <= endMinutes) {
-                                endIndex = Math.ceil((i + 1) / 2);
-                                break;
-                            }
-                        }
-                        if (endIndex === -1) endIndex = displayTimes.length;
-                    }
+                    let startIndex = times.indexOf(startTimeStr);
+                    let endIndex = times.indexOf(endTimeStr);
+                    if (endIndex === -1) endIndex = times.length;
                     
                     // Create a unique key for this time span
                     let timeSpanKey = `${startIndex}-${endIndex}`;
@@ -1889,16 +1938,12 @@ function printScheduleTable(name, ic, staffNo, email) {
                 if (timeSpanKeys.length > 0) {
                     let firstGroup = eventGroups[timeSpanKeys[0]];
                     let rowSpan = firstGroup.rowSpan;
-                    if (rowSpan < 1) rowSpan = 1;
                     let events = firstGroup.events;
                     
                     // Mark future slots to skip
                     for (let k = 1; k < rowSpan; k++) {
-                        if (dataIndex + (k * 2) < times.length) {
-                            skip[d][dataIndex + (k * 2)] = true;
-                            if (dataIndex + (k * 2) + 1 < times.length) {
-                                skip[d][dataIndex + (k * 2) + 1] = true;
-                            }
+                        if (t + k < times.length) {
+                            skip[d][t + k] = true;
                         }
                     }
                     
@@ -1918,6 +1963,7 @@ function printScheduleTable(name, ic, staffNo, email) {
                                 html += `<div class="event-divider"></div>`;
                             }
                             
+                            // Title
                             html += `<div class="event-title">${event.title || '(No Title)'}</div>`;
                             
                             // Add description if available
@@ -1925,9 +1971,14 @@ function printScheduleTable(name, ic, staffNo, email) {
                                 html += `<div class="event-description">${event.extendedProps.description}</div>`;
                             }
                             
-                            // Add program info if available
+                            // Add program info if available (only once, with special class)
                             if (event.extendedProps && event.extendedProps.programInfo) {
-                                html += `<div class="event-description">Program: ${event.extendedProps.programInfo}</div>`;
+                                html += `<div class="event-description program-info">Program: ${event.extendedProps.programInfo}</div>`;
+                            }
+                            
+                            // Add lecturer info if available (was missing before)
+                            if (event.extendedProps && event.extendedProps.lectInfo) {
+                                html += `<div class="event-description lecturer-info">Lecturer: ${event.extendedProps.lectInfo}</div>`;
                             }
                         });
                         
@@ -1951,28 +2002,19 @@ function printScheduleTable(name, ic, staffNo, email) {
         // Close row
         html += `</tr>`;
     }
-
-    // Add current date and footer
-    const currentDate = new Date().toLocaleDateString('en-GB', {
-        day: '2-digit', 
-        month: 'short', 
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
     
     html += `
-            </tbody>
-        </table>
-        
-        <div class="print-date">
-            Generated on: ${currentDate}
+                </tbody>
+            </table>
+            
+            <footer>
+                © Timetable Management System
+            </footer>`;
+            
+    // Remove the script completely - it's not essential
+    // Just close the remaining HTML tags
+    html += `
         </div>
-        
-        <footer>
-            © Timetable Management System
-        </footer>
-    </div>
     </body>
     </html>`;
 
