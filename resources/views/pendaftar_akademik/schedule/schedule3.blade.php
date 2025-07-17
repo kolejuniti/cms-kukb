@@ -403,7 +403,7 @@ function printScheduleTable(param1, param2, param3, param4, type) {
     let startMinute = 15;
     let endHour = 17;
     let endMinute = 15;
-    while (startHour < endHour || (startHour === endHour && startMinute <= endMinute)) {
+    while (startHour < endHour || (startHour === endHour && startMinute < endMinute)) {
         let hh = String(startHour).padStart(2, '0');
         let mm = String(startMinute).padStart(2, '0');
         times.push(`${hh}:${mm}`);
@@ -429,6 +429,14 @@ function printScheduleTable(param1, param2, param3, param4, type) {
             }
         }
     }
+    
+    // Add the final time slot if needed
+    if (startHour === endHour && startMinute === endMinute) {
+        let hh = String(startHour).padStart(2, '0');
+        let mm = String(startMinute).padStart(2, '0');
+        times.push(`${hh}:${mm}`);
+    }
+    
     const events = calendar.getEvents();
     let scheduleData = [];
     for (let d = 0; d < dayNames.length; d++) {

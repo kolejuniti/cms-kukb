@@ -1897,7 +1897,7 @@ function printScheduleTable(name, ic, staffNo, email) {
     let endHour = 17;
     let endMinute = 15;
 
-    while (startHour < endHour || (startHour === endHour && startMinute <= endMinute)) {
+    while (startHour < endHour || (startHour === endHour && startMinute < endMinute)) {
         let hh = String(startHour).padStart(2, '0');
         let mm = String(startMinute).padStart(2, '0');
         times.push(`${hh}:${mm}`);
@@ -1922,6 +1922,13 @@ function printScheduleTable(name, ic, staffNo, email) {
                 startHour++;
             }
         }
+    }
+    
+    // Add the final time slot if needed
+    if (startHour === endHour && startMinute === endMinute) {
+        let hh = String(startHour).padStart(2, '0');
+        let mm = String(startMinute).padStart(2, '0');
+        times.push(`${hh}:${mm}`);
     }
 
     // Get events from FullCalendar

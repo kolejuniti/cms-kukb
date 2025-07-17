@@ -821,7 +821,7 @@
     let endHour = 17; // Until 17:15 as per calendar config
     let endMinute = 15;
 
-    while (currentHour < endHour || (currentHour === endHour && currentMinute <= endMinute)) {
+    while (currentHour < endHour || (currentHour === endHour && currentMinute < endMinute)) {
         let hh = String(currentHour).padStart(2, '0');
         let mm = String(currentMinute).padStart(2, '0');
         times.push(`${hh}:${mm}`);
@@ -847,6 +847,13 @@
                 currentHour++;
             }
         }
+    }
+    
+    // Add the final time slot if needed
+    if (currentHour === endHour && currentMinute === endMinute) {
+        let hh = String(currentHour).padStart(2, '0');
+        let mm = String(currentMinute).padStart(2, '0');
+        times.push(`${hh}:${mm}`);
     }
 
     // Get events from FullCalendar
