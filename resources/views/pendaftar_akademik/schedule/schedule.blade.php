@@ -1032,7 +1032,7 @@ var calendar;
 // Initialize FullCalendar
 document.addEventListener('DOMContentLoaded', function () {
     var calendarEl = document.getElementById('calendar');
-    var hiddenDays = [5, 6]; // Hide Friday(5) & Saturday(6)
+            var hiddenDays = [5, 6]; // Hide Friday(5) & Saturday(6)
 
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'timeGridWeek',
@@ -1074,8 +1074,8 @@ document.addEventListener('DOMContentLoaded', function () {
             var date = new Date(fetchInfo.start);
             while (date < fetchInfo.end) {
                 var dayOfWeek = date.getDay(); 
-                if (dayOfWeek >= 1 && dayOfWeek <= 4) {
-                    // Monday-Thursday => 13:30 to 14:00
+                if (dayOfWeek === 0 || (dayOfWeek >= 1 && dayOfWeek <= 4)) {
+                    // Sunday, Monday-Thursday => 13:15 to 14:15
                     rehatEvents.push({
                         title: 'REHAT',
                         start: new Date(date.getFullYear(), date.getMonth(), date.getDate(), 13, 15, 0),
@@ -1085,18 +1085,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         textColor: '#ffffff',
                         borderColor: '#e63946'
                     });
-                } else if (dayOfWeek === 5) {
-                    // Friday => 12:30 to 14:30
-                    rehatEvents.push({
-                        title: 'REHAT',
-                        start: new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 30, 0),
-                        end: new Date(date.getFullYear(), date.getMonth(), date.getDate(), 14, 30, 0),
-                        allDay: false,
-                        color: '#e63946',
-                        textColor: '#ffffff',
-                        borderColor: '#e63946'
-                    });
                 }
+                // Friday and Saturday are now hidden, so no REHAT events for those days
                 date.setDate(date.getDate() + 1);
             }
 
@@ -1425,8 +1415,12 @@ document.getElementById('add-event').addEventListener('click', async function ()
     const slotMinTime = '08:15:00';
     const slotMaxTime = '17:15:00';
     const startHour = parseInt(eventStart.slice(11, 13));
+    const startMinute = parseInt(eventStart.slice(14, 16));
 
-    if (startHour < parseInt(slotMinTime.slice(0, 2)) || startHour > parseInt(slotMaxTime.slice(0, 2))) {
+    // Check if time is within working hours (8:15 to 17:15)
+    if (startHour < 8 || startHour > 17 || 
+        (startHour === 8 && startMinute < 15) || 
+        (startHour === 17 && startMinute > 15)) {
         showNotification('Event start time must be between 08:15 and 17:15', 'error');
         return;
     }
@@ -1813,9 +1807,14 @@ async function handleEventUpdate(event) {
     const slotMinTime = '08:15:00';
     const slotMaxTime = '17:15:00';
     const startHour = parseInt(newStart.slice(11, 13));
+    const startMinute = parseInt(newStart.slice(14, 16));
     const endHour = parseInt(newEnd.slice(11, 13));
+    const endMinute = parseInt(newEnd.slice(14, 16));
 
-    if (startHour < parseInt(slotMinTime.slice(0, 2)) || endHour > parseInt(slotMaxTime.slice(0, 2))) {
+    // Check if times are within working hours (8:15 to 17:15)
+    if (startHour < 8 || endHour > 17 || 
+        (startHour === 8 && startMinute < 15) || 
+        (endHour === 17 && endMinute > 15)) {
         showNotification('Event times must be between 08:15 and 17:15', 'error');
         return;
     }
@@ -1890,12 +1889,37 @@ function printScheduleTable(name, ic, staffNo, email) {
     
     const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday'];
 
-    // Build time slots (08:15..17:15) with safer logic
-    let times = [
-        '08:15', '08:45', '09:15', '09:45', '10:15', '10:45', '11:15', '11:45',
-        '12:15', '12:45', '13:15', '13:30', '13:45', '14:00', '14:15', '14:30',
-        '15:00', '15:30', '16:00', '16:30', '17:00'
-    ];
+    // Build time slots (08:15..17:15) with 15-minute intervals during break time
+    let times = [];
+    let startHour = 8;
+    let startMinute = 15;
+    let endHour = 17;
+    let endMinute = 15;
+
+    while (startHour < endHour || (startHour === endHour && startMinute <= endMinute)) {
+        let hh = String(startHour).padStart(2, '0');
+        let mm = String(startMinute).padStart(2, '0');
+        times.push(`${hh}:${mm}`);
+        
+        // Special handling for break time (13:15-14:15) - use 15-minute intervals
+        if (startHour === 13 && startMinute === 15) {
+            // Add 15-minute intervals during break time
+            times.push('13:30');
+            times.push('13:45');
+            times.push('14:00');
+            times.push('14:15');
+            // Jump to 14:30 (next 30-minute slot after break)
+            startHour = 14;
+            startMinute = 30;
+        } else {
+            // Regular 30-minute intervals
+            startMinute += 30;
+            if (startMinute === 60) {
+                startMinute = 0;
+                startHour++;
+            }
+        }
+    }
 
     // Get events from FullCalendar
     const events = calendar.getEvents();
@@ -1914,9 +1938,16 @@ function printScheduleTable(name, ic, staffNo, email) {
         let start = event.start;
         let end = event.end || new Date(start.getTime() + 60 * 60 * 1000);
 
-        // Convert day-of-week (Sun=0..Thu=4 => index 0..4)
+        // Convert day-of-week (Sun=0, Mon=1..Thu=4 => index 0..4)
         let dayIndex = start.getDay(); 
-        if (dayIndex > 4) return; // skip Friday(5) and Saturday(6)
+        if (dayIndex === 0) {
+            dayIndex = 0; // Sunday = index 0
+        } else if (dayIndex >= 1 && dayIndex <= 4) {
+            // Monday-Thursday = index 1-4
+            // No change needed as getDay() already returns 1-4 for Mon-Thu
+        } else {
+            return; // skip Friday(5) and Saturday(6)
+        }
 
         let startTimeStr = toHHMM(start);
         let endTimeStr = toHHMM(end);
