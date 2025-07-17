@@ -814,47 +814,12 @@
     const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const hiddenDays = [4, 5]; // Hide Friday (4) and Saturday (5) in this array indexing
 
-    // Build time slots with proper 15-minute intervals during lunch period
-    let times = [];
-    let currentHour = 8; // From 8:15 as per calendar config
-    let currentMinute = 15;
-    let endHour = 17; // Until 17:15 as per calendar config
-    let endMinute = 15;
-
-    while (currentHour < endHour || (currentHour === endHour && currentMinute < endMinute)) {
-        let hh = String(currentHour).padStart(2, '0');
-        let mm = String(currentMinute).padStart(2, '0');
-        times.push(`${hh}:${mm}`);
-        
-        // Special handling for 13:00-15:00 period (15-minute intervals)
-        if (currentHour === 13 && currentMinute === 0) {
-            // Add all 15-minute intervals from 13:00 to 15:00
-            times.push('13:15');
-            times.push('13:30');
-            times.push('13:45');
-            times.push('14:00');
-            times.push('14:15');
-            times.push('14:30');
-            times.push('14:45');
-            // Jump to 15:00 for next iteration
-            currentHour = 15;
-            currentMinute = 0;
-        } else {
-            // Regular 30-minute increment
-            currentMinute += 30;
-            if (currentMinute === 60) {
-                currentMinute = 0;
-                currentHour++;
-            }
-        }
-    }
-    
-    // Add the final time slot if needed
-    if (currentHour === endHour && currentMinute === endMinute) {
-        let hh = String(currentHour).padStart(2, '0');
-        let mm = String(currentMinute).padStart(2, '0');
-        times.push(`${hh}:${mm}`);
-    }
+    // Build time slots with safe predefined slots (08:15..17:15)
+    let times = [
+        '08:15', '08:45', '09:15', '09:45', '10:15', '10:45', '11:15', '11:45',
+        '12:15', '12:45', '13:15', '13:30', '13:45', '14:00', '14:15', '14:30',
+        '15:00', '15:30', '16:00', '16:30', '17:00'
+    ];
 
     // Get events from FullCalendar
     const events = calendar.getEvents();
