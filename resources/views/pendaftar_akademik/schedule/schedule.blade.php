@@ -1896,7 +1896,7 @@ function printScheduleTable(name, ic, staffNo, email) {
     let endHour = 17;
     let endMinute = 15;
 
-    while (startHour < endHour || (startHour === endHour && startMinute <= endMinute)) {
+    while (startHour < endHour || (startHour === endHour && startMinute < endMinute)) {
         let hh = String(startHour).padStart(2, '0');
         let mm = String(startMinute).padStart(2, '0');
         times.push(`${hh}:${mm}`);
@@ -1914,12 +1914,21 @@ function printScheduleTable(name, ic, staffNo, email) {
         } else {
             // Regular 30-minute intervals
             startMinute += 30;
-            if (startMinute === 60) {
+            if (startMinute >= 60) {
                 startMinute = 0;
                 startHour++;
             }
         }
+        
+        // Safety check to prevent infinite loop
+        if (times.length > 50) {
+            console.warn('Time generation stopped to prevent infinite loop');
+            break;
+        }
     }
+    
+    // Ensure we include the final end time
+    times.push('17:15');
 
     // Get events from FullCalendar
     const events = calendar.getEvents();
