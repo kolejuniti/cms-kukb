@@ -397,7 +397,7 @@ function printScheduleTable(param1, param2, param3, param4, type) {
             <p style="margin:0;">Email: ${param4}</p>
         `;
     }
-    const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+    const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday'];
     // Build time slots with safe predefined slots (08:15..17:15)
     let times = [
         '08:15', '08:45', '09:15', '09:45', '10:15', '10:45', '11:15', '11:45',
@@ -413,8 +413,8 @@ function printScheduleTable(param1, param2, param3, param4, type) {
     events.forEach(event => {
         let start = event.start;
         let end = event.end || new Date(start.getTime() + 60 * 60 * 1000);
-        let dayIndex = start.getDay() - 1;
-        if (dayIndex < 0 || dayIndex > 4) return;
+        let dayIndex = start.getDay(); // Sunday=0, Monday=1, etc.
+        if (dayIndex > 4) return; // skip Friday(5) and Saturday(6)
         let startTimeStr = toHHMM(start);
         let endTimeStr = toHHMM(end);
         let startIndex = times.indexOf(startTimeStr);

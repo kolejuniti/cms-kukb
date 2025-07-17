@@ -810,9 +810,9 @@
      * Extracted as a separate function so it can be used by both print and PDF functions
      */
      function generateScheduleHTML() {
-    // Build days array
-    const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    const hiddenDays = [4, 5]; // Hide Friday (4) and Saturday (5) in this array indexing
+    // Build days array - Sunday to Thursday
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const hiddenDays = [5, 6]; // Hide Friday (5) and Saturday (6) in this array indexing
 
     // Build time slots with safe predefined slots (08:15..17:15)
     let times = [
@@ -889,10 +889,8 @@
         let start = event.start;
         let end = event.end || new Date(start.getTime() + 60 * 60 * 1000);
 
-        // Day of week (0=Sunday, 1=Monday, etc.)
-        let dayIndex = start.getDay();
-        if (dayIndex === 0) dayIndex = 6; // Move Sunday to the end (index 6)
-        else dayIndex -= 1; // Adjust other days (Monday=0, Tuesday=1, etc.)
+        // Day of week (0=Sunday, 1=Monday, etc.) - keep Sunday as 0
+        let dayIndex = start.getDay(); // Sunday=0, Monday=1, Tuesday=2, Wednesday=3, Thursday=4
 
         let startTimeStr = toHHMM(start);
         let endTimeStr = toHHMM(end);
@@ -1194,7 +1192,7 @@
                         <tr>
                             <th class="time-column">Time</th>`;
 
-    // Column headers for days (only show days that aren't hidden)
+    // Column headers for days (only show days that aren't hidden: Sunday to Thursday)
     const visibleDays = dayNames.filter((_, i) => !hiddenDays.includes(i));
     visibleDays.forEach(day => {
         html += `<th>${day}</th>`;
@@ -1242,9 +1240,9 @@
         let timeColumnClass = isMinorSlot ? "time-column minor-slot" : "time-column";
         html += `<td class="${timeColumnClass}">${timeLabel}</td>`;
 
-        // For each day column
+        // For each day column (Sunday=0 to Thursday=4)
         for (let d = 0; d < 7; d++) {
-            // Skip if this day is hidden
+            // Skip if this day is hidden (Friday=5, Saturday=6)
             if (hiddenDays.includes(d)) continue;
 
             // If this slot is marked skip => do nothing
