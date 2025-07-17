@@ -1422,12 +1422,12 @@ document.getElementById('add-event').addEventListener('click', async function ()
         new Date(document.getElementById('event-start').value)
     );
 
-    const slotMinTime = '08:00:00';
-    const slotMaxTime = '18:00:00';
+    const slotMinTime = '08:15:00';
+    const slotMaxTime = '17:15:00';
     const startHour = parseInt(eventStart.slice(11, 13));
 
     if (startHour < parseInt(slotMinTime.slice(0, 2)) || startHour > parseInt(slotMaxTime.slice(0, 2))) {
-        showNotification('Event start time must be between 08:00 and 18:00', 'error');
+        showNotification('Event start time must be between 08:15 and 17:15', 'error');
         return;
     }
 

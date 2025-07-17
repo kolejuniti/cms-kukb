@@ -581,8 +581,8 @@
         var calendarEl = document.getElementById('calendar');
         if (!calendarEl) return;
         
-        // Define hidden days - hide Saturday (6) and Sunday (0)
-        var hiddenDays = [0, 6]; // Sunday = 0, Saturday = 6
+        // Define hidden days - hide Friday (5) and Saturday (6)
+        var hiddenDays = [5, 6]; // Friday = 5, Saturday = 6
 
         calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'timeGridWeek',
@@ -597,8 +597,8 @@
                 day: 'Day'
             },
             hiddenDays: hiddenDays,
-            slotMinTime: '07:00:00',
-            slotMaxTime: '20:00:00',
+            slotMinTime: '08:15:00',
+            slotMaxTime: '17:15:00',
             slotDuration: '00:30:00',
             slotLabelInterval: '00:30:00',
             height: 'auto',
@@ -812,15 +812,16 @@
      function generateScheduleHTML() {
     // Build days array
     const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    const hiddenDays = [5, 6]; // Hide Saturday (5) and Sunday (6) in this array indexing
+    const hiddenDays = [4, 5]; // Hide Friday (4) and Saturday (5) in this array indexing
 
     // Build time slots with proper 15-minute intervals during lunch period
     let times = [];
-    let currentHour = 7; // From 7:00 as per calendar config
-    let currentMinute = 0;
-    let endHour = 20; // Until 20:00 as per calendar config
+    let currentHour = 8; // From 8:15 as per calendar config
+    let currentMinute = 15;
+    let endHour = 17; // Until 17:15 as per calendar config
+    let endMinute = 15;
 
-    while (currentHour < endHour || (currentHour === endHour && currentMinute === 0)) {
+    while (currentHour < endHour || (currentHour === endHour && currentMinute <= endMinute)) {
         let hh = String(currentHour).padStart(2, '0');
         let mm = String(currentMinute).padStart(2, '0');
         times.push(`${hh}:${mm}`);
@@ -1259,7 +1260,7 @@
         if (t + 1 < times.length) {
             timeLabel = currentTime + ' - ' + times[t + 1];
         } else {
-            timeLabel = currentTime + ' - 20:00';
+            timeLabel = currentTime + ' - 17:15';
         }
 
         // Start a row

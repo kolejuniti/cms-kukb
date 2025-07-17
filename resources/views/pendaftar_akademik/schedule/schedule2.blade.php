@@ -821,7 +821,7 @@ function setupCalendar() {
     var calendarEl = document.getElementById('calendar');
     if (!calendarEl) return;
     
-    var hiddenDays = [0, 6]; // Hide Sunday(0) & Saturday(6)
+    var hiddenDays = [5, 6]; // Hide Friday(5) & Saturday(6)
 
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'timeGridWeek',
@@ -836,8 +836,8 @@ function setupCalendar() {
             day: 'Day'
         },
         hiddenDays: hiddenDays,
-        slotMinTime: '08:30:00',
-        slotMaxTime: '18:00:00',
+        slotMinTime: '08:15:00',
+        slotMaxTime: '17:15:00',
         slotDuration: '00:30:00',
         slotLabelInterval: '00:30:00',
         height: 'auto',
@@ -1363,13 +1363,13 @@ async function handleEventUpdate(event, calendarRef) {
         return;
     }
 
-    const slotMinTime = '08:00:00';
-    const slotMaxTime = '18:00:00';
+    const slotMinTime = '08:15:00';
+    const slotMaxTime = '17:15:00';
     const startHour = parseInt(newStart.slice(11, 13));
     const endHour = parseInt(newEnd.slice(11, 13));
 
     if (startHour < parseInt(slotMinTime.slice(0, 2)) || endHour > parseInt(slotMaxTime.slice(0, 2))) {
-        showNotification('Event times must be between 08:00 and 18:00', 'error');
+        showNotification('Event times must be between 08:15 and 17:15', 'error');
         return;
     }
 
@@ -1445,13 +1445,14 @@ function printScheduleTable(name, ic, staffNo, email) {
     
     const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
 
-    // Build time slots (08:30..18:00) with 15-minute intervals during break time
+    // Build time slots (08:15..17:15) with 15-minute intervals during break time
     let times = [];
     let startHour = 8;
-    let startMinute = 30;
-    let endHour = 18;
+    let startMinute = 15;
+    let endHour = 17;
+    let endMinute = 15;
 
-    while (startHour < endHour || (startHour === endHour && startMinute === 0)) {
+    while (startHour < endHour || (startHour === endHour && startMinute <= endMinute)) {
         let hh = String(startHour).padStart(2, '0');
         let mm = String(startMinute).padStart(2, '0');
         times.push(`${hh}:${mm}`);
@@ -1842,7 +1843,7 @@ function printScheduleTable(name, ic, staffNo, email) {
         if (t < times.length - 1) {
             timeLabel += ' - ' + times[t + 1];
         } else {
-            timeLabel += ' - 18:00';
+            timeLabel += ' - 17:15';
         }
 
         // Start a row

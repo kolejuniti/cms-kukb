@@ -139,7 +139,7 @@
         const colors = ['blue', 'green', 'purple', 'orange', 'pink', 'cyan', 'magenta', '#34ebc9', '#eb34df'];
         return colors[Math.floor(Math.random() * colors.length)];
     }
-    var hiddenDays = [0, 6];
+    var hiddenDays = [5, 6];
     
     // Declare calendar in the global scope
     var calendar;
@@ -155,8 +155,8 @@
                 right: 'timeGridWeek,timeGridDay'
             },
             hiddenDays: hiddenDays,
-            slotMinTime: '08:30:00',
-            slotMaxTime: '18:00:00',
+            slotMinTime: '08:15:00',
+            slotMaxTime: '17:15:00',
             slotDuration: '00:30:00',
             slotLabelInterval: '00:30:00',
             height: 'auto',
@@ -400,9 +400,10 @@ function printScheduleTable(param1, param2, param3, param4, type) {
     const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
     let times = [];
     let startHour = 8;
-    let startMinute = 30;
-    let endHour = 18;
-    while (startHour < endHour || (startHour === endHour && startMinute === 0)) {
+    let startMinute = 15;
+    let endHour = 17;
+    let endMinute = 15;
+    while (startHour < endHour || (startHour === endHour && startMinute <= endMinute)) {
         let hh = String(startHour).padStart(2, '0');
         let mm = String(startMinute).padStart(2, '0');
         times.push(`${hh}:${mm}`);
@@ -510,7 +511,7 @@ function printScheduleTable(param1, param2, param3, param4, type) {
         if (t < times.length - 1) {
             timeLabel += ' - ' + times[t + 1];
         } else {
-            timeLabel += ' - END';
+            timeLabel += ' - 17:15';
         }
         html += `<tr><td><b>${timeLabel}</b></td>`;
         for (let d = 0; d < dayNames.length; d++) {
