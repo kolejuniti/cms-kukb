@@ -1932,6 +1932,14 @@ function printScheduleTable(name, ic, staffNo, email) {
 
     // Get events from FullCalendar
     const events = calendar.getEvents();
+    
+    // Debug: Log all events for troubleshooting
+    console.log('Print function - Total events found:', events.length);
+    events.forEach(event => {
+        console.log('Event:', event.title, 'Start:', toHHMM(event.start), 'End:', event.end ? toHHMM(event.end) : 'No end', 'Day:', event.start.getDay());
+    });
+    
+    console.log('Generated time slots:', times);
 
     // Build a 2D array scheduleData[dayIndex][timeIndex] = [events]
     // Changed to store arrays of events instead of single events
@@ -1941,6 +1949,20 @@ function printScheduleTable(name, ic, staffNo, email) {
         for (let t = 0; t < times.length; t++) {
             scheduleData[d][t] = []; // Initialize with empty array
         }
+    }
+
+    // Helper function to find closest time slot index
+    function findClosestTimeIndex(timeStr, times) {
+        let exactIndex = times.indexOf(timeStr);
+        if (exactIndex !== -1) return exactIndex;
+        
+        // Find the closest earlier time slot
+        for (let i = times.length - 1; i >= 0; i--) {
+            if (times[i] <= timeStr) {
+                return i;
+            }
+        }
+        return 0; // Default to first slot if no match
     }
 
     events.forEach(event => {
@@ -1955,21 +1977,30 @@ function printScheduleTable(name, ic, staffNo, email) {
             // Monday-Thursday = index 1-4
             // No change needed as getDay() already returns 1-4 for Mon-Thu
         } else {
+            console.log('Skipping event on day:', dayIndex, event.title);
             return; // skip Friday(5) and Saturday(6)
         }
 
         let startTimeStr = toHHMM(start);
         let endTimeStr = toHHMM(end);
 
-        let startIndex = times.indexOf(startTimeStr);
-        if (startIndex === -1) return;
+        // Use flexible time matching instead of strict indexOf
+        let startIndex = findClosestTimeIndex(startTimeStr, times);
+        let endIndex = findClosestTimeIndex(endTimeStr, times);
+        
+        // If end time is not found, calculate based on duration
+        if (endIndex <= startIndex) {
+            endIndex = Math.min(startIndex + Math.ceil((end - start) / (30 * 60 * 1000)), times.length);
+        }
 
-        let endIndex = times.indexOf(endTimeStr);
-        if (endIndex === -1) endIndex = times.length;
+        console.log(`Processing event: ${event.title}, Day: ${dayIndex}, Start: ${startTimeStr} (index: ${startIndex}), End: ${endTimeStr} (index: ${endIndex})`);
 
-        // Fill each half-hour slot with the event
-        for (let i = startIndex; i < endIndex; i++) {
-            scheduleData[dayIndex][i].push(event); // Push to array instead of overwriting
+        // Fill each time slot with the event
+        for (let i = startIndex; i < endIndex && i < times.length; i++) {
+            if (i >= 0) {
+                scheduleData[dayIndex][i].push(event);
+                console.log(`Added ${event.title} to day ${dayIndex}, time slot ${i} (${times[i]})`);
+            }
         }
     });
 
@@ -2205,132 +2236,64 @@ function printScheduleTable(name, ic, staffNo, email) {
             let eventList = scheduleData[d][t];
             
             if (eventList.length > 0) {
+                console.log(`Processing cell [${d}][${t}] with ${eventList.length} events:`, eventList.map(e => e.title));
+                
                 // Check if there's a REHAT event in this cell
                 let hasRehat = eventList.some(event => event.title === 'REHAT');
                 
                 // If there's a REHAT event, give it priority
                 if (hasRehat) {
-                    let rehatEvent = eventList.find(event => event.title === 'REHAT');
-                    
-                    let start = rehatEvent.start;
-                    let end = rehatEvent.end || new Date(start.getTime() + 60 * 60 * 1000);
-                    
-                    let startTimeStr = toHHMM(start);
-                    let endTimeStr = toHHMM(end);
-                    
-                    let startIndex = times.indexOf(startTimeStr);
-                    let endIndex = times.indexOf(endTimeStr);
-                    if (endIndex === -1) endIndex = times.length;
-                    
-                    let rowSpan = endIndex - startIndex;
-                    
-                    // Mark future slots to skip
-                    for (let k = 1; k < rowSpan; k++) {
-                        if (t + k < times.length) {
-                            skip[d][t + k] = true;
-                        }
-                    }
-                    
-                    // Create cell with REHAT
-                    html += `<td rowspan="${rowSpan}" class="rehat-cell">
+                    // Simple REHAT cell without complex rowspan calculation
+                    html += `<td class="rehat-cell">
                                 <div class="event-title">REHAT</div>
                             </td>`;
-                    
-                    // Skip processing other events in this cell
                     continue;
                 }
                 
-                // Group non-REHAT events by their full time span
-                let eventGroups = {};
+                // Simplified event processing - just display all events in this time slot
+                html += `<td class="event-cell">`;
                 
-                eventList.forEach(event => {
-                    // Skip if we already processed this event
-                    if (processedEvents.has(event.id)) return;
-                    
-                    let start = event.start;
-                    let end = event.end || new Date(start.getTime() + 60 * 60 * 1000);
-                    
-                    let startTimeStr = toHHMM(start);
-                    let endTimeStr = toHHMM(end);
-                    
-                    let startIndex = times.indexOf(startTimeStr);
-                    let endIndex = times.indexOf(endTimeStr);
-                    if (endIndex === -1) endIndex = times.length;
-                    
-                    // Create a unique key for this time span
-                    let timeSpanKey = `${startIndex}-${endIndex}`;
-                    
-                    // Initialize group if not exists
-                    if (!eventGroups[timeSpanKey]) {
-                        eventGroups[timeSpanKey] = {
-                            events: [],
-                            rowSpan: endIndex - startIndex
-                        };
+                // Filter out already processed events to avoid duplicates
+                let unprocessedEvents = eventList.filter(event => !processedEvents.has(event.id));
+                
+                if (unprocessedEvents.length > 0) {
+                    // Start multi-event container if we have multiple events
+                    if (unprocessedEvents.length > 1) {
+                        html += `<div class="multi-event-container">`;
                     }
                     
-                    // Add event to the group
-                    eventGroups[timeSpanKey].events.push(event);
-                    
-                    // Mark event as processed
-                    processedEvents.add(event.id);
-                });
-                
-                // Get the keys sorted by start time
-                let timeSpanKeys = Object.keys(eventGroups).sort();
-                
-                // Only process if we have groups and this is the starting row for a group
-                if (timeSpanKeys.length > 0) {
-                    let firstGroup = eventGroups[timeSpanKeys[0]];
-                    let rowSpan = firstGroup.rowSpan;
-                    let events = firstGroup.events;
-                    
-                    // Mark future slots to skip
-                    for (let k = 1; k < rowSpan; k++) {
-                        if (t + k < times.length) {
-                            skip[d][t + k] = true;
-                        }
-                    }
-                    
-                    // Create cell with rowspan
-                    html += `<td rowspan="${rowSpan}" class="event-cell">`;
-                    
-                    // Now just display the events without REHAT check (handled earlier)
-                    {
-                        // Start multi-event container if we have multiple events
-                        if (events.length > 1) {
-                            html += `<div class="multi-event-container">`;
+                    // Add each event
+                    unprocessedEvents.forEach((event, index) => {
+                        if (index > 0) {
+                            html += `<div class="event-divider"></div>`;
                         }
                         
-                        // Add each event
-                        events.forEach((event, index) => {
-                            if (index > 0) {
-                                html += `<div class="event-divider"></div>`;
-                            }
-                            
-                            html += `<div class="event-title">${event.title || '(No Title)'}</div>`;
-                            
-                            // Add description if available
-                            if (event.extendedProps && event.extendedProps.description) {
-                                html += `<div class="event-description">${event.extendedProps.description}</div>`;
-                            }
-                            
-                            // Add program info if available
-                            if (event.extendedProps && event.extendedProps.programInfo) {
-                                html += `<div class="event-description">Program: ${event.extendedProps.programInfo}</div>`;
-                            }
-                        });
+                        html += `<div class="event-title">${event.title || '(No Title)'}</div>`;
                         
-                        // Close multi-event container if needed
-                        if (events.length > 1) {
-                            html += `</div>`;
+                        // Add description if available
+                        if (event.extendedProps && event.extendedProps.description) {
+                            html += `<div class="event-description">${event.extendedProps.description}</div>`;
                         }
-                    }
+                        
+                        // Add program info if available
+                        if (event.extendedProps && event.extendedProps.programInfo) {
+                            html += `<div class="event-description">Program: ${event.extendedProps.programInfo}</div>`;
+                        }
+                        
+                        // Mark event as processed
+                        processedEvents.add(event.id);
+                        console.log(`Processed event: ${event.title}`);
+                    });
                     
-                    html += `</td>`;
+                    // Close multi-event container if needed
+                    if (unprocessedEvents.length > 1) {
+                        html += `</div>`;
+                    }
                 } else {
-                    // No unprocessed events => empty cell
-                    html += `<td></td>`;
+                    html += '<div class="event-title">Previous Event</div>';
                 }
+                
+                html += `</td>`;
             } else {
                 // No events => just a normal empty cell
                 html += `<td></td>`;
