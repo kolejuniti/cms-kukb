@@ -1889,80 +1889,20 @@ function printScheduleTable(name, ic, staffNo, email) {
     
     const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday'];
 
-    // Build time slots (08:15..17:15) with 15-minute intervals during break time
-    let times = [];
-    let startHour = 8;
-    let startMinute = 15;
-    let endHour = 17;
-    let endMinute = 15;
-
-    while (startHour < endHour || (startHour === endHour && startMinute < endMinute)) {
-        let hh = String(startHour).padStart(2, '0');
-        let mm = String(startMinute).padStart(2, '0');
-        times.push(`${hh}:${mm}`);
-        
-        // Special handling for break time (13:15-14:15) - use 15-minute intervals
-        if (startHour === 13 && startMinute === 15) {
-            // Add 15-minute intervals during break time
-            times.push('13:30');
-            times.push('13:45');
-            times.push('14:00');
-            times.push('14:15');
-            // Jump to 14:30 (next 30-minute slot after break)
-            startHour = 14;
-            startMinute = 30;
-        } else {
-            // Regular 30-minute intervals
-            startMinute += 30;
-            if (startMinute >= 60) {
-                startMinute = 0;
-                startHour++;
-            }
-        }
-        
-        // Safety check to prevent infinite loop
-        if (times.length > 50) {
-            console.warn('Time generation stopped to prevent infinite loop');
-            break;
-        }
-    }
-    
-    // Ensure we include the final end time
-    times.push('17:15');
+    // Build time slots with safe predefined slots (08:15..17:15) - following schedule2/schedule3 approach
+    let times = [
+        '08:15', '08:45', '09:15', '09:45', '10:15', '10:45', '11:15', '11:45',
+        '12:15', '12:45', '13:15', '13:30', '13:45', '14:00', '14:15', '14:30',
+        '15:00', '15:30', '16:00', '16:30', '17:00'
+    ];
 
     // Get events from FullCalendar
     const events = calendar.getEvents();
-    
-    // Debug: Log all events for troubleshooting
-    console.log('Print function - Total events found:', events.length);
-    events.forEach(event => {
-        console.log('Event:', event.title, 'Start:', toHHMM(event.start), 'End:', event.end ? toHHMM(event.end) : 'No end', 'Day:', event.start.getDay());
-    });
-    
-    console.log('Generated time slots:', times);
 
-    // Build a 2D array scheduleData[dayIndex][timeIndex] = [events]
-    // Changed to store arrays of events instead of single events
+    // Simple 2D array - following schedule2/schedule3 approach
     let scheduleData = [];
     for (let d = 0; d < dayNames.length; d++) {
-        scheduleData[d] = [];
-        for (let t = 0; t < times.length; t++) {
-            scheduleData[d][t] = []; // Initialize with empty array
-        }
-    }
-
-    // Helper function to find closest time slot index
-    function findClosestTimeIndex(timeStr, times) {
-        let exactIndex = times.indexOf(timeStr);
-        if (exactIndex !== -1) return exactIndex;
-        
-        // Find the closest earlier time slot
-        for (let i = times.length - 1; i >= 0; i--) {
-            if (times[i] <= timeStr) {
-                return i;
-            }
-        }
-        return 0; // Default to first slot if no match
+        scheduleData[d] = new Array(times.length).fill(null);
     }
 
     events.forEach(event => {
@@ -1971,41 +1911,24 @@ function printScheduleTable(name, ic, staffNo, email) {
 
         // Convert day-of-week (Sun=0, Mon=1..Thu=4 => index 0..4)
         let dayIndex = start.getDay(); 
-        if (dayIndex === 0) {
-            dayIndex = 0; // Sunday = index 0
-        } else if (dayIndex >= 1 && dayIndex <= 4) {
-            // Monday-Thursday = index 1-4
-            // No change needed as getDay() already returns 1-4 for Mon-Thu
-        } else {
-            console.log('Skipping event on day:', dayIndex, event.title);
-            return; // skip Friday(5) and Saturday(6)
-        }
+        if (dayIndex > 4) return; // skip Friday(5) and Saturday(6)
 
         let startTimeStr = toHHMM(start);
         let endTimeStr = toHHMM(end);
 
-        // Use flexible time matching instead of strict indexOf
-        let startIndex = findClosestTimeIndex(startTimeStr, times);
-        let endIndex = findClosestTimeIndex(endTimeStr, times);
-        
-        // If end time is not found, calculate based on duration
-        if (endIndex <= startIndex) {
-            endIndex = Math.min(startIndex + Math.ceil((end - start) / (30 * 60 * 1000)), times.length);
-        }
+        let startIndex = times.indexOf(startTimeStr);
+        if (startIndex === -1) return;
 
-        console.log(`Processing event: ${event.title}, Day: ${dayIndex}, Start: ${startTimeStr} (index: ${startIndex}), End: ${endTimeStr} (index: ${endIndex})`);
+        let endIndex = times.indexOf(endTimeStr);
+        if (endIndex === -1) endIndex = times.length;
 
-        // Fill each time slot with the event
-        for (let i = startIndex; i < endIndex && i < times.length; i++) {
-            if (i >= 0) {
-                scheduleData[dayIndex][i].push(event);
-                console.log(`Added ${event.title} to day ${dayIndex}, time slot ${i} (${times[i]})`);
-            }
+        // Simple assignment - fill each time slot with the event
+        for (let i = startIndex; i < endIndex; i++) {
+            scheduleData[dayIndex][i] = event;
         }
     });
 
-    // Create processed tracking arrays
-    let processedEvents = new Set();
+    // Skip array for rowspan logic
     let skip = [];
     for (let d = 0; d < dayNames.length; d++) {
         skip[d] = new Array(times.length).fill(false);
@@ -2233,69 +2156,43 @@ function printScheduleTable(name, ic, staffNo, email) {
                 continue; 
             }
 
-            let eventList = scheduleData[d][t];
+            let event = scheduleData[d][t];
             
-            if (eventList.length > 0) {
-                console.log(`Processing cell [${d}][${t}] with ${eventList.length} events:`, eventList.map(e => e.title));
-                
-                // Check if there's a REHAT event in this cell
-                let hasRehat = eventList.some(event => event.title === 'REHAT');
-                
-                // If there's a REHAT event, give it priority
-                if (hasRehat) {
-                    // Simple REHAT cell without complex rowspan calculation
-                    html += `<td class="rehat-cell">
-                                <div class="event-title">REHAT</div>
-                            </td>`;
-                    continue;
+            if (event) {
+                // Calculate rowspan - how many consecutive slots have the same event
+                let rowSpan = 1;
+                for (let k = t + 1; k < times.length; k++) {
+                    if (scheduleData[d][k] === event) {
+                        rowSpan++;
+                    } else {
+                        break;
+                    }
                 }
                 
-                // Simplified event processing - just display all events in this time slot
-                html += `<td class="event-cell">`;
-                
-                // Filter out already processed events to avoid duplicates
-                let unprocessedEvents = eventList.filter(event => !processedEvents.has(event.id));
-                
-                if (unprocessedEvents.length > 0) {
-                    // Start multi-event container if we have multiple events
-                    if (unprocessedEvents.length > 1) {
-                        html += `<div class="multi-event-container">`;
-                    }
-                    
-                    // Add each event
-                    unprocessedEvents.forEach((event, index) => {
-                        if (index > 0) {
-                            html += `<div class="event-divider"></div>`;
-                        }
-                        
-                        html += `<div class="event-title">${event.title || '(No Title)'}</div>`;
-                        
-                        // Add description if available
-                        if (event.extendedProps && event.extendedProps.description) {
-                            html += `<div class="event-description">${event.extendedProps.description}</div>`;
-                        }
-                        
-                        // Add program info if available
-                        if (event.extendedProps && event.extendedProps.programInfo) {
-                            html += `<div class="event-description">Program: ${event.extendedProps.programInfo}</div>`;
-                        }
-                        
-                        // Mark event as processed
-                        processedEvents.add(event.id);
-                        console.log(`Processed event: ${event.title}`);
-                    });
-                    
-                    // Close multi-event container if needed
-                    if (unprocessedEvents.length > 1) {
-                        html += `</div>`;
-                    }
-                } else {
-                    html += '<div class="event-title">Previous Event</div>';
+                // Mark future slots to skip
+                for (let k = 1; k < rowSpan; k++) {
+                    skip[d][t + k] = true;
                 }
                 
-                html += `</td>`;
+                // Choose cell class based on event type
+                let cellClass = event.title === 'REHAT' ? 'rehat-cell' : 'event-cell';
+                
+                // Build event content
+                let eventContent = `<div class="event-title">${event.title || '(No Title)'}</div>`;
+                
+                // Add description if available
+                if (event.extendedProps && event.extendedProps.description) {
+                    eventContent += `<div class="event-description">${event.extendedProps.description}</div>`;
+                }
+                
+                // Add program info if available
+                if (event.extendedProps && event.extendedProps.programInfo) {
+                    eventContent += `<div class="event-description">Program: ${event.extendedProps.programInfo}</div>`;
+                }
+                
+                html += `<td rowspan="${rowSpan}" class="${cellClass}">${eventContent}</td>`;
             } else {
-                // No events => just a normal empty cell
+                // No event => empty cell
                 html += `<td></td>`;
             }
         }
