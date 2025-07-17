@@ -1889,12 +1889,20 @@ function printScheduleTable(name, ic, staffNo, email) {
     
     const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday'];
 
-    // Build time slots with safe predefined slots (08:15..17:15) - following schedule2/schedule3 approach
-    let times = [
-        '08:15', '08:45', '09:15', '09:45', '10:15', '10:45', '11:15', '11:45',
-        '12:15', '12:45', '13:15', '13:30', '13:45', '14:00', '14:15', '14:30',
-        '15:00', '15:30', '16:00', '16:30', '17:00'
-    ];
+    // Generate time slots dynamically to match FullCalendar exactly
+    let times = [];
+    let currentTime = new Date();
+    currentTime.setHours(8, 15, 0, 0); // Start at 08:15
+    let endTime = new Date();
+    endTime.setHours(17, 15, 0, 0); // End at 17:15
+    
+    while (currentTime < endTime) {
+        let timeStr = toHHMM(currentTime);
+        times.push(timeStr);
+        
+        // Add 30 minutes for next slot (FullCalendar default)
+        currentTime.setMinutes(currentTime.getMinutes() + 30);
+    }
 
     // Get events from FullCalendar
     const events = calendar.getEvents();
