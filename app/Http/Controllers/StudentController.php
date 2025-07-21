@@ -18,6 +18,24 @@ use Carbon\Carbon;
 
 class StudentController extends Controller
 {
+    public function dashboard()
+    {
+        Session::put('User', Auth::guard('student')->user());
+
+        $student = auth()->guard('student')->user();
+
+        // dd($student);
+
+        if (!$student) {
+            // handle the error, e.g., redirect back with an error message
+            return redirect()->back()->withErrors(['message' => 'Student is not logged in']);
+        }
+
+        Session::put('StudInfo', $student);
+
+        return view('student.dashboard', compact('data'));
+    }
+
     public function index()
     {
         Session::put('User', Auth::guard('student')->user());
