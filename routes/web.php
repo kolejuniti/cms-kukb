@@ -536,7 +536,6 @@ Route::post('/lecturer/forum/{id}/topic/insert', [App\Http\Controllers\ForumCont
 
 
 Route::get('/studentDashboard', [App\Http\Controllers\StudentController::class, 'dashboard'])
-    ->middleware('auth:student')
     ->name('studentDashboard');
 Route::get('/student', [App\Http\Controllers\StudentController::class, 'index'])->name('student');
 Route::get('/student/setting', [App\Http\Controllers\StudentController::class, 'setting'])->name('student.setting');
