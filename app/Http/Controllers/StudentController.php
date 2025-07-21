@@ -33,7 +33,7 @@ class StudentController extends Controller
 
         Session::put('StudInfo', $student);
 
-        return view('student.dashboard', compact('data'));
+        return view('student.dashboard');
     }
 
     public function index()
