@@ -18,6 +18,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use GuzzleHttp\Client;
 
 class PendaftarController extends Controller
 {
@@ -1268,34 +1269,43 @@ class PendaftarController extends Controller
 
     public function getStudentList(Request $request)
     {
-        $students = DB::table('students')->where('name', 'LIKE', "%".$request->search."%")
-                                         ->orwhere('ic', 'LIKE', "%".$request->search."%")
-                                         ->orwhere('no_matric', 'LIKE', "%".$request->search."%")->get();
+        try {
+            // Validate search parameter
+            if (!$request->has('search') || empty(trim($request->search))) {
+                $content = "<option value='0' selected disabled>Please enter search term</option>";
+                return response($content, 200);
+            }
 
-        $content = "";
+            $students = DB::table('students')->where('name', 'LIKE', "%".$request->search."%")
+                                             ->orwhere('ic', 'LIKE', "%".$request->search."%")
+                                             ->orwhere('no_matric', 'LIKE', "%".$request->search."%")->get();
 
-        $content .= "<option value='0' selected disabled>-</option>";
-        foreach($students as $std){
+            $content = "";
+            $content .= "<option value='0' selected disabled>-</option>";
+            
+            foreach($students as $std){
+                $content .= "<option data-style=\"btn-inverse\"
+                data-content=\"<div class='row'>
+                    <div class='col-md-2'>
+                    <div class='d-flex justify-content-center'>
+                        <img src='' 
+                            height='auto' width='70%' class='bg-light ms-0 me-2 rounded-circle'>
+                            </div>
+                    </div>
+                    <div class='col-md-10 align-self-center lh-lg'>
+                        <span><strong>". htmlspecialchars($std->name) ."</strong></span><br>
+                        <span>". htmlspecialchars($std->email) ." | <strong class='text-fade'>". htmlspecialchars($std->ic) ."</strong></span><br>
+                        <span class='text-fade'></span>
+                    </div>
+                </div>\" value='". htmlspecialchars($std->ic) ."' ></option>";
+            }
+            
+            return response($content, 200);
 
-            $content .= "<option data-style=\"btn-inverse\"
-            data-content=\"<div class='row'>
-                <div class='col-md-2'>
-                <div class='d-flex justify-content-center'>
-                    <img src='' 
-                        height='auto' width='70%' class='bg-light ms-0 me-2 rounded-circle'>
-                        </div>
-                </div>
-                <div class='col-md-10 align-self-center lh-lg'>
-                    <span><strong>". $std->name ."</strong></span><br>
-                    <span>". $std->email ." | <strong class='text-fade'>". $std->ic ."</strong></span><br>
-                    <span class='text-fade'></span>
-                </div>
-            </div>\" value='". $std->ic ."' ></option>";
-
+        } catch (\Exception $e) {
+            Log::error('Error in getStudentList: ' . $e->getMessage());
+            return response('<option value="0" selected disabled>Error loading students</option>', 500);
         }
-        
-        return $content;
-
     }
 
     public function getStudentInfo(Request $request)
@@ -1772,7 +1782,6 @@ class PendaftarController extends Controller
             ->first();
 
             $hotel = !str_contains(strtoupper($sponsor->payment_type), 'TIADA KEDIAMAN');
-
 
             foreach($claim as $clm)
             {
@@ -2459,7 +2468,7 @@ class PendaftarController extends Controller
                                     ['students.campus_id', 1]
                                     ])->get());
 
-            $data['ms9'][$key] = count(DB::table('students')
+                                    $data['ms9'][$key] = count(DB::table('students')
                                     ->join('tblstudent_personal', 'students.ic', 'tblstudent_personal.student_ic')
                                     ->where([
                                     ['students.program', $prg->id],
@@ -2520,7 +2529,7 @@ class PendaftarController extends Controller
                                     ->where([
                                     ['students.program', $prg->id],
                                     ['students.status', 15]
-                                    ])->get());
+                                    ])->get());                
 
         }
 
@@ -3568,6 +3577,7 @@ class PendaftarController extends Controller
                                                 WHEN IFNULL(SUM(tblpaymentdtl.amount), 0) < 250 THEN "R"
                                                 WHEN IFNULL(SUM(tblpaymentdtl.amount), 0) >= 250 THEN "R1"
                                                 END AS group_alias'),
+                                    DB::raw('"R2" AS group_alias'),
                                     DB::raw('IFNULL(SUM(tblpaymentdtl.amount), 0) AS amount')
 
                                     )->first();
@@ -4122,46 +4132,188 @@ class PendaftarController extends Controller
     
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
+        
+        // Add title and report information
+        $sheet->setCellValue('A1', 'JADUAL REPORT PENCAPAIAN R BAGI TEMPOH ' . $data['from'] . ' HINGGA ' . $data['to']);
+        $sheet->mergeCells('A1:K1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        
+        // Report Information
+        $row = 3;
+        $sheet->setCellValue('A' . $row, 'Report Information');
+        $sheet->mergeCells('A' . $row . ':K' . $row);
+        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+        
+        $row++;
+        $sheet->setCellValue('A' . $row, 'Total Student R By Month:');
+        $sheet->setCellValue('C' . $row, $data['totalAll']->total_student);
+        
+        // Total Payment By Weeks header
+        $row += 2;
+        $sheet->setCellValue('A' . $row, 'Total Student R By Weeks');
+        $sheet->mergeCells('A' . $row . ':K' . $row);
+        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+        
+        // Add note about weeks
+        $row++;
+        $sheet->setCellValue('A' . $row, 'Note: Weeks shown follow the calendar date per week (Sunday to Saturday)');
+        $sheet->mergeCells('A' . $row . ':K' . $row);
+        $sheet->getStyle('A' . $row)->getFont()->setItalic(true)->setSize(10);
+        
+        // Table headers
+        $row++;
+        $sheet->setCellValue('A' . $row, 'Week (Date Range)');
+        $sheet->setCellValue('B' . $row, 'Month');
+        $sheet->setCellValue('C' . $row, 'Total By Weeks');
+        $sheet->setCellValue('D' . $row, 'Total by Cumulative');
+        $sheet->setCellValue('E' . $row, 'Total by Convert');
+        $sheet->setCellValue('F' . $row, 'Balance Student');
+        $sheet->setCellValue('G' . $row, 'Student Active');
+        $sheet->setCellValue('H' . $row, 'Student Rejected');
+        $sheet->setCellValue('I' . $row, 'Student Offered');
+        $sheet->setCellValue('J' . $row, 'Student KIV');
+        $sheet->setCellValue('K' . $row, 'Student Others');
+        $sheet->getStyle('A' . $row . ':K' . $row)->getFont()->setBold(true);
     
-        // Add Total Payment By Weeks data
-        $sheet->setCellValue('A1', 'Week');
-        $sheet->setCellValue('B1', 'Month');
-        $sheet->setCellValue('C1', 'Total');
+        // Add notes for KIV and Others columns
+        $sheet->getComment('J' . $row)->getText()->createTextRun('Students whose current date has passed their offered date');
+        $sheet->getComment('K' . $row)->getText()->createTextRun('Includes: GAGAL BERHENTI, TARIK DIRI, MENINGGAL DUNIA, TANGGUH, DIBERHENTIKAN, TAMAT PENGAJIAN, TUKAR PROGRAM, GANTUNG, TUKAR KE KUKB, PINDAH KOLEJ, TIDAK TAMAT PENGAJIAN, TAMAT PENGAJIAN (MENINGGAL DUNIA)');
     
-        $row = 2;
+        $row++;
         $total_allW = 0;
+        $total_allC = 0;
+        $total_allC2 = 0;
+        $total_allB = 0;
+        $total_allR = 0;
+        $total_allO = 0;
+        $total_allK = 0;
+        $total_allT = 0;
+        $total_allOthers = 0;
+        
         foreach ($data['dateRange'] as $key => $week) {
-            $sheet->setCellValue('A' . $row, $week['week']);
+            $dateRange = \Carbon\Carbon::parse(reset($week['days']))->format('j F Y') . ' - ' . \Carbon\Carbon::parse(end($week['days']))->format('j F Y');
+            $sheet->setCellValue('A' . $row, $week['week'] . ' (' . $dateRange . ')');
             $sheet->setCellValue('B' . $row, $week['month']);
             $sheet->setCellValue('C' . $row, $data['totalWeek'][$key]->total_week);
+            $sheet->setCellValue('D' . $row, $data['countedPerWeek'][$key]);
+            $sheet->setCellValue('E' . $row, $data['totalConvert'][$key]);
+            $sheet->setCellValue('F' . $row, $data['totalWeek'][$key]->total_week - $data['totalConvert'][$key]);
+            $sheet->setCellValue('G' . $row, $data['registeredPerWeek'][$key]);
+            $sheet->setCellValue('H' . $row, $data['rejectedPerWeek'][$key]);
+            $sheet->setCellValue('I' . $row, $data['offeredPerWeek'][$key]);
+            $sheet->setCellValue('J' . $row, $data['KIVPerWeek'][$key]);
+            $sheet->setCellValue('K' . $row, $data['othersPerWeek'][$key]);
+            
             $total_allW += $data['totalWeek'][$key]->total_week;
+            $total_allC = $data['countedPerWeek'][$key];
+            $total_allC2 += $data['totalConvert'][$key];
+            $total_allB += $data['totalWeek'][$key]->total_week - $data['totalConvert'][$key];
+            $total_allR += $data['registeredPerWeek'][$key];
+            $total_allO += $data['rejectedPerWeek'][$key];
+            $total_allK += $data['offeredPerWeek'][$key];
+            $total_allT += $data['KIVPerWeek'][$key];
+            $total_allOthers += $data['othersPerWeek'][$key];
             $row++;
         }
     
+        // Totals row for weeks
         $sheet->setCellValue('A' . $row, 'TOTAL');
-        $sheet->setCellValue('C' . $row, number_format($total_allW, 2));
-    
-        // Add Total Payment By Days data
-        $row += 2; // Add some space between tables
+        $sheet->mergeCells('A' . $row . ':B' . $row);
+        $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A' . $row . ':K' . $row)->getFont()->setBold(true);
+        $sheet->setCellValue('C' . $row, $total_allW);
+        $sheet->setCellValue('D' . $row, $total_allC);
+        $sheet->setCellValue('E' . $row, $total_allC2);
+        $sheet->setCellValue('F' . $row, $total_allB);
+        $sheet->setCellValue('G' . $row, $total_allR);
+        $sheet->setCellValue('H' . $row, $total_allO);
+        $sheet->setCellValue('I' . $row, $total_allK);
+        $sheet->setCellValue('J' . $row, $total_allT);
+        $sheet->setCellValue('K' . $row, $total_allOthers);
+        
+        // Total Student R By Days header
+        $row += 2;
+        $sheet->setCellValue('A' . $row, 'Total Student R By Days');
+        $sheet->mergeCells('A' . $row . ':K' . $row);
+        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+        
+        // Table headers for days
+        $row++;
         $sheet->setCellValue('A' . $row, 'Date');
-        $sheet->setCellValue('B' . $row, 'Total');
+        $sheet->setCellValue('B' . $row, 'Total By Days');
+        $sheet->setCellValue('C' . $row, 'Total by Cumulative');
+        $sheet->setCellValue('D' . $row, 'Total by Convert');
+        $sheet->setCellValue('E' . $row, 'Balance Student');
+        $sheet->setCellValue('F' . $row, 'Student Active');
+        $sheet->setCellValue('G' . $row, 'Student Rejected');
+        $sheet->setCellValue('H' . $row, 'Student Offered');
+        $sheet->setCellValue('I' . $row, 'Student KIV');
+        $sheet->setCellValue('J' . $row, 'Student Others');
+        $sheet->getStyle('A' . $row . ':J' . $row)->getFont()->setBold(true);
+    
+        // Add notes for KIV and Others columns
+        $sheet->getComment('I' . $row)->getText()->createTextRun('Students whose current date has passed their offered date');
+        $sheet->getComment('J' . $row)->getText()->createTextRun('Includes: GAGAL BERHENTI, TARIK DIRI, MENINGGAL DUNIA, TANGGUH, DIBERHENTIKAN, TAMAT PENGAJIAN, TUKAR PROGRAM, GANTUNG, TUKAR KE KUKB, PINDAH KOLEJ, TIDAK TAMAT PENGAJIAN, TAMAT PENGAJIAN (MENINGGAL DUNIA)');
     
         $row++;
         $total_allD = 0;
+        $total_allQ = 0;
+        $total_allZ = 0;
+        $total_allB = 0;
+        $total_allR = 0;
+        $total_allO = 0;
+        $total_allK = 0;
+        $total_allT = 0;
+        $total_allOthers = 0;
+        
         foreach ($data['dateRange'] as $key => $week) {
             foreach ($data['week'][$key] as $key2 => $day) {
                 $sheet->setCellValue('A' . $row, $day);
                 $sheet->setCellValue('B' . $row, $data['totalDay'][$key][$key2]->total_day);
+                $sheet->setCellValue('C' . $row, $data['countedPerDay'][$key][$key2]);
+                $sheet->setCellValue('D' . $row, $data['totalConvert2'][$key][$key2]);
+                $sheet->setCellValue('E' . $row, $data['totalDay'][$key][$key2]->total_day - $data['totalConvert2'][$key][$key2]);
+                $sheet->setCellValue('F' . $row, $data['registeredPerDay'][$key][$key2]);
+                $sheet->setCellValue('G' . $row, $data['rejectedPerDay'][$key][$key2]);
+                $sheet->setCellValue('H' . $row, $data['offeredPerDay'][$key][$key2]);
+                $sheet->setCellValue('I' . $row, $data['KIVPerDay'][$key][$key2]);
+                $sheet->setCellValue('J' . $row, $data['othersPerDay'][$key][$key2]);
+                
                 $total_allD += $data['totalDay'][$key][$key2]->total_day;
+                $total_allQ = $data['countedPerDay'][$key][$key2];
+                $total_allZ += $data['totalConvert2'][$key][$key2];
+                $total_allB += $data['totalDay'][$key][$key2]->total_day - $data['totalConvert2'][$key][$key2];
+                $total_allR += $data['registeredPerDay'][$key][$key2];
+                $total_allO += $data['rejectedPerDay'][$key][$key2];
+                $total_allK += $data['offeredPerDay'][$key][$key2];
+                $total_allT += $data['KIVPerDay'][$key][$key2];
+                $total_allOthers += $data['othersPerDay'][$key][$key2];
                 $row++;
             }
         }
     
+        // Totals row for days
         $sheet->setCellValue('A' . $row, 'TOTAL');
-        $sheet->setCellValue('B' . $row, number_format($total_allD, 2));
+        $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A' . $row . ':J' . $row)->getFont()->setBold(true);
+        $sheet->setCellValue('B' . $row, $total_allD);
+        $sheet->setCellValue('C' . $row, $total_allQ);
+        $sheet->setCellValue('D' . $row, $total_allZ);
+        $sheet->setCellValue('E' . $row, $total_allB);
+        $sheet->setCellValue('F' . $row, $total_allR);
+        $sheet->setCellValue('G' . $row, $total_allO);
+        $sheet->setCellValue('H' . $row, $total_allK);
+        $sheet->setCellValue('I' . $row, $total_allT);
+        $sheet->setCellValue('J' . $row, $total_allOthers);
+        
+        // Set columns to auto width
+        foreach(range('A', 'K') as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
     
         $writer = new Xlsx($spreadsheet);
-        $fileName = 'report.xlsx';
+        $fileName = 'report_' . date('Y-m-d') . '.xlsx';
         $filePath = 'reports/' . $fileName;
     
         ob_start();
@@ -4182,23 +4334,6 @@ class PendaftarController extends Controller
             Log::error('File not created on Linode storage');
             abort(500, 'File not created');
         }
-    }
-
-
-    public function incomeReport()
-    {
-        $loop = 20;
-
-        for($i = 18; $i <= $loop; $i++)
-        {
-
-            $stateNot[] = $i;
-            
-        }
-
-        $data['state'] = DB::table('tblstate')->whereNotIn('id', $stateNot)->get();
-
-        return view('pendaftar.income_report.index', compact('data'));
     }
 
     public function studentReportRA()
@@ -5994,6 +6129,22 @@ class PendaftarController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
+    public function incomeReport()
+    {
+        $loop = 20;
+
+        for($i = 18; $i <= $loop; $i++)
+        {
+
+            $stateNot[] = $i;
+            
+        }
+
+        $data['state'] = DB::table('tblstate')->whereNotIn('id', $stateNot)->get();
+
+        return view('pendaftar.income_report.index', compact('data'));
+    }
+
     public function getIncomeReport(Request $request)
     {
 
@@ -6020,15 +6171,23 @@ class PendaftarController extends Controller
         ->leftjoin('tblstudent_status', 'students.status', 'tblstudent_status.id')
         ->leftjoin('tblstudent_address', 'students.ic', 'tblstudent_address.student_ic')
         ->leftjoin('tblstate', 'tblstudent_address.state_id', 'tblstate.id')
-        ->leftjoin('tblstudent_waris', 'students.ic', 'tblstudent_waris.student_ic')
+        ->leftJoinSub(
+            DB::table('tblstudent_waris')
+                ->select('student_ic')
+                ->selectRaw('SUM(dependent_no) as total_dependent')
+                ->selectRaw('SUM(kasar) as total_kasar')
+                ->where('status', '!=', 2)
+                ->groupBy('student_ic'),
+            'waris_summary',
+            function($join) {
+                $join->on('students.ic', '=', 'waris_summary.student_ic');
+            }
+        )
         ->where([
             ['students.status', 2],
             ['students.campus_id', 1],
-            ['tblstudent_waris.status', '!=', 2],
         ])
         ->whereIn('students.student_status', [1, 2, 4])
-        ->groupBy('students.ic')
-        ->orderBy('students.name')
         ->select(
             'students.*',
             'tblsex.code',
@@ -6037,38 +6196,33 @@ class PendaftarController extends Controller
             'tblstudent_status.name AS status',
             'tblstudent_personal.no_tel',
             DB::raw('CONCAT_WS(", ", tblstudent_address.address1, tblstudent_address.address2, tblstudent_address.address3, tblstudent_address.city, tblstudent_address.postcode, tblstate.state_name) AS full_address'),
-            'tblstudent_waris.dependent_no',
-            DB::raw('SUM(tblstudent_waris.kasar) AS gajikasar')
+            'waris_summary.total_dependent as dependent_no',
+            'waris_summary.total_kasar as gajikasar'
         )
-        ->where(function ($query) {
-            $query->where('tblstudent_waris.dependent_no', '!=', 0)
-                ->orWhere(function ($query) {
-                    $query->where('tblstudent_waris.dependent_no', '=', 0)
-                            ->whereNotExists(function ($subquery) {
-                                $subquery->select(DB::raw(1))
-                                    ->from('tblstudent_waris as inner_waris')
-                                    ->whereColumn('inner_waris.student_ic', 'tblstudent_waris.student_ic')
-                                    ->where('inner_waris.dependent_no', '!=', 0);
-                            });
-                });
-        });
+        ->orderBy('students.name');
 
 
         if($data['b40'])
         {
-
-            $query = $query->havingRaw('SUM(tblstudent_waris.kasar) <= 4850');
-
+            $query = $query->where('waris_summary.total_kasar', '<=', 4850);
         }
 
         if($data['value'])
         {
-
             $query = $query->whereIn('tblstudent_address.state_id', $data['value']);
-
         }
 
         $data['students'] = $query->get();
+
+        foreach($data['students'] as $key => $student)
+        {
+            $data['waris'][$key] = DB::table('tblstudent_waris')
+                ->join('tblwaris_status', 'tblstudent_waris.status', 'tblwaris_status.id')
+                ->where('student_ic', $student->ic)
+                ->select('tblstudent_waris.*', 'tblwaris_status.name AS status')
+                ->limit(2)
+                ->get();
+        }
 
         // // Return the data as part of the response
         // return response()->json([
@@ -6114,7 +6268,7 @@ class PendaftarController extends Controller
         ->whereIn('tblstudent_log.student_ic', function($query){
           $query->select('students.ic')
                 ->from('students')
-                ->where('students.no_matric', '!=', null)
+                // ->where('students.no_matric', '!=', null)
                 ->where('students.status', '<>', 9);
         })
         ->where('sessions.Year', $request->year)
@@ -6177,6 +6331,7 @@ class PendaftarController extends Controller
         return DB::table('students')
         ->leftjoin('tblstudent_log', 'students.ic', 'tblstudent_log.student_ic')
         ->leftjoin('tblstudent_personal', 'students.ic', 'tblstudent_personal.student_ic')
+        ->leftjoin('tblnationality', 'tblstudent_personal.nationality_id', 'tblnationality.id')
         ->leftjoin('tblsex', 'tblstudent_personal.sex_id', 'tblsex.id')
         ->leftjoin('tblprogramme', 'students.program', 'tblprogramme.id')
         ->leftjoin('sessions', 'tblstudent_log.session_id', 'sessions.SessionID')
@@ -6195,7 +6350,7 @@ class PendaftarController extends Controller
         ->select('students.name', 'students.ic', 'students.no_matric', 'tblstudent_log.kuliah_id AS student_status', 'tblsex.code as gender', 
                 'tblprogramme.progcode', 'sessions.SessionName AS session', 
                 'tblstudent_log.semester_id AS semester', 'tblstudent_log.date', 
-                'tblstudent_log.remark', 'tblstudent_status.name AS status')
+                'tblstudent_log.remark', 'tblstudent_status.name AS status', 'tblnationality.nationality_name AS race')
         ->get();
 
         $data['student2'] = ($baseQuery)()
@@ -6206,11 +6361,184 @@ class PendaftarController extends Controller
         ->where('tblstudent_log.semester_id', '>', 1)
         ->select('students.name', 'students.ic', 'students.no_matric', 'tblstudent_log.kuliah_id AS student_status', 'tblsex.code as gender', 'tblprogramme.progcode',
                 'sessions.SessionName AS session', 'tblstudent_log.semester_id AS semester', 'tblstudent_log.date', 'tblstudent_log.remark',
-                'tblstudent_status.name AS status')
+                'tblstudent_status.name AS status', 'tblnationality.nationality_name AS race')
         ->get();
 
         return view('pendaftar.report.annual_student_report.getStudent', compact('data'));
 
+    }
+
+    // Temporary debug method - remove after debugging
+    public function debugPaymentData()
+    {
+        // Check total payments
+        $totalPayments = DB::table('tblpayment')->count();
+        
+        // Check what date ranges we have
+        $dateRanges = DB::table('tblpayment')
+                       ->selectRaw('MIN(add_date) as min_date, MAX(add_date) as max_date')
+                       ->first();
+        
+        // Check a few sample records
+        $samplePayments = DB::table('tblpayment')
+                           ->select('student_ic', 'add_date', 'process_status_id', 'process_type_id', 'semester_id')
+                           ->limit(10)
+                           ->get();
+        
+        return response()->json([
+            'total_payments' => $totalPayments,
+            'date_ranges' => $dateRanges,
+            'sample_payments' => $samplePayments
+        ]);
+    }
+
+    public function analyseData(Request $request)
+    {
+        try {
+            // Get the table data from the request
+            $tableData = json_decode($request->tableData, true);
+            
+            if (!$tableData) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid table data provided.'
+                ], 400);
+            }
+            
+            // Generate AI analysis
+            $analysis = $this->generateAIAnalysis($tableData);
+            
+            return response()->json([
+                'success' => true,
+                'analysis' => $analysis
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error in analyseData: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error analyzing data: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    private function generateAIAnalysis($tableData)
+    {
+        $apiKey = env('OPENAI_API_KEY');
+        
+        if (!$apiKey) {
+            throw new \Exception('OpenAI API key is not configured.');
+        }
+        
+        $client = new \GuzzleHttp\Client();
+        
+        try {
+            // Build the analysis prompt
+            $prompt = $this->buildAnalysisPrompt($tableData);
+            
+            // Send request to OpenAI API
+            $response = $client->post('https://api.openai.com/v1/chat/completions', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $apiKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => [
+                    'model' => 'gpt-3.5-turbo-1106',
+                    'messages' => [
+                        [
+                            'role' => 'system',
+                            'content' => 'You are an expert educational data analyst specializing in student registration and enrollment analytics. Your role is to provide comprehensive, actionable insights from student registration data to help educational institutions improve their enrollment processes and student success outcomes.'
+                        ],
+                        [
+                            'role' => 'user',
+                            'content' => $prompt
+                        ]
+                    ],
+                    'max_tokens' => 1500,
+                    'temperature' => 0.7,
+                ]
+            ]);
+            
+            $responseBody = json_decode($response->getBody(), true);
+            
+            if (isset($responseBody['choices'][0]['message']['content'])) {
+                return $responseBody['choices'][0]['message']['content'];
+            } else {
+                throw new \Exception('Invalid AI response received.');
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('Error communicating with OpenAI: ' . $e->getMessage());
+            throw new \Exception('Error generating AI analysis: ' . $e->getMessage());
+        }
+    }
+    
+    private function buildAnalysisPrompt($tableData)
+    {
+        $prompt = "Please analyze the following student registration data and provide comprehensive insights:\n\n";
+        
+        if ($tableData['type'] === 'multiple') {
+            $prompt .= "MULTIPLE TABLES ANALYSIS:\n";
+            $prompt .= "We have " . count($tableData['tables']) . " different data sets to compare:\n\n";
+            
+            foreach ($tableData['tables'] as $index => $table) {
+                $prompt .= "TABLE " . ($index + 1) . " - " . $table['label'] . ":\n";
+                $prompt .= "- Total Student R (Registered): " . $table['totalStudentR'] . "\n";
+                $prompt .= "- Total by Convert: " . $table['totalConvert'] . "\n";
+                $prompt .= "- Balance Student: " . $table['balanceStudent'] . "\n";
+                $prompt .= "- Student Active: " . $table['studentActive'] . "\n";
+                $prompt .= "- Student Rejected: " . $table['studentRejected'] . "\n";
+                $prompt .= "- Student Offered: " . $table['studentOffered'] . "\n";
+                $prompt .= "- Student KIV (past offered date): " . $table['studentKIV'] . "\n";
+                $prompt .= "- Student Others: " . $table['studentOthers'] . "\n\n";
+            }
+            
+        } else {
+            $prompt .= "SINGLE TABLE ANALYSIS:\n";
+            $table = $tableData['table'];
+            $prompt .= "- Total Student R (Registered): " . $table['totalStudentR'] . "\n";
+            $prompt .= "- Total by Convert: " . $table['totalConvert'] . "\n";
+            $prompt .= "- Balance Student: " . $table['balanceStudent'] . "\n";
+            $prompt .= "- Student Active: " . $table['studentActive'] . "\n";
+            $prompt .= "- Student Rejected: " . $table['studentRejected'] . "\n";
+            $prompt .= "- Student Offered: " . $table['studentOffered'] . "\n";
+            $prompt .= "- Student KIV (past offered date): " . $table['studentKIV'] . "\n";
+            $prompt .= "- Student Others: " . $table['studentOthers'] . "\n\n";
+        }
+        
+        $prompt .= "ANALYSIS REQUIREMENTS:\n";
+        $prompt .= "Please provide a detailed analysis covering these key areas:\n\n";
+        
+        $prompt .= "1. PERFORMANCE COMPARISON:\n";
+        if ($tableData['type'] === 'multiple') {
+            $prompt .= "   - Which table/period shows the highest performance in Total Student R?\n";
+            $prompt .= "   - Which table/period has the most students actually registered (Student Active)?\n";
+            $prompt .= "   - Compare conversion rates across different periods\n\n";
+        } else {
+            $prompt .= "   - Evaluate the overall registration performance\n";
+            $prompt .= "   - Assess the conversion rate from offered to active students\n\n";
+        }
+        
+        $prompt .= "2. CRITICAL FOCUS AREAS:\n";
+        $prompt .= "   - Which area has the most 'Student Offered' that need attention for conversion?\n";
+        $prompt .= "   - Analyze the 'Student KIV' numbers (students past their offered registration date)\n";
+        $prompt .= "   - Identify potential bottlenecks in the registration process\n\n";
+        
+        $prompt .= "3. ACTIONABLE RECOMMENDATIONS:\n";
+        $prompt .= "   - Specific strategies to improve conversion from 'offered' to 'active' status\n";
+        $prompt .= "   - How to reduce KIV students and prevent deadline oversights\n";
+        $prompt .= "   - Process improvements for better registration outcomes\n\n";
+        
+        $prompt .= "4. TREND INSIGHTS:\n";
+        if ($tableData['type'] === 'multiple') {
+            $prompt .= "   - Identify patterns across different periods\n";
+            $prompt .= "   - Highlight best and worst performing periods\n";
+        }
+        $prompt .= "   - Calculate key performance indicators and conversion rates\n\n";
+        
+        $prompt .= "Please format your response in a clear, professional manner with headings and bullet points for easy reading. Focus on actionable insights that can help improve student enrollment and registration processes.";
+        
+        return $prompt;
     }
 
     public function getFilteredData(Request $request)
@@ -6476,5 +6804,5 @@ class PendaftarController extends Controller
         }
         return null;
     }
-    
+
 }
