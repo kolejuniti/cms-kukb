@@ -2684,7 +2684,9 @@ class PendaftarController extends Controller
                         ['semesterid', $data->semester],
                         ['group_id', '!=', null]
                     ])
-                    ->whereIn('course_status_id', [1, 12, 15])->sum('credit');
+                    ->whereIn('course_status_id', [1, 12, 15])
+                    ->whereNotIn('grade', ['E','F','GL'])
+                    ->sum('credit');
 
                     $grade_pointer_s = DB::table('student_subjek')
                     ->where([
@@ -2725,7 +2727,9 @@ class PendaftarController extends Controller
                         ['group_id', '!=', null]
                     ])
                     ->where('semesterid', '<=', $data->semester)
-                    ->whereIn('course_status_id', [1, 12, 15])->sum('credit');
+                    ->whereIn('course_status_id', [1, 12, 15])
+                    ->whereNotIn('grade', ['E','F','GL'])
+                    ->sum('credit');
 
                     $distinct_courses = DB::table('student_subjek')
                     ->where([
@@ -3073,8 +3077,11 @@ class PendaftarController extends Controller
                         ['student_ic', $std],
                         ['sessionid', $data->session],
                         ['semesterid', $data->semester],
-                        ['group_id','!=',null]
-                    ])->whereIn('course_status_id', [1, 12, 15])->sum('credit');
+                        ['group_id', '!=', null]
+                    ])
+                    ->whereIn('course_status_id', [1, 12, 15])
+                    ->whereNotIn('grade', ['E','F','GL'])
+                    ->sum('credit');
 
                     $grade_pointer_s = DB::table('student_subjek')
                     ->where([
@@ -3107,9 +3114,12 @@ class PendaftarController extends Controller
 
                     $passed_credit_c = DB::table('student_subjek')->where([
                         ['student_ic', $std],
-                        ['group_id','!=',null]
-                    ])->where('semesterid', '<=', $data->semester)
-                    ->whereIn('course_status_id', [1, 12, 15])->sum('credit');
+                        ['group_id', '!=', null]
+                    ])
+                    ->where('semesterid', '<=', $data->semester)
+                    ->whereIn('course_status_id', [1, 12, 15])
+                    ->whereNotIn('grade', ['E','F','GL'])
+                    ->sum('credit');
 
                     $distinct_courses = DB::table('student_subjek')
                     ->where([
