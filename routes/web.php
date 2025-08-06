@@ -147,6 +147,7 @@ Route::post('/pendaftar/student/result/storeResultPeriod', [App\Http\Controllers
 Route::get('/pendaftar/student/result/overallResult', [App\Http\Controllers\PendaftarController::class, 'overallResult']);
 Route::get('/pendaftar/student/reportRs', [App\Http\Controllers\PendaftarController::class, 'studentReportRs'])->name('pendaftar.student.reportR');
 Route::get('/pendaftar/student/reportRs/getStudentReportR', [App\Http\Controllers\PendaftarController::class, 'getStudentReportRs']);
+Route::post('/AR/reportR/getAgingStudents', [App\Http\Controllers\AR_Controller::class, 'getAgingStudents']);
 Route::get('/pendaftar/student/reportR2', [App\Http\Controllers\PendaftarController::class, 'studentReportR2'])->name('pendaftar.student.reportR2');
 Route::get('/pendaftar/student/reportR2/getStudentReportR2', [App\Http\Controllers\PendaftarController::class, 'getStudentReportR2']);
 Route::get('/pendaftar/student/reportRA', [App\Http\Controllers\PendaftarController::class, 'studentReportRA'])->name('pendaftar.student.reportRA');
