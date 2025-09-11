@@ -45,8 +45,9 @@
          outline: 0;
          vertical-align: baseline;
          background: transparent;
-         font-size: 12px; /* reduce font-size */
+         font-size: 10px; /* reduce font-size */
          table-layout: fixed;
+         font-family: 'Courier New', monospace;
       }
       h2,h3,p {
          margin: 0;
@@ -55,7 +56,8 @@
          outline: 0;
          vertical-align: baseline;
          background: transparent;
-         font-size: 12px; /* reduce font-size */
+         font-size: 10px; /* reduce font-size */
+         font-family: 'Courier New', monospace;
       }
       .container {
          transform: scale(0.1); /* scale down everything */
@@ -67,6 +69,23 @@
       td, th {
          width: 50%; /* Adjust the width as needed */
          padding: 2px; /* Reduce padding */
+      }
+      .info-row {
+         display: flex;
+         margin-bottom: 2px;
+      }
+      .info-label {
+         width: 200px;
+         display: inline-block;
+      }
+      .info-colon {
+         width: 20px;
+         display: inline-block;
+         text-align: center;
+      }
+      .info-value {
+         flex: 1;
+         display: inline-block;
       }
 
 
@@ -87,12 +106,11 @@
                   <div class="col-12 d-flex">
                      <img src="{{ asset('assets/images/logo/Kolej-UNITI.png')}}" alt="" height="50">
                      <address>
-                        <strong>KOLEJ UNITI KOTA BHARU</strong><br>
-                        Kampus Kijang, Lot 1911<br>
-                        Jalan Pantai Cahaya Bulan, 15350<br>
-                        Kota Bharu, Kelantan.<br>
-                        <abbr title="Phone">Tel:</abbr> 09-774 7449/09-774 7450/09-774 5451 | <abbr title="Phone">Fax:</abbr> 09-774 3006<br>
-                        http://www.unitikotabharu.edu.my | <abbr title="Email">Email:</abbr> info@kukb.edu.my
+                        <strong>KOLEJ UNITI</strong><br>
+                        PERSIARAN UNITI VILLAGE, TANJUNG AGAS<br>
+                        71250, PORT DICKSON, NEGERI SEMBILAN.<br>
+                        <abbr title="Phone">Tel:</abbr> 06-649 0350 | <abbr title="Phone">Fax:</abbr> 06-661 0509<br>
+                        http://www.uniti.edu.my | <abbr title="Email">Email:</abbr> info@uniti.edu.my
                      </address>
                   </div>
                </div>
@@ -108,20 +126,60 @@
                <div class="col-md-12 d-flex p-2">
                   <div class="col-md-6" style="margin-right: 10px">
                      <div class="form-group">
-                           <p>Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: &nbsp;&nbsp; {{ $data['student']->name }}</p>
-                           <p>No. Resit &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: &nbsp;&nbsp; {{ $data['payment']->ref_no }}</p>
-                           <p>No. KP / No. Passport &thinsp;&thinsp;&nbsp;&nbsp;&nbsp;&nbsp;: &nbsp;&nbsp; {{ $data['student']->ic }}</p>
-                           <p>Sesi Kemasukan &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: &nbsp;&nbsp; {{ $data['student']->intake }}</p>
-                           <p>Sesi Semasa &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: &nbsp;&nbsp; {{ $data['payment']->session }}</p>
-                           <p>No. Matriks &thinsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: &nbsp;&nbsp; {{ $data['student']->no_matric }}</p>
-                           <p>Program &thinsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: &nbsp;&nbsp; {{ $data['payment']->program }}</p>
+                           <div class="info-row">
+                              <span class="info-label">Name</span>
+                              <span class="info-colon">:</span>
+                              <span class="info-value">{{ $data['student']->name }}</span>
+                           </div>
+                           <div class="info-row">
+                              <span class="info-label">No. Resit</span>
+                              <span class="info-colon">:</span>
+                              <span class="info-value">{{ $data['payment']->ref_no }}</span>
+                           </div>
+                           <div class="info-row">
+                              <span class="info-label">No. KP / No. Passport</span>
+                              <span class="info-colon">:</span>
+                              <span class="info-value">{{ $data['student']->ic }}</span>
+                           </div>
+                           <div class="info-row">
+                              <span class="info-label">Sesi Kemasukan</span>
+                              <span class="info-colon">:</span>
+                              <span class="info-value">{{ $data['student']->intake }}</span>
+                           </div>
+                           <div class="info-row">
+                              <span class="info-label">Sesi Semasa</span>
+                              <span class="info-colon">:</span>
+                              <span class="info-value">{{ $data['payment']->session }}</span>
+                           </div>
+                           <div class="info-row">
+                              <span class="info-label">No. Matriks</span>
+                              <span class="info-colon">:</span>
+                              <span class="info-value">{{ $data['student']->no_matric }}</span>
+                           </div>
+                           <div class="info-row">
+                              <span class="info-label">Program</span>
+                              <span class="info-colon">:</span>
+                              <span class="info-value">{{ $data['payment']->program }}</span>
+                           </div>
                      </div>
                   </div>
                   <div class="col-md-4">
                      <div class="form-group">
-                           <p>Tarikh &thinsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: &nbsp;&nbsp; {{ $data['date'] }}</p>
-                           {{-- <p>Status &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: &nbsp;&nbsp; {{ $data['student']->status }}</p> --}}
-                           <p>Semester &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: &nbsp;&nbsp; {{ $data['payment']->semester_id }}</p>
+                           <div class="info-row">
+                              <span class="info-label">Tarikh</span>
+                              <span class="info-colon">:</span>
+                              <span class="info-value">{{ $data['date'] }}</span>
+                           </div>
+                           {{-- <div class="info-row">
+                              <span class="info-label">Status</span>
+                              <span class="info-colon">:</span>
+                              <span class="info-value">{{ $data['student']->status }}</span>
+                           </div> --}}
+                           <div class="info-row">
+                              <span class="info-label">Semester</span>
+                              <span class="info-colon">:</span>
+                              <span class="info-value">{{ $data['payment']->semester_id }}</span>
+                           </div>
                      </div>
                   </div>
                </div>
