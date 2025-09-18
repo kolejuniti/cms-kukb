@@ -761,7 +761,10 @@ $content .= '<tr>
     public function getLecturer(Request $request)
     {
         
-        $lecturer = subject::where('course_id', $request->course)->where('session_id', $request->session)->get();
+        $lecturer = subject::where('course_id', $request->course)
+        ->where('session_id', $request->session)
+        ->where('user_ic', '!=', null)
+        ->get();
 
         $content = "";
 
