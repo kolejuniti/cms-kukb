@@ -12542,7 +12542,7 @@ class FinanceController extends Controller
 
         $data['program'] = DB::table('tblprogramme')->orderBy('program_ID')->get();
 
-        $data['session'] = DB::table('sessions')->get();
+        $data['session'] = DB::table('sessions')->orderBy('SessionID', 'DESC')->get();
 
         $data['status'] = DB::table('tblstudent_status')->get();
 

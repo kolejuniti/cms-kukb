@@ -51,8 +51,8 @@
             <div class="col-md-6 mr-3" id="session-card">
               <div class="form-group">
                 <label class="form-label" for="session">Session</label>
-                <select class="form-select" id="session" name="session">
-                  <option value="all" selected>All Session</option> 
+                <select class="form-select" id="session" name="session" multiple size="9">
+                  {{-- <option value="all" selected>All Session</option>  --}}
                   @foreach ($data['session'] as $sts)
                   <option value="{{ $sts->SessionID }}">{{ $sts->SessionName}}</option> 
                   @endforeach
@@ -70,8 +70,31 @@
                 </select>
               </div>
             </div>
+            {{-- <div class="col-md-6 mr-3" id="intake-card">
+              <div class="form-group">
+                <label class="form-label" for="intake">Intake</label>
+                <select class="form-select" id="intake" name="intake" multiple size="9">
+                  @foreach ($data['session'] as $sts)
+                  <option value="{{ $sts->SessionID }}">{{ $sts->SessionName}}</option> 
+                  @endforeach
+                </select>
+              </div>
+            </div> --}}
           </div>
-
+          <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                <label class="form-label" for="from">FROM</label>
+                <input type="date" class="form-control" id="from" name="from">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                <label class="form-label" for="to">TO</label>
+                <input type="date" class="form-control" id="to" name="to">
+                </div>
+            </div>
+          </div>
           <button type="submit" id="block" class="btn btn-warning pull-left mb-3 mt-3" onclick="submit2()" hidden>Block / Unblock</button>
           <button type="submit" class="btn btn-primary pull-right mb-3" onclick="submit()">Find</button>
 
@@ -171,6 +194,9 @@
         program: $('#program').val(),
         session: $('#session').val(),
         status: $('#status').val(),
+        // intake: $('#intake').val(),
+        from: $('#from').val(),
+        to: $('#to').val(),
       };
 
 
@@ -197,6 +223,8 @@
                       $('#complex_header').DataTable({
                         dom: 'lBfrtip', // if you remove this line you will see the show entries dropdown
                         paging: false,
+                        ordering: false, // Disable sorting to preserve manual numbering
+                        info: false, // Hide the "Showing X of Y entries" info
 
                         buttons: [
                             {
@@ -241,6 +269,8 @@
 
                       // Remove the cells that are hidden
                       $("#complex_header td:first-child:hidden").remove();
+
+                      $("#block").attr("hidden", false);
                       
                   }else{
                       $('.error-field').html('');
