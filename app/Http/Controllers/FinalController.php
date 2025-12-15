@@ -311,6 +311,8 @@ class FinalController extends Controller
         
         //dd($final);
 
+        $status = [];
+
         foreach($final as $qz)
         {
             //$status[] = DB::table('tblclassstudentfinal')
@@ -332,7 +334,7 @@ class FinalController extends Controller
             ->where([
                 ['finalid', $qz->clssid],
                 ['userid', $qz->student_ic]
-            ])->first() ?? null;
+            ])->first();
         }
 
         //dd($status);
@@ -366,6 +368,8 @@ class FinalController extends Controller
                     ['student_subjek.group_name', $gp[1]]
                 ])->whereNotIn('students.status', [4,5,6,7,16])->orderBy('students.program')->get();
         
+        $status = [];
+
         foreach($final as $qz)
         {
 
