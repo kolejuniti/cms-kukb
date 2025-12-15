@@ -332,7 +332,7 @@ class FinalController extends Controller
             ->where([
                 ['finalid', $qz->clssid],
                 ['userid', $qz->student_ic]
-            ])->first();
+            ])->first() ?? null;
         }
 
         //dd($status);
