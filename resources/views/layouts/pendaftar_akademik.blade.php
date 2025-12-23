@@ -384,8 +384,10 @@ li a {
 						<li><a href="{{ route('pendaftar_akademik.resultReport') }}" class="{{ (route('pendaftar_akademik.resultReport') == Request::url()) ? 'active' : ''}}">Result Report</a></li>
 						<li><a href="{{ route('pendaftar_akademik.transcript') }}" class="{{ (route('pendaftar_akademik.transcript') == Request::url()) ? 'active' : ''}}">Transcript</a></li>
 						<li><a href="{{ route('pendaftar_akademik.miniTranscript') }}" class="{{ (route('pendaftar_akademik.miniTranscript') == Request::url()) ? 'active' : ''}}">Mini Transcript</a></li>
+						<li><a href="{{ route('pendaftar_akademik.resultOverall') }}" class="{{ (route('pendaftar_akademik.resultOverall') == Request::url()) ? 'active' : ''}}">Result Filter</a></li>
 						{{-- <li><a href="{{ route('pendaftar_akademik.resultOverall') }}" class="{{ (route('pendaftar_akademik.resultOverall') == Request::url()) ? 'active' : ''}}">Result Filter</a></li> --}}
 						<li><a href="{{ route('pendaftar_akademik.assessmentFilter') }}" class="{{ (route('pendaftar_akademik.assessmentFilter') == Request::url()) ? 'active' : ''}}">Assessment Filter</a></li>
+						<li><a href="{{ route('pendaftar_akademik.slipFilter') }}" class="{{ (route('pendaftar_akademik.slipFilter') == Request::url()) ? 'active' : ''}}">Slip Exam Filter</a></li>
 						<li><a href="{{ route('pendaftar_akademik.student.certificate') }}" class="{{ (route('pendaftar_akademik.student.certificate') == Request::url()) ? 'active' : ''}}">Student Certificate</a></li>
 						<li><a href="{{ route('pendaftar_akademik.student.certificate.bulk') }}" class="{{ (route('pendaftar_akademik.student.certificate.bulk') == Request::url()) ? 'active' : ''}}">Bulk Student Cert</a></li>
 					</ul>
