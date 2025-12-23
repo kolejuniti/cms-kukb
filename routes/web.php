@@ -246,6 +246,14 @@ Route::post('/AR/student/miniTranscript/printStudentMiniTranscript', [App\Http\C
 // Route::get('/AR/student/groupTable', [App\Http\Controllers\AR_Controller::class, 'groupTable'])->name('pendaftar_akademik.groupTable');
 Route::get('/AR/student/resultOverall', [App\Http\Controllers\AR_Controller::class, 'resultOverall'])->name('pendaftar_akademik.resultOverall');
 Route::post('/AR/student/resultOverall/submit', [App\Http\Controllers\AR_Controller::class, 'resultOverallSubmit']);
+Route::get('/AR/student/resultOverall/get/{id}', [App\Http\Controllers\AR_Controller::class, 'resultOverallGet']);
+Route::post('/AR/student/resultOverall/edit/{id}', [App\Http\Controllers\AR_Controller::class, 'resultOverallEdit']);
+Route::delete('/AR/student/resultOverall/delete/{id}', [App\Http\Controllers\AR_Controller::class, 'resultOverallDelete']);
+Route::get('/AR/student/slipFilter', [App\Http\Controllers\AR_Controller::class, 'slipFilter'])->name('pendaftar_akademik.slipFilter');
+Route::post('/AR/student/slipFilter/submit', [App\Http\Controllers\AR_Controller::class, 'slipFilterSubmit']);
+Route::get('/AR/student/slipFilter/get/{id}', [App\Http\Controllers\AR_Controller::class, 'slipFilterGet']);
+Route::post('/AR/student/slipFilter/edit/{id}', [App\Http\Controllers\AR_Controller::class, 'slipFilterEdit']);
+Route::delete('/AR/student/slipFilter/delete/{id}', [App\Http\Controllers\AR_Controller::class, 'slipFilterDelete']);
 Route::get('/AR/student/assessmentFilter', [App\Http\Controllers\AR_Controller::class, 'assessmentFilter'])->name('pendaftar_akademik.assessmentFilter');
 Route::post('/AR/student/assessmentFilter/submit', [App\Http\Controllers\AR_Controller::class, 'assessmentFilterSubmit']);
 Route::get('/AR/student/certificate', [App\Http\Controllers\AR_Controller::class, 'studentCertificate'])->name('pendaftar_akademik.student.certificate');
