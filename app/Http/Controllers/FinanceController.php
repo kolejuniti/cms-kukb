@@ -11957,7 +11957,7 @@ class FinanceController extends Controller
                             ['tblclaim.student_ic', '=', $std->ic]
                         ])
                         ->when($filter->from != '' && $filter->to != '', function ($query) use ($filter) {
-                            return $query->whereBetween('tblclaim.date', [$filter->from, $filter->to]);
+                            return $query->whereBetween('tblclaim.add_date', [$filter->from, $filter->to]);
                         })
                         ->where('tblstudentclaim.id', '!=', 39)
                         ->select(DB::raw("IFNULL(SUM(tblclaimdtl.amount), 0) AS claim"), DB::raw('0 as payment'));
@@ -11968,11 +11968,12 @@ class FinanceController extends Controller
                         ->leftjoin('tblstudentclaim', 'tblpaymentdtl.claim_type_id', '=', 'tblstudentclaim.id')
                         ->where([
                             ['tblpayment.process_status_id', '=', 2],
-                            ['tblstudentclaim.groupid', '=', 1],
                             ['tblpayment.student_ic', '=', $std->ic]
                         ])
+                        ->whereIn('tblstudentclaim.groupid', [1, 4, 5])
+                        ->whereIn('tblpayment.process_type_id', [1, 8])
                         ->when($filter->from != '' && $filter->to != '', function ($query) use ($filter) {
-                            return $query->whereBetween('tblpayment.date', [$filter->from, $filter->to]);
+                            return $query->whereBetween('tblpayment.add_date', [$filter->from, $filter->to]);
                         })
                         ->select(DB::raw('0 as claim'), DB::raw("IFNULL(SUM(tblpaymentdtl.amount), 0) AS payment"))
                         ->unionAll($query); // Here, use the Query Builder instance directly
