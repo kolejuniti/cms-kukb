@@ -11953,13 +11953,14 @@ class FinanceController extends Controller
                         ->leftjoin('tblstudentclaim', 'tblclaimdtl.claim_package_id', '=', 'tblstudentclaim.id')
                         ->where([
                             ['tblclaim.process_status_id', '=', 2],
-                            ['tblstudentclaim.groupid', '=', 1],
                             ['tblclaim.student_ic', '=', $std->ic]
                         ])
+                        ->whereIn('tblstudentclaim.groupid', [1, 4, 5])
+                        ->whereIn('tblclaim.process_type_id', [2, 4, 5])
                         ->when($filter->from != '' && $filter->to != '', function ($query) use ($filter) {
                             return $query->whereBetween('tblclaim.add_date', [$filter->from, $filter->to]);
                         })
-                        ->where('tblstudentclaim.id', '!=', 39)
+                        // ->where('tblstudentclaim.id', '!=', 39)
                         ->select(DB::raw("IFNULL(SUM(tblclaimdtl.amount), 0) AS claim"), DB::raw('0 as payment'));
 
                     // Define the second part of the union
@@ -11971,7 +11972,7 @@ class FinanceController extends Controller
                             ['tblpayment.student_ic', '=', $std->ic]
                         ])
                         ->whereIn('tblstudentclaim.groupid', [1, 4, 5])
-                        ->whereIn('tblpayment.process_type_id', [1, 7, 8])
+                        ->whereIn('tblpayment.process_type_id', [1, 5, 6, 7, 8])
                         ->when($filter->from != '' && $filter->to != '', function ($query) use ($filter) {
                             return $query->whereBetween('tblpayment.add_date', [$filter->from, $filter->to]);
                         })
