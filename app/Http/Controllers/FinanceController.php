@@ -11971,7 +11971,7 @@ class FinanceController extends Controller
                             ['tblpayment.student_ic', '=', $std->ic]
                         ])
                         ->whereIn('tblstudentclaim.groupid', [1, 4, 5])
-                        ->whereIn('tblpayment.process_type_id', [1, 8])
+                        ->whereIn('tblpayment.process_type_id', [1, 7, 8])
                         ->when($filter->from != '' && $filter->to != '', function ($query) use ($filter) {
                             return $query->whereBetween('tblpayment.add_date', [$filter->from, $filter->to]);
                         })
