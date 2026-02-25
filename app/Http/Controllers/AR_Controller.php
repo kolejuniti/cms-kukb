@@ -29,46 +29,45 @@ class AR_Controller extends Controller
 
         return view('dashboard');
     }
-    
+
     public function courseList()
     {
 
         $data = [
             // 'course' => DB::table('subjek')->leftjoin('tblprogramme', 'subjek.prgid', 'tblprogramme.id')->select('subjek.*', 'tblprogramme.progname')->get(),
             'course' => DB::table('subjek')
-            ->leftjoin('subjek AS b', 'subjek.prerequisite_id', 'b.sub_id')
-            ->leftjoin('tblcourse_level', 'subjek.course_level_id', 'tblcourse_level.id')
-            ->select('subjek.*', 'b.course_name AS prerequisite', 'tblcourse_level.name AS course_level_id')
-            ->get(),
+                ->leftjoin('subjek AS b', 'subjek.prerequisite_id', 'b.sub_id')
+                ->leftjoin('tblcourse_level', 'subjek.course_level_id', 'tblcourse_level.id')
+                ->select('subjek.*', 'b.course_name AS prerequisite', 'tblcourse_level.name AS course_level_id')
+                ->get(),
             'courselist' => DB::table('subjek')->groupBy('sub_id')->get(),
             'program' => DB::table('tblprogramme')->get(),
             'level' => DB::table('tblcourse_level')->get()
         ];
 
         return view('pendaftar_akademik', compact('data'));
-
     }
 
     public function getCourse(Request $request)
     {
         //if(isset($request->session))
         //{
-            //if(isset($request->group))
-            //{
-                //$students = student::where('courseid', $request->subject)->where('sessionid', $request->session)->where('group_id', $request->group)->get();
-            //}else
-            //{
-                //$students = student::where('courseid', $request->subject)->where('sessionid', $request->session)->get();
-            //}
+        //if(isset($request->group))
+        //{
+        //$students = student::where('courseid', $request->subject)->where('sessionid', $request->session)->where('group_id', $request->group)->get();
         //}else
         //{
-            //$students = student::where('courseid', $request->subject)->get();
+        //$students = student::where('courseid', $request->subject)->where('sessionid', $request->session)->get();
+        //}
+        //}else
+        //{
+        //$students = student::where('courseid', $request->subject)->get();
         //}
 
         $course = DB::table('subjek')
-                  ->join('subjek_structure', 'subjek.sub_id', 'subjek_structure.courseID')
-                  ->join('tblprogramme', 'subjek_structure.program_id', 'tblprogramme.id')
-                  ->where('program_id', $request->program)->select('subjek.*', 'tblprogramme.progname')->get();
+            ->join('subjek_structure', 'subjek.sub_id', 'subjek_structure.courseID')
+            ->join('tblprogramme', 'subjek_structure.program_id', 'tblprogramme.id')
+            ->where('program_id', $request->program)->select('subjek.*', 'tblprogramme.progname')->get();
 
         $content = "";
         $content .= '<thead>
@@ -90,22 +89,22 @@ class AR_Controller extends Controller
                     </tr>
                     </thead>
                     <tbody id="table">';
-                    
-        foreach($course as $key => $crs){
+
+        foreach ($course as $key => $crs) {
             //$registered = ($crs->status == 'ACTIVE') ? 'checked' : '';
             $content .= '
             <tr>
                 <td style="width: 1%">
-                '. $key+1 .'
+                ' . $key + 1 . '
                 </td>
                 <td style="width: 20%">
-                '. $crs->course_name .'
+                ' . $crs->course_name . '
                 </td>
                 <td style="width: 5%">
-                '. $crs->course_code .'
+                ' . $crs->course_code . '
                 </td>
                 <td style="width: 5%">
-                '. $crs->course_credit .'
+                ' . $crs->course_credit . '
                 </td>
                 <td class="project-actions text-right" style="text-align: center;">
                 <a class="btn btn-info btn-sm btn-sm mr-2" href="#">
@@ -113,7 +112,7 @@ class AR_Controller extends Controller
                     </i>
                     Edit
                 </a>
-                <a class="btn btn-danger btn-sm" href="#" onclick="deleteMaterial(\''. $crs->id .'\')">
+                <a class="btn btn-danger btn-sm" href="#" onclick="deleteMaterial(\'' . $crs->id . '\')">
                     <i class="ti-trash">
                     </i>
                     Delete
@@ -121,11 +120,10 @@ class AR_Controller extends Controller
                 </td>
             </tr>
             ';
-            }
-            $content .= '</tbody>';
+        }
+        $content .= '</tbody>';
 
-            return $content;
-
+        return $content;
     }
 
     public function createCourse(Request $request)
@@ -142,8 +140,7 @@ class AR_Controller extends Controller
         //dd($request->upt);
 
 
-        if(isset($request->idS))
-        {
+        if (isset($request->idS)) {
 
             DB::table('subjek')->where('id', $request->idS)->update([
                 'course_name' => $data['name'],
@@ -153,9 +150,7 @@ class AR_Controller extends Controller
                 'course_level_id' => $data['clid'],
                 'offer' => $data['offer']
             ]);
-
-        }else
-        {
+        } else {
 
             $recentId = DB::table('subjek')->orderBy('sub_id', 'desc')->value('sub_id');
 
@@ -190,7 +185,7 @@ class AR_Controller extends Controller
 
             // }
         }
-        
+
         // elseif(isset($request->upt))
         // {
 
@@ -229,7 +224,6 @@ class AR_Controller extends Controller
         // }
 
         return redirect(route('pendaftar_akademik'));
-
     }
 
     public function deleteCourse(Request $request)
@@ -238,7 +232,6 @@ class AR_Controller extends Controller
         DB::table('subjek')->where('id', $request->id)->delete();
 
         return true;
-
     }
 
     public function updateCourse(Request $request)
@@ -246,44 +239,29 @@ class AR_Controller extends Controller
 
         $data = [
             'course' => DB::table('subjek')
-            ->leftjoin('subjek AS b', 'subjek.prerequisite_id', 'b.sub_id')
-            ->select('subjek.*', 'b.course_name AS prerequisite')
-            ->where('subjek.id', $request->id)
-            ->first(),
+                ->leftjoin('subjek AS b', 'subjek.prerequisite_id', 'b.sub_id')
+                ->select('subjek.*', 'b.course_name AS prerequisite')
+                ->where('subjek.id', $request->id)
+                ->first(),
             'courselist' => DB::table('subjek')->groupBy('sub_id')->get(),
             'level' => DB::table('tblcourse_level')->get()
         ];
 
         return view('pendaftar_akademik.getCourse', compact('data'))->with('id', $request->id);
-
     }
 
     public function assignCourse()
     {
-
         $data = [
-
-            // 'course' => DB::table('subjek')->get(),
-            'program' => DB::table('tblprogramme')->get(),
-            'structure' => DB::table('structure')->get(),
-            'intake' => DB::table('sessions')->get(),
-            'semester' => DB::table('semester')->get(),
-            // 'assigned' => DB::table('subjek_structure')
-            //             ->join('subjek', function($join)
-            //             {
-            //                 $join->on('subjek_structure.courseID', 'subjek.sub_id');
-            //                 $join->on('subjek_structure.program_id', 'subjek.prgid');
-            //                 $join->on('subjek_structure.semester_id', 'subjek.semesterid');
-            //             })
-            //             ->leftjoin('structure', 'subjek_structure.structure', 'structure.id')
-            //             ->leftjoin('sessions', 'subjek_structure.intake_id', 'sessions.SessionID')
-            //             ->leftjoin('tblprogramme', 'subjek.prgid', 'tblprogramme.id')
-            //             ->select('subjek_structure.id', 'subjek.course_name', 'subjek.course_code','structure.structure_name', 'sessions.SessionName', 'tblprogramme.progname')->get()
-
+            'program'        => DB::table('tblprogramme')->orderBy('progname')->get(),
+            'structure'      => DB::table('structure')->get(),
+            'intake'         => DB::table('sessions')->get(),
+            'intake_latest'  => DB::table('sessions')->orderBy('SessionID', 'desc')->limit(10)->get(),
+            'semester'       => DB::table('semester')->get(),
+            'subjek'         => DB::table('subjek')->orderBy('course_name')->get(),
         ];
 
         return view('pendaftar_akademik.course.assignSubject', compact('data'));
-
     }
 
     public function getCourse0(Request $request)
@@ -293,67 +271,57 @@ class AR_Controller extends Controller
         $content = "";
 
         $content .= "<option value='0' disabled>-</option>";
-        foreach($course as $crs){
+        foreach ($course as $crs) {
 
-            $content .= "<option value='". $crs->id ."'><strong>". $crs->course_code ." - ". $crs->course_name . "</strong></option>"; 
-
+            $content .= "<option value='" . $crs->id . "'><strong>" . $crs->course_code . " - " . $crs->course_name . "</strong></option>";
         }
-        
-        return $content;
 
+        return $content;
     }
 
     public function getCourse2(Request $request)
     {
         //if(isset($request->session))
         //{
-            //if(isset($request->group))
-            //{
-                //$students = student::where('courseid', $request->subject)->where('sessionid', $request->session)->where('group_id', $request->group)->get();
-            //}else
-            //{
-                //$students = student::where('courseid', $request->subject)->where('sessionid', $request->session)->get();
-            //}
+        //if(isset($request->group))
+        //{
+        //$students = student::where('courseid', $request->subject)->where('sessionid', $request->session)->where('group_id', $request->group)->get();
         //}else
         //{
-            //$students = student::where('courseid', $request->subject)->get();
+        //$students = student::where('courseid', $request->subject)->where('sessionid', $request->session)->get();
+        //}
+        //}else
+        //{
+        //$students = student::where('courseid', $request->subject)->get();
         //}
 
-        if(isset($request->course))
-        {
+        if (isset($request->course)) {
 
             $course = DB::table('subjek_structure')
-                    ->join('subjek', function($join)
-                    {
-                        $join->on('subjek_structure.courseID', 'subjek.sub_id');
-                    })
-                    ->leftjoin('structure', 'subjek_structure.structure', 'structure.id')
-                    ->leftjoin('sessions', 'subjek_structure.intake_id', 'sessions.SessionID')
-                    ->leftjoin('tblprogramme', 'subjek_structure.program_id', 'tblprogramme.id')
-                    ->where('subjek_structure.program_id', $request->program);
+                ->join('subjek', function ($join) {
+                    $join->on('subjek_structure.courseID', 'subjek.sub_id');
+                })
+                ->leftjoin('structure', 'subjek_structure.structure', 'structure.id')
+                ->leftjoin('sessions', 'subjek_structure.intake_id', 'sessions.SessionID')
+                ->leftjoin('tblprogramme', 'subjek_structure.program_id', 'tblprogramme.id')
+                ->where('subjek_structure.program_id', $request->program);
 
-            if(isset($request->course))
-            {
+            if (isset($request->course)) {
 
                 $courses = $course->whereIn('subjek.id', $request->course);
-
             }
 
-            if(isset($request->structure))
-            {
+            if (isset($request->structure)) {
 
                 $courses = $course->where('structure.id', $request->structure);
-
             }
 
-            if(isset($request->intake))
-            {
+            if (isset($request->intake)) {
 
                 $courses = $course->whereIn('sessions.SessionID', $request->intake);
-
             }
 
-            $data['course'] = $courses->select('subjek_structure.id', 'subjek.course_name', 'subjek.course_code','structure.structure_name', 'subjek_structure.semester_id','sessions.SessionName', 'tblprogramme.progname')->get();
+            $data['course'] = $courses->select('subjek_structure.id', 'subjek.course_name', 'subjek.course_code', 'structure.structure_name', 'subjek_structure.semester_id', 'sessions.SessionName', 'tblprogramme.progname')->get();
 
             // $ids = DB::table('subjek')->where('id', $request->course)->first();
 
@@ -392,34 +360,34 @@ class AR_Controller extends Controller
                         </tr>
                         </thead>
                         <tbody id="table">';
-                        
-            foreach($data['course'] as $key => $crs){
+
+            foreach ($data['course'] as $key => $crs) {
                 //$registered = ($crs->status == 'ACTIVE') ? 'checked' : '';
                 $content .= '
                 <tr>
                     <td style="width: 1%">
-                    '. $key+1 .'
+                    ' . $key + 1 . '
                     </td>
                     <td style="width: 20%">
-                    '. $crs->course_name .'
+                    ' . $crs->course_name . '
                     </td>
                     <td style="width: 5%">
-                    '. $crs->course_code .'
+                    ' . $crs->course_code . '
                     </td>
                     <td style="width: 5%">
-                    '. $crs->structure_name .'
+                    ' . $crs->structure_name . '
                     </td>
                     <td style="width: 5%">
-                    '. $crs->progname .'
+                    ' . $crs->progname . '
                     </td>
                     <td style="width: 5%">
-                    '. $crs->SessionName .'
+                    ' . $crs->SessionName . '
                     </td>
                     <td style="width: 5%">
-                    '. $crs->semester_id .'
+                    ' . $crs->semester_id . '
                     </td>
                     <td class="project-actions text-right" style="text-align: center;">
-                    <a class="btn btn-danger btn-sm" href="#" onclick="deleteMaterial(\''. $crs->id .'\')">
+                    <a class="btn btn-danger btn-sm" href="#" onclick="deleteMaterial(\'' . $crs->id . '\')">
                         <i class="ti-trash">
                         </i>
                         Delete
@@ -427,18 +395,15 @@ class AR_Controller extends Controller
                     </td>
                 </tr>
                 ';
-                }
-                $content .= '</tbody>';
+            }
+            $content .= '</tbody>';
 
-                return $content;
-
-        }else{
+            return $content;
+        } else {
 
 
             return response()->json(['error' => 'Please select subject first!']);
-
         }
-
     }
 
     public function addCourse(Request $request)
@@ -446,30 +411,28 @@ class AR_Controller extends Controller
 
         $data = json_decode($request->addCourse);
 
-        if (isset($data->course) && is_array($data->course) && count($data->course) > 0 
+        if (
+            isset($data->course) && is_array($data->course) && count($data->course) > 0
             && isset($data->intake) && is_array($data->intake) && count($data->intake) > 0
-            && isset($data->structure) && isset($data->semester) && isset($data->program)) {
+            && isset($data->structure) && isset($data->semester) && isset($data->program)
+        ) {
             // The 'program' input is not empty, process the data
             $selectedCourse = $data->course;
 
             $selectedIntake = $data->intake;
 
             // $course = DB::table('subjek')->where('id', $data->course)->first();
-            
+
             // Do something with the selected programs
-            foreach($selectedCourse as $courseID) {
+            foreach ($selectedCourse as $courseID) {
                 // Process each selected Course
 
                 $course = DB::table('subjek')->where('id', $courseID)->first();
 
-                foreach($selectedIntake as $intakeID)
-                {
+                foreach ($selectedIntake as $intakeID) {
 
-                    if(DB::table('subjek_structure')->where([['courseID', $course->sub_id], ['structure', $data->structure], ['intake_id', $intakeID], ['program_id', $data->program], ['semester_id', $data->semester]])->exists())
-                    {
-
-
-                    }else{
+                    if (DB::table('subjek_structure')->where([['courseID', $course->sub_id], ['structure', $data->structure], ['intake_id', $intakeID], ['program_id', $data->program], ['semester_id', $data->semester]])->exists()) {
+                    } else {
 
                         DB::table('subjek_structure')->insert([
                             'courseID' => $course->sub_id,
@@ -478,35 +441,103 @@ class AR_Controller extends Controller
                             'program_id' => $data->program,
                             'semester_id' => $data->semester
                         ]);
-
                     }
                 }
             }
 
             $datas = DB::table('subjek_structure')
-            ->join('subjek', function($join)
-            {
-                $join->on('subjek_structure.courseID', 'subjek.sub_id');
-            })
-            ->leftjoin('structure', 'subjek_structure.structure', 'structure.id')
-            ->leftjoin('sessions', 'subjek_structure.intake_id', 'sessions.SessionID')
-            ->leftjoin('tblprogramme', 'subjek_structure.program_id', 'tblprogramme.id')
-            ->whereIn('subjek.id', $data->course)
-            ->where('structure.id', $data->structure)
-            ->whereIn('sessions.SessionID', $data->intake)
-            ->select('subjek_structure.id', 'subjek.course_name', 'subjek.course_code','structure.structure_name', 'subjek_structure.semester_id', 'sessions.SessionName', 'tblprogramme.progname')->get();
+                ->join('subjek', function ($join) {
+                    $join->on('subjek_structure.courseID', 'subjek.sub_id');
+                })
+                ->leftjoin('structure', 'subjek_structure.structure', 'structure.id')
+                ->leftjoin('sessions', 'subjek_structure.intake_id', 'sessions.SessionID')
+                ->leftjoin('tblprogramme', 'subjek_structure.program_id', 'tblprogramme.id')
+                ->whereIn('subjek.id', $data->course)
+                ->where('structure.id', $data->structure)
+                ->whereIn('sessions.SessionID', $data->intake)
+                ->select('subjek_structure.id', 'subjek.course_name', 'subjek.course_code', 'structure.structure_name', 'subjek_structure.semester_id', 'sessions.SessionName', 'tblprogramme.progname')->get();
 
 
             return response()->json(['message' => 'Success', 'data' => $datas]);
-
         } else {
             // The 'program' input is empty
             // Handle the case when no program is selected
 
             return response()->json(['message' => 'Please fills in required details']);
-
         }
+    }
 
+    public function storeCourseToStructure(Request $request)
+    {
+        try {
+            $program   = $request->program;
+            $structure = $request->structure;
+            $subjekIds = $request->input('subjek_ids', []);  // array of subjek.id values
+            $intakeId  = $request->intake_id;
+            $semester  = $request->semester;
+
+            if (!$program || !$structure || !$intakeId || !$semester) {
+                return response()->json(['error' => 'Please fill in all required fields.']);
+            }
+
+            if (empty($subjekIds) || !is_array($subjekIds)) {
+                return response()->json(['error' => 'Please select at least one subject.']);
+            }
+
+            $inserted = 0;
+            $skipped  = 0;
+            $notFound = [];
+
+            foreach ($subjekIds as $subjekId) {
+                // Resolve sub_id from the numeric PK
+                $subjek = DB::table('subjek')->where('id', $subjekId)->first();
+
+                if (!$subjek) {
+                    $notFound[] = $subjekId;
+                    continue;
+                }
+
+                // Skip duplicates silently
+                $exists = DB::table('subjek_structure')
+                    ->where('courseID',    $subjek->sub_id)
+                    ->where('structure',   $structure)
+                    ->where('intake_id',   $intakeId)
+                    ->where('program_id',  $program)
+                    ->where('semester_id', $semester)
+                    ->exists();
+
+                if ($exists) {
+                    $skipped++;
+                    continue;
+                }
+
+                DB::table('subjek_structure')->insert([
+                    'courseID'    => $subjek->sub_id,
+                    'structure'   => $structure,
+                    'intake_id'   => $intakeId,
+                    'program_id'  => $program,
+                    'semester_id' => $semester,
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ]);
+
+                $inserted++;
+            }
+
+            $message = $inserted > 0
+                ? $inserted . ' subject(s) added successfully.'
+                : 'No new subjects were added.';
+
+            return response()->json([
+                'success'  => true,
+                'message'  => $message,
+                'inserted' => $inserted,
+                'skipped'  => $skipped,
+                'notFound' => $notFound,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error adding subject(s): ' . $e->getMessage()]);
+        }
     }
 
     public function deleteCourse2(Request $request)
@@ -515,7 +546,603 @@ class AR_Controller extends Controller
         DB::table('subjek_structure')->where('id', $request->id)->delete();
 
         return true;
+    }
 
+    public function copyStructure(Request $request)
+    {
+        try {
+            $data = json_decode($request->copyData);
+
+            // Validate required fields
+            if (
+                !isset($data->sourceStructure) || !isset($data->sourceIntake) ||
+                !isset($data->targetStructure)  ||
+                !isset($data->targetIntakes) || !is_array($data->targetIntakes) ||
+                empty($data->targetIntakes) || !isset($data->program)
+            ) {
+                return response()->json([
+                    'message' => 'Please provide all required fields: source structure, source intake, target structure, target intakes, and program'
+                ], 400);
+            }
+
+            $sourceStructure = $data->sourceStructure;
+            $sourceIntake    = $data->sourceIntake;
+            $targetStructure = $data->targetStructure;
+            $targetIntakes   = $data->targetIntakes;
+            $program         = $data->program;
+
+            // Get all courses from source structure + intake
+            $sourceCourses = DB::table('subjek_structure')
+                ->where('structure',  $sourceStructure)
+                ->where('intake_id',  $sourceIntake)
+                ->where('program_id', $program)
+                ->get();
+
+            if ($sourceCourses->isEmpty()) {
+                return response()->json([
+                    'message' => 'No courses found in the source structure and intake'
+                ], 404);
+            }
+
+            $copiedCount  = 0;
+            $skippedCount = 0;
+            $copiedRecords = [];
+
+            foreach ($targetIntakes as $targetIntake) {
+                // When copying to the same structure, skip the identical source intake
+                if ($targetStructure == $sourceStructure && $targetIntake == $sourceIntake) {
+                    continue;
+                }
+
+                foreach ($sourceCourses as $course) {
+                    // Duplicate check uses TARGET structure + TARGET intake
+                    $exists = DB::table('subjek_structure')
+                        ->where('courseID',    $course->courseID)
+                        ->where('structure',   $targetStructure)
+                        ->where('intake_id',   $targetIntake)
+                        ->where('program_id',  $course->program_id)
+                        ->where('semester_id', $course->semester_id)
+                        ->exists();
+
+                    if (!$exists) {
+                        $newId = DB::table('subjek_structure')->insertGetId([
+                            'courseID'    => $course->courseID,
+                            'structure'   => $targetStructure,   // <-- target structure
+                            'intake_id'   => $targetIntake,
+                            'program_id'  => $course->program_id,
+                            'semester_id' => $course->semester_id,
+                            'created_at'  => now(),
+                            'updated_at'  => now(),
+                        ]);
+
+                        $copiedCount++;
+                        $copiedRecords[] = $newId;
+                    } else {
+                        $skippedCount++;
+                    }
+                }
+            }
+
+            return response()->json([
+                'message'      => 'Copy operation completed successfully',
+                'copiedCount'  => $copiedCount,
+                'skippedCount' => $skippedCount,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred while copying structure: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getStructurePreview(Request $request)
+    {
+        try {
+            $structure = $request->structure;
+            $intake = $request->intake;
+            $program = $request->program;
+
+            if (!$structure || !$intake || !$program) {
+                return response()->json([
+                    'message' => 'Please provide structure, intake, and program'
+                ], 400);
+            }
+
+            // Get courses in the selected structure and intake
+            $courses = DB::table('subjek_structure')
+                ->join('subjek', function ($join) {
+                    $join->on('subjek_structure.courseID', 'subjek.sub_id');
+                })
+                ->leftjoin('structure', 'subjek_structure.structure', 'structure.id')
+                ->leftjoin('sessions', 'subjek_structure.intake_id', 'sessions.SessionID')
+                ->where('subjek_structure.structure', $structure)
+                ->where('subjek_structure.intake_id', $intake)
+                ->where('subjek_structure.program_id', $program)
+                ->select(
+                    'subjek.course_name',
+                    'subjek.course_code',
+                    'subjek_structure.semester_id',
+                    'structure.structure_name',
+                    'sessions.SessionName'
+                )
+                ->orderBy('subjek_structure.semester_id')
+                ->get();
+
+            return response()->json([
+                'courses' => $courses,
+                'count' => $courses->count()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching structure preview: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function addSubjectToStudents(Request $request)
+    {
+        try {
+            $data = json_decode($request->studentData);
+
+            // Validate required fields
+            if (!isset($data->program) || !isset($data->intake) || !isset($data->semester)) {
+                return response()->json([
+                    'message' => 'Please provide program, intake, and semester'
+                ], 400);
+            }
+
+            $program = $data->program;
+            $intake = $data->intake;
+            $semester = $data->semester;
+
+            // Find all students matching the criteria
+            $students = DB::table('students')
+                ->where('program', $program)
+                ->where('intake', $intake)
+                ->where('semester', $semester)
+                ->where('status', 2) // Assuming 1 is active status
+                ->get();
+
+            if ($students->isEmpty()) {
+                return response()->json([
+                    'message' => 'No students found matching the criteria'
+                ], 404);
+            }
+
+            $processedCount = 0;
+            $alreadyExistsCount = 0;
+            $addedCount = 0;
+            $errors = [];
+
+            foreach ($students as $student) {
+                $processedCount++;
+
+                // Check if student already has subjects for this semester
+                if (DB::table('student_subjek')
+                    ->where('student_ic', $student->ic)
+                    ->where('sessionid', $student->session)
+                    ->where('semesterid', $student->semester)
+                    ->exists()
+                ) {
+
+                    $alreadyExistsCount++;
+                    continue;
+                }
+
+                // Get subjects from structure for this student's program, intake, and semester
+                $subjects = DB::table('subjek')
+                    ->join('subjek_structure', function ($join) {
+                        $join->on('subjek.sub_id', 'subjek_structure.courseID');
+                    })
+                    ->where([
+                        ['subjek_structure.program_id', '=', $student->program],
+                        ['subjek_structure.semester_id', '=', $student->semester],
+                        ['subjek_structure.intake_id', $student->intake]
+                    ])
+                    ->select('subjek.*', 'subjek_structure.semester_id')
+                    ->get();
+
+                $studentSubjectsAdded = 0;
+
+                foreach ($subjects as $subject) {
+                    if ($subject->offer == 1) { // Only offered subjects
+
+                        if ($subject->prerequisite_id == 881) {
+                            // No prerequisite required
+                            DB::table('student_subjek')->insert([
+                                'student_ic' => $student->ic,
+                                'courseid' => $subject->sub_id,
+                                'sessionid' => $student->session,
+                                'semesterid' => $subject->semester_id,
+                                'course_status_id' => 15,
+                                'status' => 'ACTIVE',
+                                'credit' => $subject->course_credit,
+                                'created_at' => now(),
+                                'updated_at' => now()
+                            ]);
+                            $studentSubjectsAdded++;
+                        } else {
+                            // Check prerequisite
+                            $check = DB::table('student_subjek')
+                                ->where('student_ic', $student->ic)
+                                ->where('courseid', $subject->prerequisite_id)
+                                ->value('course_status_id');
+
+                            if (isset($check) && $check != 2) { // Prerequisite passed
+                                DB::table('student_subjek')->insert([
+                                    'student_ic' => $student->ic,
+                                    'courseid' => $subject->sub_id,
+                                    'sessionid' => $student->session,
+                                    'semesterid' => $subject->semester_id,
+                                    'course_status_id' => 15,
+                                    'status' => 'ACTIVE',
+                                    'credit' => $subject->course_credit,
+                                    'created_at' => now(),
+                                    'updated_at' => now()
+                                ]);
+                                $studentSubjectsAdded++;
+                            }
+                        }
+                    }
+                }
+
+                if ($studentSubjectsAdded > 0) {
+                    $addedCount++;
+                }
+            }
+
+            return response()->json([
+                'message' => 'Subject assignment completed successfully',
+                'totalStudents' => $processedCount,
+                'studentsWithSubjectsAdded' => $addedCount,
+                'studentsAlreadyHaveSubjects' => $alreadyExistsCount,
+                'studentsSkipped' => $processedCount - $addedCount - $alreadyExistsCount
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred while adding subjects to students: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getStudentPreview(Request $request)
+    {
+        try {
+            $program = $request->program;
+            $intake = $request->intake;
+            $semester = $request->semester;
+
+            if (!$program || !$intake || !$semester) {
+                return response()->json([
+                    'message' => 'Please provide program, intake, and semester'
+                ], 400);
+            }
+
+            // Get students matching criteria
+            $students = DB::table('students')
+                ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
+                ->where('students.program', $program)
+                ->where('students.intake', $intake)
+                ->where('students.semester', $semester)
+                ->where('students.status', 2) // Active students only
+                ->select(
+                    'students.ic',
+                    'students.name',
+                    'students.no_matric',
+                    'tblstudent_status.name as status_name'
+                )
+                ->get();
+
+            // Check which students already have subjects
+            $studentsWithSubjects = [];
+            $studentsWithoutSubjects = [];
+
+            foreach ($students as $student) {
+                $hasSubjects = DB::table('student_subjek')
+                    ->where('student_ic', $student->ic)
+                    ->where('semesterid', $semester)
+                    ->exists();
+
+                if ($hasSubjects) {
+                    $studentsWithSubjects[] = $student;
+                } else {
+                    $studentsWithoutSubjects[] = $student;
+                }
+            }
+
+            // Get subjects that would be assigned
+            $subjects = DB::table('subjek')
+                ->join('subjek_structure', function ($join) {
+                    $join->on('subjek.sub_id', 'subjek_structure.courseID');
+                })
+                ->where([
+                    ['subjek_structure.program_id', '=', $program],
+                    ['subjek_structure.semester_id', '=', $semester],
+                    ['subjek_structure.intake_id', $intake]
+                ])
+                ->where('subjek.offer', 1)
+                ->select('subjek.course_code', 'subjek.course_name', 'subjek.course_credit')
+                ->get();
+
+            return response()->json([
+                'totalStudents' => $students->count(),
+                'studentsWithSubjects' => count($studentsWithSubjects),
+                'studentsWithoutSubjects' => count($studentsWithoutSubjects),
+                'studentsToProcess' => $studentsWithoutSubjects,
+                'subjectsToAssign' => $subjects,
+                'subjectCount' => $subjects->count()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching student preview: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get subjects filtered by program + structure only,
+     * and return the linked intakes as a caption.
+     */
+    public function getSubjectsByFilter(Request $request)
+    {
+        try {
+            $program   = $request->program;
+            $structure = $request->structure;
+
+            if (!$program || !$structure) {
+                return response()->json(['error' => 'Please select both Program and Structure.']);
+            }
+
+            // Fetch DISTINCT subjects for this program + structure (one row per subject per semester)
+            $courses = DB::table('subjek_structure')
+                ->join('subjek', 'subjek_structure.courseID', '=', 'subjek.sub_id')
+                ->leftJoin('structure', 'subjek_structure.structure', '=', 'structure.id')
+                ->leftJoin('tblprogramme', 'subjek_structure.program_id', '=', 'tblprogramme.id')
+                ->where('subjek_structure.program_id', $program)
+                ->where('subjek_structure.structure', $structure)
+                ->select(
+                    DB::raw('MIN(subjek_structure.id) as id'),
+                    'subjek_structure.courseID',
+                    'subjek_structure.structure as structure_id',
+                    'subjek_structure.program_id',
+                    'subjek.course_name',
+                    'subjek.course_code',
+                    'structure.structure_name',
+                    'subjek_structure.semester_id',
+                    'tblprogramme.progname'
+                )
+                ->groupBy(
+                    'subjek_structure.courseID',
+                    'subjek_structure.structure',
+                    'subjek_structure.program_id',
+                    'subjek_structure.semester_id',
+                    'subjek.course_name',
+                    'subjek.course_code',
+                    'structure.structure_name',
+                    'tblprogramme.progname'
+                )
+                ->orderBy('subjek_structure.semester_id')
+                ->get();
+
+            // Collect distinct linked intakes for the caption only
+            $intakes = DB::table('sessions')
+                ->whereIn(
+                    'sessions.SessionID',
+                    DB::table('subjek_structure')
+                        ->where('program_id', $program)
+                        ->where('structure', $structure)
+                        ->pluck('intake_id')
+                        ->unique()
+                )
+                ->select('SessionID', 'SessionName')
+                ->orderBy('SessionName')
+                ->get();
+
+            // Build table HTML — no Intake column (shown in caption above the table)
+            $tableHtml  = '<thead><tr>';
+            $tableHtml .= '<th style="width:4%">No.</th>';
+            $tableHtml .= '<th style="width:32%">Course Name</th>';
+            $tableHtml .= '<th style="width:12%">Course Code</th>';
+            $tableHtml .= '<th style="width:12%">Structure</th>';
+            $tableHtml .= '<th style="width:16%">Program</th>';
+            $tableHtml .= '<th style="width:8%">Semester</th>';
+            $tableHtml .= '<th style="width:16%"></th>';
+            $tableHtml .= '</tr></thead>';
+            $tableHtml .= '<tbody id="table">';
+
+            foreach ($courses as $key => $crs) {
+                // Safely encode per-row data for the delete modal trigger
+                $courseId   = addslashes($crs->courseID   ?? '');
+                $structId   = addslashes($crs->structure_id ?? '');
+                $programId  = addslashes($crs->program_id  ?? '');
+                $semesterId = addslashes((string)($crs->semester_id ?? ''));
+                $courseName = addslashes($crs->course_name  ?? '');
+                $courseCode = addslashes($crs->course_code  ?? '');
+
+                $tableHtml .= '<tr>';
+                $tableHtml .= '<td style="width:4%">'   . ($key + 1)                              . '</td>';
+                $tableHtml .= '<td style="width:32%">'  . htmlspecialchars($crs->course_name    ?? '') . '</td>';
+                $tableHtml .= '<td style="width:12%">'  . htmlspecialchars($crs->course_code    ?? '') . '</td>';
+                $tableHtml .= '<td style="width:12%">'  . htmlspecialchars($crs->structure_name ?? '') . '</td>';
+                $tableHtml .= '<td style="width:16%">'  . htmlspecialchars($crs->progname       ?? '') . '</td>';
+                $tableHtml .= '<td style="width:8%">'   . htmlspecialchars((string)($crs->semester_id ?? '')) . '</td>';
+                $tableHtml .= '<td class="project-actions text-right" style="text-align:center;width:16%">';
+                $tableHtml .= "<a class=\"btn btn-danger btn-sm\" href=\"#\" onclick=\"showDeleteIntakeModal('{$courseId}','{$structId}','{$programId}','{$semesterId}','{$courseName}','{$courseCode}')\">";
+                $tableHtml .= '<i class="ti-trash"></i> Delete</a>';
+                $tableHtml .= '</td>';
+                $tableHtml .= '</tr>';
+            }
+
+            $tableHtml .= '</tbody>';
+
+            return response()->json([
+                'tableHtml' => $tableHtml,
+                'intakes'   => $intakes,
+                'count'     => $courses->count(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error loading subjects: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Return all subjek_structure records (with intake name) for a specific
+     * course + structure + program + semester combination.
+     * Used by the delete-by-intake modal.
+     */
+    public function getIntakesForCourse(Request $request)
+    {
+        try {
+            $courseId   = $request->courseId;
+            $structureId = $request->structureId;
+            $programId  = $request->programId;
+            $semester   = $request->semester;
+
+            if (!$courseId || !$structureId || !$programId || !$semester) {
+                return response()->json(['error' => 'Missing required parameters.']);
+            }
+
+            $intakes = DB::table('subjek_structure')
+                ->leftJoin('sessions', 'subjek_structure.intake_id', '=', 'sessions.SessionID')
+                ->where('subjek_structure.courseID',    $courseId)
+                ->where('subjek_structure.structure',   $structureId)
+                ->where('subjek_structure.program_id',  $programId)
+                ->where('subjek_structure.semester_id', $semester)
+                ->select(
+                    'subjek_structure.id',
+                    'sessions.SessionName',
+                    'sessions.SessionID'
+                )
+                ->orderBy('sessions.SessionName')
+                ->get();
+
+            return response()->json(['intakes' => $intakes]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error fetching intakes: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Delete selected subjek_structure records by their IDs.
+     * Used by the delete-by-intake modal after checkboxes are confirmed.
+     */
+    public function deleteByIntakes(Request $request)
+    {
+        try {
+            $recordIds = $request->input('record_ids', []);
+
+            if (empty($recordIds) || !is_array($recordIds)) {
+                return response()->json(['error' => 'No records selected for deletion.']);
+            }
+
+            $deleted = DB::table('subjek_structure')
+                ->whereIn('id', $recordIds)
+                ->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => $deleted . ' intake record(s) removed successfully.',
+                'deleted' => $deleted,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error deleting records: ' . $e->getMessage()]);
+        }
+    }
+
+    public function structureReport()
+    {
+
+        $data = [
+
+            'program' => DB::table('tblprogramme')->get(),
+
+        ];
+
+        return view('pendaftar_akademik.course.structureReport', compact('data'));
+    }
+
+    public function getStructure(Request $request)
+    {
+
+        $structure = DB::table('subjek_structure')
+            ->join('structure', 'subjek_structure.structure', 'structure.id')
+            ->where('program_id', $request->program)
+            ->groupBy('structure')
+            ->select('structure.*')
+            ->get();
+
+        return response()->json(['data' => $structure]);
+    }
+
+    public function getStructureReport(Request $request)
+    {
+        $structure = DB::table('subjek_structure')
+            ->join('structure', 'subjek_structure.structure', 'structure.id')
+            ->join('subjek', 'subjek_structure.courseID', 'subjek.sub_id')
+            ->join('tblcourse_level', 'subjek.course_level_id', 'tblcourse_level.id')
+            ->where('program_id', $request->program)
+            ->where('structure.id', $request->structure)
+            ->groupBy('subjek_structure.courseID', 'subjek_structure.semester_id')
+            ->orderBy('subjek_structure.semester_id')
+            //  ->orderBy('subjek_structure.semester_id')
+            //  ->orderBy('subjek.course_code')
+            ->select('structure.structure_name', 'subjek_structure.semester_id', 'subjek.course_code', 'subjek.course_name', 'subjek.course_credit', 'tblcourse_level.name AS classification')
+            ->get();
+
+        // Group courses by semester
+        $groupedData = $structure->groupBy('semester_id');
+
+        $html = '<thead>
+                    <tr>
+                        <th style="width: 1%; border: 1px solid #000;">No.</th>
+                        <th style="width: 5%; border: 1px solid #000;">Semester</th>
+                        <th style="width: 10%; border: 1px solid #000;">Course Code</th>
+                        <th style="width: 30%; border: 1px solid #000;">Course Name</th>
+                        <th style="width: 5%; border: 1px solid #000;">Structure</th>
+                        <th style="width: 5%; border: 1px solid #000;">Credit</th>
+                        <th style="width: 15%; border: 1px solid #000;">Classification</th>
+                    </tr>
+                </thead>
+                <tbody>';
+
+        $counter = 1;
+        foreach ($groupedData as $semester => $courses) {
+            $semesterTotal = 0;
+            $isFirstRow = true;
+            $semesterRowCount = count($courses);
+
+            foreach ($courses as $index => $course) {
+                $html .= '<tr>';
+                $html .= '<td style="border: 1px solid #000; text-align: center;">' . $counter . '</td>';
+
+                // Show semester only on first row of each semester group
+                if ($isFirstRow) {
+                    $html .= '<td rowspan="' . ($semesterRowCount + 1) . '" style="vertical-align: middle; text-align: center; font-weight: bold; border: 1px solid #000;">' . $semester . '</td>';
+                    $isFirstRow = false;
+                }
+
+                $html .= '<td style="border: 1px solid #000;">' . $course->course_code . '</td>';
+                $html .= '<td style="border: 1px solid #000; padding-left: 8px;">' . strtoupper($course->course_name) . '</td>';
+                $html .= '<td style="border: 1px solid #000; text-align: center;">' . $course->structure_name . '</td>'; // Structure column placeholder
+                $html .= '<td style="border: 1px solid #000; text-align: center;">' . $course->course_credit . '</td>';
+                $html .= '<td style="border: 1px solid #000; text-align: center;">' . $course->classification . '</td>';
+                $html .= '</tr>';
+
+                $semesterTotal += $course->course_credit;
+                $counter++;
+            }
+
+            // Add semester total row - compatible with both light and dark modes
+            $html .= '<tr style="vertical-align: middle; text-align: center; font-weight: bold; border: 1px solid #000;">';
+            $html .= '<td colspan="5" style="border: 1px solid #000; text-align: center; padding: 8px;">JUMLAH</td>';
+            $html .= '<td style="border: 1px solid #000; text-align: center; padding: 8px;">' . $semesterTotal . '</td>';
+            $html .= '<td style="border: 1px solid #000;"></td>';
+            $html .= '</tr>';
+        }
+
+        $html .= '</tbody>';
+
+        return $html;
     }
 
     public function studentCourse()
@@ -528,27 +1155,25 @@ class AR_Controller extends Controller
         ];
 
         return view('pendaftar_akademik.studentCourse', compact('data'));
-
     }
 
     public function getStudents(Request $request)
     {
-        if($request->program == null)
-        {
+        if ($request->program == null) {
             $students = DB::table('students')->where('session', $request->session)->get();
-        }elseif($request->session == null){
+        } elseif ($request->session == null) {
             $students = DB::table('students')->where('program', $request->program)->get();
-        }else{
+        } else {
             $students = DB::table('students')->where([
                 ['session', $request->session],
                 ['program', $request->program]
-                ])->get();
+            ])->get();
         }
 
         $content = "";
 
         $content .= "<option value='-' disabled selected>-</option>";
-        foreach($students as $std){
+        foreach ($students as $std) {
 
             $content .= '<option data-style="btn-inverse"  
             data-content=\'<div class="row" >
@@ -559,15 +1184,14 @@ class AR_Controller extends Controller
                         </div>
                 </div>
                 <div class="col-md-10 align-self-center lh-lg">
-                    <span><strong>'. $std->name .'</strong></span><br>
-                    <span>'. $std->email .' | <strong class="text-fade"">Semester '.$std->semester .'</strong></span><br>
+                    <span><strong>' . $std->name . '</strong></span><br>
+                    <span>' . $std->email . ' | <strong class="text-fade"">Semester ' . $std->semester . '</strong></span><br>
                     <span class="text-fade"></span>
                 </div>
-            </div>\' value='. $std->ic .'></option>';
+            </div>\' value=' . $std->ic . '></option>';
         }
-        
-        return $content;
 
+        return $content;
     }
 
     public function getCourses(Request $request)
@@ -575,50 +1199,49 @@ class AR_Controller extends Controller
         $data['student'] = UserStudent::where('ic', $request->student)->first();
 
         $data['course'] = DB::table('subjek')
-                          ->join('subjek_structure', 'subjek.sub_id', 'subjek_structure.courseID')
-                          ->where('subjek_structure.program_id', $data['student']->program)
-                          ->groupBy('subjek.sub_id')
-                          ->select('subjek.*')
-                          ->get();
+            ->join('subjek_structure', 'subjek.sub_id', 'subjek_structure.courseID')
+            ->where('subjek_structure.program_id', $data['student']->program)
+            ->groupBy('subjek.sub_id')
+            ->select('subjek.*')
+            ->get();
 
-        for($i = 0; $i <= $data['student']->semester; $i++)
-        {
+        for ($i = 0; $i <= $data['student']->semester; $i++) {
             $loop[] = $i;
         }
 
         $data['students'] = DB::table('students')
-        ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
-        ->join('tblprogramme', 'students.program', 'tblprogramme.id')
-        ->join('sessions AS a', 'students.intake', 'a.SessionID')
-        ->join('sessions AS b', 'students.session', 'b.SessionID')
-        ->select('students.*', 'tblstudent_status.name AS status', 'tblprogramme.progname AS program', 'a.SessionName AS intake', 'b.SessionName AS session')
-        ->where('ic', $request->student)->first();
+            ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
+            ->join('tblprogramme', 'students.program', 'tblprogramme.id')
+            ->join('sessions AS a', 'students.intake', 'a.SessionID')
+            ->join('sessions AS b', 'students.session', 'b.SessionID')
+            ->select('students.*', 'tblstudent_status.name AS status', 'tblprogramme.progname AS program', 'a.SessionName AS intake', 'b.SessionName AS session')
+            ->where('ic', $request->student)->first();
 
         $getCourse =  DB::table('student_subjek')
-                      ->join('students', 'student_subjek.student_ic', 'students.ic')
-                      ->join('subjek', 'student_subjek.courseid', 'subjek.sub_id')
-                      ->join('sessions', 'student_subjek.sessionid', 'sessions.SessionID')
-                      //->where('student_subjek.sessionid', $data['student']->session)
-                      ->where('students.ic', $data['student']->ic)
-                      ->groupBy('student_subjek.courseid')
-                      ->groupBy('student_subjek.semesterid');
+            ->join('students', 'student_subjek.student_ic', 'students.ic')
+            ->join('subjek', 'student_subjek.courseid', 'subjek.sub_id')
+            ->join('sessions', 'student_subjek.sessionid', 'sessions.SessionID')
+            //->where('student_subjek.sessionid', $data['student']->session)
+            ->where('students.ic', $data['student']->ic)
+            ->groupBy('student_subjek.courseid')
+            ->groupBy('student_subjek.semesterid');
 
         $data['allCourse'] = $getCourse->select('student_subjek.sessionid', 'student_subjek.id as IDS', 'student_subjek.courseid', 'student_subjek.semesterid AS semester', 'sessions.SessionName', 'subjek.*')->orderBy('student_subjek.semesterid', 'ASC')->get();
 
         $crsExists = $getCourse->where('student_subjek.course_status_id', '!=', 2)->pluck('student_subjek.courseid')->toArray();
 
         $data['regCourse'] = DB::table('subjek')->whereNotIn('sub_id', $crsExists)
-                             ->join('subjek_structure', function($join){
-                                $join->on('subjek.sub_id', 'subjek_structure.courseID');
-                             })
-                             ->whereIn('subjek_structure.semester_id', $loop)
-                             ->where([
-                                ['subjek_structure.program_id', $data['student']->program],
-                                ['subjek_structure.intake_id', $data['student']->intake],
-                                ['subjek_structure.semester_id', '<=', $data['student']->semester]
-                             ])
-                             ->orderBy('subjek_structure.semester_id')
-                             ->select('subjek.*', 'subjek_structure.semester_id AS semesterid')->get();
+            ->join('subjek_structure', function ($join) {
+                $join->on('subjek.sub_id', 'subjek_structure.courseID');
+            })
+            ->whereIn('subjek_structure.semester_id', $loop)
+            ->where([
+                ['subjek_structure.program_id', $data['student']->program],
+                ['subjek_structure.intake_id', $data['student']->intake],
+                ['subjek_structure.semester_id', '<=', $data['student']->semester]
+            ])
+            ->orderBy('subjek_structure.semester_id')
+            ->select('subjek.*', 'subjek_structure.semester_id AS semesterid')->get();
 
         $data['atvSession'] = DB::table('sessions')->where('Status', 'ACTIVE')->pluck('SessionID')->toArray();
 
@@ -631,17 +1254,16 @@ class AR_Controller extends Controller
         $data['student'] = UserStudent::where('ic', $request->ic)->first();
 
         $data['course'] = DB::table('subjek')
-                          ->join('subjek_structure', 'subjek.sub_id', 'subjek_structure.courseID')
-                          ->where('subjek_structure.program_id', $data['student']->program)
-                          ->groupBy('subjek.sub_id')
-                          ->select('subjek.*')
-                          ->get();
+            ->join('subjek_structure', 'subjek.sub_id', 'subjek_structure.courseID')
+            ->where('subjek_structure.program_id', $data['student']->program)
+            ->groupBy('subjek.sub_id')
+            ->select('subjek.*')
+            ->get();
 
         $course = DB::table('subjek')->where('id', $request->id)->first();
 
-        if($course->prerequisite_id == 999)
-        {
-  
+        if ($course->prerequisite_id == 999) {
+
             DB::table('student_subjek')->insert([
                 'student_ic' => $data['student']->ic,
                 'courseid' => $course->sub_id,
@@ -652,21 +1274,17 @@ class AR_Controller extends Controller
                 'credit' => $course->course_credit
             ]);
 
-            if($data['student']->student_status == 1 && $data['student']->student_status != 4)
-            {
+            if ($data['student']->student_status == 1 && $data['student']->student_status != 4) {
 
                 DB::table('students')->where('ic', $data['student']->ic)->update([
                     'student_status' => 2
                 ]);
-
             }
-
-        }else{
+        } else {
 
             $check = DB::table('student_subjek')->where('courseid', $course->prerequisite_id)->value('course_status_id');
 
-            if(isset($check) && $check != 2)
-            {
+            if (isset($check) && $check != 2) {
 
                 DB::table('student_subjek')->insert([
                     'student_ic' => $data['student']->ic,
@@ -677,69 +1295,62 @@ class AR_Controller extends Controller
                     'status' => 'ACTIVE',
                     'credit' => $course->course_credit
                 ]);
-    
-                if($data['student']->student_status == 1  && $data['student']->student_status != 4)
-                {
-    
+
+                if ($data['student']->student_status == 1  && $data['student']->student_status != 4) {
+
                     DB::table('students')->where('ic', $data['student']->ic)->update([
                         'student_status' => 2
                     ]);
-    
                 }
-
-            }else{
+            } else {
 
                 $data['error'] = 'Subject from previous semester status FAILED';
-
             }
-
         }
 
 
-        for($i = 0; $i <= $data['student']->semester; $i++)
-        {
+        for ($i = 0; $i <= $data['student']->semester; $i++) {
             $loop[] = $i;
         }
 
         $data['students'] = DB::table('students')
-        ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
-        ->join('tblprogramme', 'students.program', 'tblprogramme.id')
-        ->join('sessions AS a', 'students.intake', 'a.SessionID')
-        ->join('sessions AS b', 'students.session', 'b.SessionID')
-        ->select('students.*', 'tblstudent_status.name AS status', 'tblprogramme.progname AS program', 'a.SessionName AS intake', 'b.SessionName AS session')
-        ->where('ic', $request->ic)->first();
+            ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
+            ->join('tblprogramme', 'students.program', 'tblprogramme.id')
+            ->join('sessions AS a', 'students.intake', 'a.SessionID')
+            ->join('sessions AS b', 'students.session', 'b.SessionID')
+            ->select('students.*', 'tblstudent_status.name AS status', 'tblprogramme.progname AS program', 'a.SessionName AS intake', 'b.SessionName AS session')
+            ->where('ic', $request->ic)->first();
 
-         $getCourse =  DB::table('student_subjek')
-                      ->join('students', 'student_subjek.student_ic', 'students.ic')
-                      ->join('subjek', 'student_subjek.courseid', 'subjek.sub_id')
-                      ->join('sessions', 'student_subjek.sessionid', 'sessions.SessionID')
-                      //->where('student_subjek.sessionid', $data['student']->session)
-                      ->where('students.ic', $data['student']->ic)
-                      ->groupBy('student_subjek.courseid')
-                      ->groupBy('student_subjek.semesterid');
+        $getCourse =  DB::table('student_subjek')
+            ->join('students', 'student_subjek.student_ic', 'students.ic')
+            ->join('subjek', 'student_subjek.courseid', 'subjek.sub_id')
+            ->join('sessions', 'student_subjek.sessionid', 'sessions.SessionID')
+            //->where('student_subjek.sessionid', $data['student']->session)
+            ->where('students.ic', $data['student']->ic)
+            ->groupBy('student_subjek.courseid')
+            ->groupBy('student_subjek.semesterid');
 
         $data['allCourse'] = $getCourse->select('student_subjek.sessionid', 'student_subjek.id as IDS', 'student_subjek.courseid', 'student_subjek.semesterid AS semester', 'sessions.SessionName', 'subjek.*')->orderBy('student_subjek.semesterid')->get();
 
         $crsExists = $getCourse->where('student_subjek.course_status_id', '!=', 2)->pluck('student_subjek.courseid')->toArray();
 
         $data['regCourse'] = DB::table('subjek')->whereNotIn('sub_id', $crsExists)
-                            ->join('subjek_structure', function($join){
-                                $join->on('subjek.sub_id', 'subjek_structure.courseID');
-                            })
-                            ->where('subjek_structure.intake_id', $data['student']->intake)
-                            ->whereIn('subjek_structure.semester_id', $loop)
-                            ->where([
-                                ['subjek_structure.program_id', $data['student']->program],
-                                ['subjek_structure.intake_id', $data['student']->intake],
-                                ['subjek_structure.semester_id', '<=', $data['student']->semester]
-                            ])
-                            ->orderBy('subjek_structure.semester_id')
-                            ->select('subjek.*', 'subjek_structure.semester_id AS semesterid')->get();
+            ->join('subjek_structure', function ($join) {
+                $join->on('subjek.sub_id', 'subjek_structure.courseID');
+            })
+            ->where('subjek_structure.intake_id', $data['student']->intake)
+            ->whereIn('subjek_structure.semester_id', $loop)
+            ->where([
+                ['subjek_structure.program_id', $data['student']->program],
+                ['subjek_structure.intake_id', $data['student']->intake],
+                ['subjek_structure.semester_id', '<=', $data['student']->semester]
+            ])
+            ->orderBy('subjek_structure.semester_id')
+            ->select('subjek.*', 'subjek_structure.semester_id AS semesterid')->get();
 
         $data['atvSession'] = DB::table('sessions')->where('Status', 'ACTIVE')->pluck('SessionID')->toArray();
 
         return view('pendaftar_akademik.getAllCourse', compact('data'));
-
     }
 
 
@@ -748,84 +1359,81 @@ class AR_Controller extends Controller
         $data['student'] = UserStudent::where('ic', $request->ic)->first();
 
         $data['course'] = DB::table('subjek')
-                          ->join('subjek_structure', 'subjek.sub_id', 'subjek_structure.courseID')
-                          ->where('subjek_structure.program_id', $data['student']->program)
-                          ->groupBy('subjek.sub_id')
-                          ->select('subjek.*')
-                          ->get();
+            ->join('subjek_structure', 'subjek.sub_id', 'subjek_structure.courseID')
+            ->where('subjek_structure.program_id', $data['student']->program)
+            ->groupBy('subjek.sub_id')
+            ->select('subjek.*')
+            ->get();
 
         DB::table('student_subjek')->where('id', $request->id)->delete();
 
-        for($i = 0; $i <= $data['student']->semester; $i++)
-        {
+        for ($i = 0; $i <= $data['student']->semester; $i++) {
             $loop[] = $i;
         }
 
         $data['students'] = DB::table('students')
-        ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
-        ->join('tblprogramme', 'students.program', 'tblprogramme.id')
-        ->join('sessions AS a', 'students.intake', 'a.SessionID')
-        ->join('sessions AS b', 'students.session', 'b.SessionID')
-        ->select('students.*', 'tblstudent_status.name AS status', 'tblprogramme.progname AS program', 'a.SessionName AS intake', 'b.SessionName AS session')
-        ->where('ic', $request->ic)->first();
+            ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
+            ->join('tblprogramme', 'students.program', 'tblprogramme.id')
+            ->join('sessions AS a', 'students.intake', 'a.SessionID')
+            ->join('sessions AS b', 'students.session', 'b.SessionID')
+            ->select('students.*', 'tblstudent_status.name AS status', 'tblprogramme.progname AS program', 'a.SessionName AS intake', 'b.SessionName AS session')
+            ->where('ic', $request->ic)->first();
 
         $getCourse =  DB::table('student_subjek')
-                      ->join('students', 'student_subjek.student_ic', 'students.ic')
-                      ->join('subjek', 'student_subjek.courseid', 'subjek.sub_id')
-                      ->join('sessions', 'student_subjek.sessionid', 'sessions.SessionID')
-                      //->where('student_subjek.sessionid', $data['student']->session)
-                      ->where('students.ic', $data['student']->ic)
-                      ->groupBy('student_subjek.courseid')
-                      ->groupBy('student_subjek.semesterid');
+            ->join('students', 'student_subjek.student_ic', 'students.ic')
+            ->join('subjek', 'student_subjek.courseid', 'subjek.sub_id')
+            ->join('sessions', 'student_subjek.sessionid', 'sessions.SessionID')
+            //->where('student_subjek.sessionid', $data['student']->session)
+            ->where('students.ic', $data['student']->ic)
+            ->groupBy('student_subjek.courseid')
+            ->groupBy('student_subjek.semesterid');
 
         $data['allCourse'] = $getCourse->select('student_subjek.sessionid', 'student_subjek.id as IDS', 'student_subjek.courseid', 'student_subjek.semesterid AS semester', 'sessions.SessionName', 'subjek.*')->orderBy('student_subjek.semesterid')->get();
 
         $crsExists = $getCourse->where('student_subjek.course_status_id', '!=', 2)->pluck('student_subjek.courseid')->toArray();
 
         $data['regCourse'] = DB::table('subjek')->whereNotIn('sub_id', $crsExists)
-                            ->join('subjek_structure', function($join){
-                                $join->on('subjek.sub_id', 'subjek_structure.courseID');
-                            })
-                            ->where('subjek_structure.intake_id', $data['student']->intake)
-                            ->whereIn('subjek_structure.semester_id', $loop)
-                            ->where([
-                                ['subjek_structure.program_id', $data['student']->program],
-                                ['subjek_structure.intake_id', $data['student']->intake],
-                                ['subjek_structure.semester_id', '<=', $data['student']->semester]
-                            ])
-                            ->orderBy('subjek_structure.semester_id')
-                            ->select('subjek.*', 'subjek_structure.semester_id AS semesterid')->get();
+            ->join('subjek_structure', function ($join) {
+                $join->on('subjek.sub_id', 'subjek_structure.courseID');
+            })
+            ->where('subjek_structure.intake_id', $data['student']->intake)
+            ->whereIn('subjek_structure.semester_id', $loop)
+            ->where([
+                ['subjek_structure.program_id', $data['student']->program],
+                ['subjek_structure.intake_id', $data['student']->intake],
+                ['subjek_structure.semester_id', '<=', $data['student']->semester]
+            ])
+            ->orderBy('subjek_structure.semester_id')
+            ->select('subjek.*', 'subjek_structure.semester_id AS semesterid')->get();
 
         $data['atvSession'] = DB::table('sessions')->where('Status', 'ACTIVE')->pluck('SessionID')->toArray();
 
         return view('pendaftar_akademik.getAllCourse', compact('data'));
-
     }
 
     public function getSlipExam(Request $request)
     {
 
         $data['student'] = DB::table('students')
-                           ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
-                           ->join('tblprogramme', 'students.program', 'tblprogramme.id')
-                           ->join('sessions AS t1', 'students.intake', 't1.SessionID')
-                           ->join('sessions AS t2', 'students.session', 't2.SessionID')
-                           ->select('students.*', 'tblstudent_status.name AS status', 'tblprogramme.progname AS program', 'students.program AS progid', 't1.SessionName AS intake_name', 't2.SessionName AS session_name')
-                           ->where('ic', $request->student)->first();
+            ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
+            ->join('tblprogramme', 'students.program', 'tblprogramme.id')
+            ->join('sessions AS t1', 'students.intake', 't1.SessionID')
+            ->join('sessions AS t2', 'students.session', 't2.SessionID')
+            ->select('students.*', 'tblstudent_status.name AS status', 'tblprogramme.progname AS program', 'students.program AS progid', 't1.SessionName AS intake_name', 't2.SessionName AS session_name')
+            ->where('ic', $request->student)->first();
 
         $data['course'] = DB::table('student_subjek')
-                          ->join('subjek', 'student_subjek.courseid', 'subjek.sub_id')
-                          ->join('tblcourse_level', 'subjek.course_level_id', 'tblcourse_level.id')
-                          ->where([
-                            ['student_subjek.student_ic', $request->student],
-                            ['student_subjek.semesterid', $data['student']->semester]
-                            ])
-                            ->groupBy('subjek.sub_id')
-                            ->select('subjek.*', 'tblcourse_level.name AS level')
-                            ->get();
+            ->join('subjek', 'student_subjek.courseid', 'subjek.sub_id')
+            ->join('tblcourse_level', 'subjek.course_level_id', 'tblcourse_level.id')
+            ->where([
+                ['student_subjek.student_ic', $request->student],
+                ['student_subjek.semesterid', $data['student']->semester]
+            ])
+            ->groupBy('subjek.sub_id')
+            ->select('subjek.*', 'tblcourse_level.name AS level')
+            ->get();
 
         return view('pendaftar_akademik.slipExam', compact('data'));
-
     }
 
     public function sessionList()
@@ -836,7 +1444,6 @@ class AR_Controller extends Controller
         ];
 
         return view('pendaftar_akademik.session', compact('data'));
-
     }
 
     public function createSession(Request $request)
@@ -851,13 +1458,12 @@ class AR_Controller extends Controller
         ]);
 
         // $start = $this->getYear($data['start']);
-        
+
         // $end = $this->getYear($data['end']);
 
         $name = $data['month'] . ' ' . $data['year1'] . '/' . $data['year2'];
 
-        if(isset($request->idS))
-        {
+        if (isset($request->idS)) {
 
             DB::table('sessions')->where('SessionID', $request->idS)->update([
                 'SessionName' => $name,
@@ -865,10 +1471,9 @@ class AR_Controller extends Controller
                 'End' => $data['end'],
                 'Year' => $data['year'],
                 'Status' => $request->status
-                
-            ]);
 
-        }else{
+            ]);
+        } else {
 
             $id = DB::table('sessions')->insertGetId([
                 'SessionName' => $name,
@@ -882,8 +1487,7 @@ class AR_Controller extends Controller
 
             $oldStructure = DB::table('subjek_structure')->where('intake_id', $newId)->get();
 
-            foreach($oldStructure as $os)
-            {
+            foreach ($oldStructure as $os) {
 
                 DB::table('subjek_structure')->insert([
                     'courseID' => $os->courseID,
@@ -892,13 +1496,10 @@ class AR_Controller extends Controller
                     'program_id' => $os->program_id,
                     'semester_id' => $os->semester_id
                 ]);
-
             }
-
         }
 
         return redirect(route('pendaftar_akademik.session'));
-
     }
 
     private function getYear($date)
@@ -926,7 +1527,6 @@ class AR_Controller extends Controller
         $data['year2'] = $years[1];
 
         return view('pendaftar_akademik.getSession', compact('data'))->with('id', $request->id);
-
     }
 
     public function deleteDelete(Request $request)
@@ -935,7 +1535,6 @@ class AR_Controller extends Controller
         DB::table('sessions')->where('SessionID', $request->id)->delete();
 
         return true;
-
     }
 
     public function batchList()
@@ -946,7 +1545,6 @@ class AR_Controller extends Controller
         ];
 
         return view('pendaftar_akademik.batch', compact('data'));
-
     }
 
     public function createBatch(Request $request)
@@ -957,18 +1555,16 @@ class AR_Controller extends Controller
             'end' => ['required']
         ]);
 
-        if(isset($request->idS))
-        {
+        if (isset($request->idS)) {
 
             DB::table('tblbatch')->where('BatchID', $request->idS)->update([
                 'BatchName' => $data['name'],
                 'Start' => $data['start'],
                 'End' => $data['end'],
                 'Status' => $request->status
-                
-            ]);
 
-        }else{
+            ]);
+        } else {
 
             DB::table('tblbatch')->insertGetId([
                 'BatchName' => $data['name'],
@@ -976,11 +1572,9 @@ class AR_Controller extends Controller
                 'End' => $data['end'],
                 'Status' => 'ACTIVE'
             ]);
-
         }
 
         return redirect(route('pendaftar_akademik.batch'));
-
     }
     public function updateBatch(Request $request)
     {
@@ -991,7 +1585,6 @@ class AR_Controller extends Controller
         ];
 
         return view('pendaftar_akademik.getBatch', compact('data'))->with('id', $request->id);
-
     }
 
     public function deleteBatch(Request $request)
@@ -1000,7 +1593,6 @@ class AR_Controller extends Controller
         DB::table('tblbatch')->where('BatchID', $request->id)->delete();
 
         return true;
-
     }
 
     public function scheduleIndex()
@@ -1008,51 +1600,44 @@ class AR_Controller extends Controller
 
         $data['type'] = request()->type;
 
-        if(request()->type == 'lct')
-        {
+        if (request()->type == 'lct') {
 
             $data = [
                 'room' => DB::table('tbllecture_room')->get(),
                 'session' => DB::table('sessions')->where('Status', 'ACTIVE')->get(),
                 'lecturer' => DB::table('users')->whereIn('usrtype', ['LCT', 'PL', 'AO'])->get()
             ];
-
-        }elseif(request()->type == 'std')
-        {
+        } elseif (request()->type == 'std') {
 
             $data = [
                 'student' => DB::table('students')
-                             ->join('tblprogramme', 'students.program', 'tblprogramme.id')
-                             ->orderBy('students.program')
-                             ->where('status', 2)
-                             ->get()
+                    ->join('tblprogramme', 'students.program', 'tblprogramme.id')
+                    ->orderBy('students.program')
+                    ->where('status', 2)
+                    ->get()
             ];
-
-        }elseif(request()->type == 'lcr'){
+        } elseif (request()->type == 'lcr') {
 
             $data = [
                 'room' => DB::table('tbllecture_room')->get()
             ];
-
         }
 
         return view('pendaftar_akademik.schedule.index', compact('data'));
-
     }
 
     public function getLectureRoom(Request $request)
     {
 
-        if(isset($request->session))
-        {
+        if (isset($request->session)) {
 
             $allRoom = DB::table('tbllecture')
-                       ->join('sessions', 'tbllecture.session_id', 'sessions.SessionID')
-                       ->join('tbllecture_room', 'tbllecture.room_id', 'tbllecture_room.id')
-                       ->select('tbllecture.*', 'sessions.SessionName', 'tbllecture_room.name AS roomName')
-                       ->where([
-                        ['tbllecture.session_id', $request->session]
-                       ])->get();
+                ->join('sessions', 'tbllecture.session_id', 'sessions.SessionID')
+                ->join('tbllecture_room', 'tbllecture.room_id', 'tbllecture_room.id')
+                ->select('tbllecture.*', 'sessions.SessionName', 'tbllecture_room.name AS roomName')
+                ->where([
+                    ['tbllecture.session_id', $request->session]
+                ])->get();
 
             $content = "";
             $content .= '<thead>
@@ -1071,40 +1656,37 @@ class AR_Controller extends Controller
                             </tr>
                         </thead>
                         <tbody id="table">';
-                        
-            foreach($allRoom as $key => $ar){
+
+            foreach ($allRoom as $key => $ar) {
                 //$registered = ($student->status == 'ACTIVE') ? 'checked' : '';
                 $content .= '
                 <tr>
                     <td style="width: 1%">
-                    '. $key+1 .'
+                    ' . $key + 1 . '
                     </td>
                     <td>
-                    '. $ar->SessionName .'
+                    ' . $ar->SessionName . '
                     </td>
                     <td>
-                    '. $ar->roomName .'
+                    ' . $ar->roomName . '
                     </td>
                     <td class="project-actions text-right" >
-                        <a class="btn btn-info btn-sm" href="/AR/schedule/scheduleTable/'. $ar->id .'">
+                        <a class="btn btn-info btn-sm" href="/AR/schedule/scheduleTable/' . $ar->id . '">
                             <i class="ti-info-alt">
                             </i>
                             Table
                         </a>
-                        <a class="btn btn-danger btn-sm" href="#" onclick="deleteMaterial('. $ar->id .')">
+                        <a class="btn btn-danger btn-sm" href="#" onclick="deleteMaterial(' . $ar->id . ')">
                             <i class="ti-trash">
                             </i>
                             Delete
                         </a>
                     </td>';
+            }
+            $content .= '</tr></tbody>';
 
-                }
-                $content .= '</tr></tbody>';
-    
-                return $content;
-
+            return $content;
         }
-
     }
 
     public function createLectureRoom(Request $request)
@@ -1112,34 +1694,32 @@ class AR_Controller extends Controller
 
         $data = json_decode($request->formData);
 
-        try{ 
+        try {
             DB::beginTransaction();
             DB::connection()->enableQueryLog();
 
-            try{
+            try {
 
                 DB::table('tbllecture')->insert([
                     'room_id' => $data->room,
                     'session_id' => $data->session
                 ]);
-
-            }catch(QueryException $ex){
+            } catch (QueryException $ex) {
                 DB::rollback();
-                if($ex->getCode() == 23000){
-                    return ["message"=>"Class code already existed inside the system"];
-                }else{
+                if ($ex->getCode() == 23000) {
+                    return ["message" => "Class code already existed inside the system"];
+                } else {
                     \Log::debug($ex);
-                    return ["message"=>"DB Error"];
+                    return ["message" => "DB Error"];
                 }
             }
 
             DB::commit();
-        }catch(Exception $ex){
-            return ["message"=>"Error"];
+        } catch (Exception $ex) {
+            return ["message" => "Error"];
         }
 
         return response()->json(['message' => 'Success']);
-
     }
 
     // public function dropzoneStore(Request $request)
@@ -1156,7 +1736,7 @@ class AR_Controller extends Controller
     //     //dd($file_name);
 
     //     $classmaterial = "classschedule/";
-        
+
 
     //     if(! file_exists($newname)){
     //         Storage::disk('linode')->putFileAs(
@@ -1181,7 +1761,6 @@ class AR_Controller extends Controller
         $data['semesters'] = DB::table('semester')->get();
 
         return view('pendaftar_akademik.leave.studentLeave', compact('data'));
-
     }
 
     public function getStudentLeave(Request $request)
@@ -1191,16 +1770,15 @@ class AR_Controller extends Controller
         $session = $request->session;
         $semester = $request->semester;
 
-        $query = DB::table('students')->where(function($query) {
+        $query = DB::table('students')->where(function ($query) {
             $query->where('campus_id', 1)
-                  ->where('status', 2)
-                  ->orWhereNull('campus_id');
+                ->where('status', 2)
+                ->orWhereNull('campus_id');
         });
 
         $query2 = DB::table('students')->where('status', 2)->where('campus_id', 0);
 
-        if($program != '' && $session != '' && $semester != '')
-        {
+        if ($program != '' && $session != '' && $semester != '') {
 
             $data['campus'] = $query->where([
                 ['program', $program],
@@ -1213,9 +1791,7 @@ class AR_Controller extends Controller
                 ['session', $session],
                 ['semester', $semester]
             ])->get();
-
-        }elseif($program != '' && $session != '')
-        {
+        } elseif ($program != '' && $session != '') {
 
             $data['campus'] = $query->where([
                 ['program', $program],
@@ -1227,64 +1803,64 @@ class AR_Controller extends Controller
                 ['session', $session]
             ])->get();
 
-        // }elseif($program != '' && $semester != '')
-        // {
+            // }elseif($program != '' && $semester != '')
+            // {
 
-        //     $data['campus'] = $query->where([
-        //         ['program', $program],
-        //         ['semester', $semester]
-        //     ])->get();
+            //     $data['campus'] = $query->where([
+            //         ['program', $program],
+            //         ['semester', $semester]
+            //     ])->get();
 
-        //     $data['leave'] = $query2->where([
-        //         ['program', $program],
-        //         ['semester', $semester]
-        //     ])->get();
+            //     $data['leave'] = $query2->where([
+            //         ['program', $program],
+            //         ['semester', $semester]
+            //     ])->get();
 
-        // }elseif($session != '' && $semester != '')
-        // {
+            // }elseif($session != '' && $semester != '')
+            // {
 
-        //     $data['campus'] = $query->where([
-        //         ['session', $session],
-        //         ['semester', $semester]
-        //     ])->get();
+            //     $data['campus'] = $query->where([
+            //         ['session', $session],
+            //         ['semester', $semester]
+            //     ])->get();
 
-        //     $data['leave'] = $query2->where([
-        //         ['session', $session],
-        //         ['semester', $semester]
-        //     ])->get();
+            //     $data['leave'] = $query2->where([
+            //         ['session', $session],
+            //         ['semester', $semester]
+            //     ])->get();
 
-        // }elseif($program != '')
-        // {
+            // }elseif($program != '')
+            // {
 
-        //     $data['campus'] = $query->where([
-        //         ['program', $program]
-        //     ])->get();
+            //     $data['campus'] = $query->where([
+            //         ['program', $program]
+            //     ])->get();
 
-        //     $data['leave'] = $query2->where([
-        //         ['program', $program]
-        //     ])->get();
+            //     $data['leave'] = $query2->where([
+            //         ['program', $program]
+            //     ])->get();
 
-        // }elseif($session != '')
-        // {
+            // }elseif($session != '')
+            // {
 
-        //     $data['campus'] = $query->where([
-        //         ['session', $session]
-        //     ])->get();
+            //     $data['campus'] = $query->where([
+            //         ['session', $session]
+            //     ])->get();
 
-        //     $data['leave'] = $query2->where([
-        //         ['session', $session]
-        //     ])->get();
+            //     $data['leave'] = $query2->where([
+            //         ['session', $session]
+            //     ])->get();
 
-        // }elseif($semester != '')
-        // {
+            // }elseif($semester != '')
+            // {
 
-        //     $data['campus'] = $query->where([
-        //         ['semester', $semester]
-        //     ])->get();
+            //     $data['campus'] = $query->where([
+            //         ['semester', $semester]
+            //     ])->get();
 
-        //     $data['leave'] = $query2->where([
-        //         ['semester', $semester]
-        //     ])->get();
+            //     $data['leave'] = $query2->where([
+            //         ['semester', $semester]
+            //     ])->get();
 
         }
 
@@ -1299,8 +1875,7 @@ class AR_Controller extends Controller
             'campus_id' => 0,
         ]);
 
-        foreach($request->leave AS $matric)
-        {
+        foreach ($request->leave as $matric) {
             $student = UserStudent::where('no_matric', $matric)->first();
 
 
@@ -1315,11 +1890,9 @@ class AR_Controller extends Controller
                 'remark' => null,
                 'add_staffID' => Auth::user()->ic
             ]);
-
         }
-        
-        return ['message' => 'success'];
 
+        return ['message' => 'success'];
     }
 
     public function updateCampus(Request $request)
@@ -1329,8 +1902,7 @@ class AR_Controller extends Controller
             'campus_id' => 1,
         ]);
 
-        foreach($request->campus AS $campus)
-        {
+        foreach ($request->campus as $campus) {
             $student = UserStudent::where('no_matric', $campus)->first();
 
 
@@ -1345,83 +1917,70 @@ class AR_Controller extends Controller
                 'remark' => null,
                 'add_staffID' => Auth::user()->ic
             ]);
-
         }
 
         return ['message' => 'success'];
-
     }
 
     public function studentSemester()
     {
 
         return view('pendaftar_akademik.semester.semester');
-
     }
 
     public function getStudentSemester(Request $request)
     {
 
         $data['student'] = DB::table('students')
-                           ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
-                           ->join('tblprogramme', 'students.program', 'tblprogramme.id')
-                           ->join('sessions AS t1', 'students.intake', 't1.SessionID')
-                           ->join('sessions AS t2', 'students.session', 't2.SessionID')
-                           ->select('students.*', 'tblstudent_status.name AS status', 'tblprogramme.progname AS program', 'students.program AS progid', 't1.SessionName AS intake_name', 't2.SessionName AS session_name')
-                           ->where('ic', $request->student)->first();
+            ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
+            ->join('tblprogramme', 'students.program', 'tblprogramme.id')
+            ->join('sessions AS t1', 'students.intake', 't1.SessionID')
+            ->join('sessions AS t2', 'students.session', 't2.SessionID')
+            ->select('students.*', 'tblstudent_status.name AS status', 'tblprogramme.progname AS program', 'students.program AS progid', 't1.SessionName AS intake_name', 't2.SessionName AS session_name')
+            ->where('ic', $request->student)->first();
 
         $data['session'] = DB::table('sessions')->get();
 
         $data['semester'] = DB::table('semester')->get();
 
         return view('pendaftar_akademik.semester.semesterGetStudent', compact('data'));
-        
     }
 
     public function updateSemester(Request $request)
     {
         //check if sponsor exists
-        if(!DB::table('tblpackage_sponsorship')->where('student_ic', $request->ic)->exists())
-        {
+        if (!DB::table('tblpackage_sponsorship')->where('student_ic', $request->ic)->exists()) {
             return response()->json([
-                'message' => 'Student has no sponsor package! Please make sure student sponsor is created first!'], 404);
+                'message' => 'Student has no sponsor package! Please make sure student sponsor is created first!'
+            ], 404);
         }
 
         $student = DB::table('students')->where('no_matric', $request->no_matric)->first();
 
         // if($request->session != '' && $request->session != $student->session && $request->session > $student->session)
-        if($request->session != '' && $request->session != $student->session)
-        {
-            if($student->status == 2 && $student->campus_id == 0)
-            {
-                if($student->block_status != 1)
-                {
+        if ($request->session != '' && $request->session != $student->session) {
+            if ($student->status == 2 && $student->campus_id == 0) {
+                if ($student->block_status != 1) {
 
-                    if($student->status != 6)
-                    {
+                    if ($student->status != 6) {
 
                         $newsem = $student->semester + 1;
-
-                    }else{
+                    } else {
 
                         $newsem = $student->semester;
-
                     }
 
-                    if($request->withheld != 1)
-                    {
+                    if ($request->withheld != 1) {
 
                         DB::table('students')->where('no_matric', $request->no_matric)->update([
                             'session' => $request->session,
                             'semester' => $newsem
                         ]);
+                    } else {
 
-                    }else{
-
-                        DB::table(  'students')->where('no_matric', $request->no_matric)->update([
+                        DB::table('students')->where('no_matric', $request->no_matric)->update([
                             'session' => $request->session
                         ]);
-
                     }
 
                     $userUpt = UserStudent::where('no_matric', $request->no_matric)->first();
@@ -1438,37 +1997,27 @@ class AR_Controller extends Controller
                     ]);
 
 
-                    if($request->withheld != 1)
-                    {
+                    if ($request->withheld != 1) {
 
                         $alert = $this->getRegisterClaim($student->ic);
-
-                    }else{
+                    } else {
 
                         return ['message' => 'Success! Not charged for on hold student!'];
-
                     }
-
-                }else{
+                } else {
 
                     return ['message' => 'This student is blocked! Please consult the finance department for inquiries.'];
-
                 }
-
-            }else{
+            } else {
 
                 return ['message' => 'Student must be on leave from campus and active to register!'];
-
             }
-
-        }else{
+        } else {
 
             return ['message' => 'Please fill all required field and cannot be the same semester!'];
-
         }
 
         return $alert;
-
     }
 
     private function getRegisterClaim($ic)
@@ -1476,15 +2025,14 @@ class AR_Controller extends Controller
 
         $student = DB::table('students')->where('ic', $ic)->first();
 
-        if(!in_array($student->semester, [7, 8]))
-        {
+        if (!in_array($student->semester, [7, 8])) {
 
             $claim = DB::table('tblstudentclaimpackage')
-                            ->where([
-                                ['program_id', $student->program],
-                                ['intake_id', $student->intake],
-                                ['semester_id', $student->semester]
-                                ])->join('tblstudentclaim', 'tblstudentclaimpackage.claim_id', 'tblstudentclaim.id')->get();
+                ->where([
+                    ['program_id', $student->program],
+                    ['intake_id', $student->intake],
+                    ['semester_id', $student->semester]
+                ])->join('tblstudentclaim', 'tblstudentclaimpackage.claim_id', 'tblstudentclaim.id')->get();
 
             DB::table('tblclaim')->where([
                 ['student_ic', $student->ic],
@@ -1509,18 +2057,16 @@ class AR_Controller extends Controller
             ]);
 
             $sponsor = DB::table('tblpackage_sponsorship')
-            ->join('tblpayment_type', 'tblpackage_sponsorship.payment_type_id', 'tblpayment_type.id')
-            ->where('tblpackage_sponsorship.student_ic', $student->ic)
-            ->select('tblpayment_type.name AS payment_type')
-            ->first();
+                ->join('tblpayment_type', 'tblpackage_sponsorship.payment_type_id', 'tblpayment_type.id')
+                ->where('tblpackage_sponsorship.student_ic', $student->ic)
+                ->select('tblpayment_type.name AS payment_type')
+                ->first();
 
             $hotel = !str_contains(strtoupper($sponsor->payment_type), 'TIADA KEDIAMAN');
 
-            foreach($claim as $clm)
-            {
+            foreach ($claim as $clm) {
 
-                if(!$hotel && $clm->id == 28)
-                {
+                if (!$hotel && $clm->id == 28) {
                     continue;
                 }
 
@@ -1535,15 +2081,13 @@ class AR_Controller extends Controller
                     'mod_staffID' => Auth::user()->ic,
                     'mod_date' => date('Y-m-d')
                 ]);
-
             }
 
-            if(count(DB::table('tblclaimdtl')->where('claim_id', $id)->get()) > 0)
-            {
+            if (count(DB::table('tblclaimdtl')->where('claim_id', $id)->get()) > 0) {
                 $ref_no = DB::table('tblref_no')
-                        ->join('tblclaim', 'tblref_no.process_type_id', 'tblclaim.process_type_id')
-                        ->where('tblclaim.id', $id)
-                        ->select('tblref_no.*', 'tblclaim.student_ic')->first();
+                    ->join('tblclaim', 'tblref_no.process_type_id', 'tblclaim.process_type_id')
+                    ->where('tblclaim.id', $id)
+                    ->select('tblref_no.*', 'tblclaim.student_ic')->first();
 
                 DB::table('tblref_no')->where('id', $ref_no->id)->update([
                     'ref_no' => $ref_no->ref_no + 1
@@ -1578,31 +2122,26 @@ class AR_Controller extends Controller
                 $student_info = DB::table('tblstudent_personal')->where('student_ic', $ref_no->student_ic)->value('statelevel_id');
 
                 //check if subject exists
-                if(DB::table('student_subjek')->where([['student_ic', $student->ic],['sessionid', $student->session],['semesterid', $student->semester]])->exists())
-                {
+                if (DB::table('student_subjek')->where([['student_ic', $student->ic], ['sessionid', $student->session], ['semesterid', $student->semester]])->exists()) {
                     $alert =  ['message' => 'Success! Subject for student has already registered for this semester!'];
-
-                }else{
+                } else {
 
                     $subject = DB::table('subjek')
-                    ->join('subjek_structure', function($join){
-                        $join->on('subjek.sub_id', 'subjek_structure.courseID');
-                    })
-                    ->where([
-                        ['subjek_structure.program_id','=', $student->program],
-                        ['subjek_structure.semester_id','=', $student->semester],
-                        ['subjek_structure.intake_id', $student->intake]
-                    ])
-                    ->select('subjek.*', 'subjek_structure.semester_id')->get();
+                        ->join('subjek_structure', function ($join) {
+                            $join->on('subjek.sub_id', 'subjek_structure.courseID');
+                        })
+                        ->where([
+                            ['subjek_structure.program_id', '=', $student->program],
+                            ['subjek_structure.semester_id', '=', $student->semester],
+                            ['subjek_structure.intake_id', $student->intake]
+                        ])
+                        ->select('subjek.*', 'subjek_structure.semester_id')->get();
 
-                    foreach($subject as $key)
-                    {
+                    foreach ($subject as $key) {
 
-                        if($key->offer == 1)
-                        {
+                        if ($key->offer == 1) {
 
-                            if($key->prerequisite_id == 999)
-                            {
+                            if ($key->prerequisite_id == 999) {
 
                                 student::create([
                                     'student_ic' => $student->ic,
@@ -1613,13 +2152,11 @@ class AR_Controller extends Controller
                                     'status' => 'ACTIVE',
                                     'credit' => $key->course_credit
                                 ]);
-
-                            }else{
+                            } else {
 
                                 $check = DB::table('student_subjek')->where('courseid', $key->prerequisite_id)->value('course_status_id');
 
-                                if(isset($check) && $check != 2)
-                                {
+                                if (isset($check) && $check != 2) {
 
                                     student::create([
                                         'student_ic' => $student->ic,
@@ -1630,46 +2167,38 @@ class AR_Controller extends Controller
                                         'status' => 'ACTIVE',
                                         'credit' => $key->course_credit
                                     ]);
-                    
-
                                 }
-
                             }
                         }
-                        
                     }
 
                     $alert = ['message' => 'Success'];
-
                 }
 
-                if($student_info == 1)
-                {
+                if ($student_info == 1) {
 
                     //PENAJA
 
                     $claim = DB::table('tblclaim')
-                    ->join('tblclaimdtl', 'tblclaim.id', 'tblclaimdtl.claim_id')
-                    ->where([
-                    ['tblclaimdtl.claim_package_id', 9],
-                    ['tblclaim.session_id', $student->session],
-                    ['tblclaim.semester_id', $student->semester],
-                    ['tblclaim.program_id', $student->program],
-                    ['tblclaim.student_ic', $student->ic]
-                    ])
-                    ->select('tblclaim.*')->first();
+                        ->join('tblclaimdtl', 'tblclaim.id', 'tblclaimdtl.claim_id')
+                        ->where([
+                            ['tblclaimdtl.claim_package_id', 9],
+                            ['tblclaim.session_id', $student->session],
+                            ['tblclaim.semester_id', $student->semester],
+                            ['tblclaim.program_id', $student->program],
+                            ['tblclaim.student_ic', $student->ic]
+                        ])
+                        ->select('tblclaim.*')->first();
 
                     $incentive = DB::table('tblincentive')
-                                    ->join('tblincentive_program', 'tblincentive.id', 'tblincentive_program.incentive_id')
-                                    ->where('tblincentive_program.program_id', $student->program)
-                                    ->select('tblincentive.*')
-                                    ->get();
+                        ->join('tblincentive_program', 'tblincentive.id', 'tblincentive_program.incentive_id')
+                        ->where('tblincentive_program.program_id', $student->program)
+                        ->select('tblincentive.*')
+                        ->get();
 
-                    foreach($incentive as $key => $icv)
-                    {
+                    foreach ($incentive as $key => $icv) {
 
-                        if(($student->intake >= $icv->session_from && $student->intake <= $icv->session_to) || ($student->intake >= $icv->session_from && $icv->session_to == null))
-                        {
+                        if (($student->intake >= $icv->session_from && $student->intake <= $icv->session_to) || ($student->intake >= $icv->session_from && $icv->session_to == null)) {
 
                             $ref_no = DB::table('tblref_no')->where('id', 8)->first();
 
@@ -1715,36 +2244,29 @@ class AR_Controller extends Controller
                                 'mod_staffID' => Auth::user()->ic,
                                 'mod_date' => date('Y-m-d')
                             ]);
-
                         }
-
                     }
 
                     //TABUNGKHAS
 
                     $sponsors = DB::table('tblpackage_sponsorship')->where('student_ic', $student->ic);
 
-                    if($sponsors->exists())
-                    {
+                    if ($sponsors->exists()) {
                         $sponsor = $sponsors->get();
 
-                        foreach($sponsor as $spn)
-                        {
+                        foreach ($sponsor as $spn) {
                             $tabungs = DB::table('tbltabungkhas')
-                                    ->join('tblprocess_type', 'tbltabungkhas.process_type_id', 'tblprocess_type.id')
-                                    ->where([
-                                        ['tbltabungkhas.package_id', $spn->package_id],
-                                        ['tbltabungkhas.intake_id', $student->intake]
-                                    ])->select('tbltabungkhas.*', 'tblprocess_type.code');
+                                ->join('tblprocess_type', 'tbltabungkhas.process_type_id', 'tblprocess_type.id')
+                                ->where([
+                                    ['tbltabungkhas.package_id', $spn->package_id],
+                                    ['tbltabungkhas.intake_id', $student->intake]
+                                ])->select('tbltabungkhas.*', 'tblprocess_type.code');
 
-                            if($tabungs->exists())
-                            {
+                            if ($tabungs->exists()) {
                                 $tabung = $tabungs->get();
 
-                                foreach($tabung as $key => $tbg)
-                                {
-                                    if(DB::table('tbltabungkhas_program')->where([['tabungkhas_id', $tbg->id],['program_id', $student->program]])->exists())
-                                    {
+                                foreach ($tabung as $key => $tbg) {
+                                    if (DB::table('tbltabungkhas_program')->where([['tabungkhas_id', $tbg->id], ['program_id', $student->program]])->exists()) {
                                         $ref_no = DB::table('tblref_no')->where('id', 8)->first();
 
                                         DB::table('tblref_no')->where('id', $ref_no->id)->update([
@@ -1798,19 +2320,16 @@ class AR_Controller extends Controller
                     //INSENTIFKHAS
 
                     $insentif = DB::table('tblinsentifkhas')
-                                    ->join('tblprocess_type', 'tblinsentifkhas.process_type_id', 'tblprocess_type.id')
-                                    ->where([
-                                        ['tblinsentifkhas.intake_id', $student->intake]
-                                    ])->select('tblinsentifkhas.*', 'tblprocess_type.code');
+                        ->join('tblprocess_type', 'tblinsentifkhas.process_type_id', 'tblprocess_type.id')
+                        ->where([
+                            ['tblinsentifkhas.intake_id', $student->intake]
+                        ])->select('tblinsentifkhas.*', 'tblprocess_type.code');
 
-                    if($insentif->exists())
-                    {
+                    if ($insentif->exists()) {
                         $insentifs = $insentif->get();
 
-                        foreach($insentifs as $key => $icv)
-                        {
-                            if(DB::table('tblinsentifkhas_program')->where([['insentifkhas_id', $icv->id],['program_id', $student->program]])->exists())
-                            {
+                        foreach ($insentifs as $key => $icv) {
+                            if (DB::table('tblinsentifkhas_program')->where([['insentifkhas_id', $icv->id], ['program_id', $student->program]])->exists()) {
                                 $ref_no = DB::table('tblref_no')->where('id', 8)->first();
 
                                 DB::table('tblref_no')->where('id', $ref_no->id)->update([
@@ -1858,25 +2377,19 @@ class AR_Controller extends Controller
                             }
                         }
                     }
-
                 }
 
                 return $alert;
-
-            }else{
+            } else {
 
                 return ['message' => 'Please add payment charge details first!'];
-
             }
-
-        }else{
+        } else {
 
             $alert = ['message' => 'Success'];
 
             return $alert;
-
         }
-
     }
 
     public function roomIndex()
@@ -1887,7 +2400,6 @@ class AR_Controller extends Controller
         ];
 
         return view('pendaftar_akademik.schedule.room', compact('data'));
-
     }
 
     public function createRoomIndex(Request $request)
@@ -1906,8 +2418,7 @@ class AR_Controller extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        if($request->idS)
-        {
+        if ($request->idS) {
 
             DB::table('tbllecture_room')->where('id', $request->idS)->update([
                 'name' => $request->name,
@@ -1921,8 +2432,7 @@ class AR_Controller extends Controller
             ]);
 
             return redirect()->back()->with('success', 'Room updated successfully');
-
-        }else{
+        } else {
 
             // Insert the data into the database
             DB::table('tbllecture_room')->insert([
@@ -1937,9 +2447,7 @@ class AR_Controller extends Controller
             ]);
 
             return redirect()->back()->with('success', 'Room created successfully');
-
         }
-
     }
 
     public function updateRoomIndex(Request $request)
@@ -1950,7 +2458,6 @@ class AR_Controller extends Controller
         ];
 
         return view('pendaftar_akademik.schedule.getRoom', compact('data'));
-
     }
 
     public function deleteRoomIndex()
@@ -1959,30 +2466,28 @@ class AR_Controller extends Controller
         DB::table('tbllecture_room')->where('id', request()->id)->delete();
 
         return back();
-
     }
 
     public function scheduleTable()
     {
 
-        if(request()->type == 'lct')
-        {
+        if (request()->type == 'lct') {
 
             $id = DB::table('tblevents')
-                    ->join('sessions', 'tblevents.session_id', '=', 'sessions.SessionID')
-                    ->where([
-                        ['tblevents.user_ic', request()->id],
-                        ['sessions.Status', '=', 'ACTIVE']
-                    ])
-                    ->groupBy(
-                        DB::raw('TIME(tblevents.start)'),      // Group by time part of start
-                        DB::raw('TIME(tblevents.end)'),        // Group by time part of end
-                        DB::raw('DAYNAME(tblevents.start)')    // Group by day name (e.g., "Wednesday")
-                    )
-                    ->pluck('tblevents.id'); // Retrieve the ids of grouped rows
+                ->join('sessions', 'tblevents.session_id', '=', 'sessions.SessionID')
+                ->where([
+                    ['tblevents.user_ic', request()->id],
+                    ['sessions.Status', '=', 'ACTIVE']
+                ])
+                ->groupBy(
+                    DB::raw('TIME(tblevents.start)'),      // Group by time part of start
+                    DB::raw('TIME(tblevents.end)'),        // Group by time part of end
+                    DB::raw('DAYNAME(tblevents.start)')    // Group by day name (e.g., "Wednesday")
+                )
+                ->pluck('tblevents.id'); // Retrieve the ids of grouped rows
 
 
-                //dd($id);
+            //dd($id);
 
             $data = [
                 // 'lectureInfo' => DB::table('tbllecture')
@@ -2001,15 +2506,15 @@ class AR_Controller extends Controller
                 'session' => DB::table('sessions')->where('Status', 'ACTIVE')->get(),
                 'lecture_room' => DB::table('tbllecture_room')->get(),
                 'details' => DB::table('user_subjek')
-                             ->join('subjek_structure', 'user_subjek.course_id', 'subjek_structure.courseID')
-                             ->join('sessions', 'user_subjek.session_id', 'sessions.SessionID')
-                             ->where([
-                                ['user_subjek.user_ic', request()->id],
-                                ['sessions.Status', 'ACTIVE']
-                                ])
-                             ->select(DB::raw('SUM(subjek_structure.meeting_hour) AS total_hour'))
-                             ->groupBy('user_subjek.id')
-                             ->get(),
+                    ->join('subjek_structure', 'user_subjek.course_id', 'subjek_structure.courseID')
+                    ->join('sessions', 'user_subjek.session_id', 'sessions.SessionID')
+                    ->where([
+                        ['user_subjek.user_ic', request()->id],
+                        ['sessions.Status', 'ACTIVE']
+                    ])
+                    ->select(DB::raw('SUM(subjek_structure.meeting_hour) AS total_hour'))
+                    ->groupBy('user_subjek.id')
+                    ->get(),
                 // 'used' => DB::table('tblevents')
                 //           ->join('user_subjek', function($join){
                 //             $join->on('tblevents.group_id', 'user_subjek.id');
@@ -2026,70 +2531,61 @@ class AR_Controller extends Controller
                 //           ->get(),
 
                 'used' => DB::table('tblevents')
-                            ->join('sessions', 'tblevents.session_id', '=', 'sessions.SessionID')
-                            ->whereIn('tblevents.id', $id)
-                            ->select(DB::raw('SUM(TIMESTAMPDIFF(HOUR, tblevents.start, tblevents.end)) as total_hours'))
-                            ->get(),
+                    ->join('sessions', 'tblevents.session_id', '=', 'sessions.SessionID')
+                    ->whereIn('tblevents.id', $id)
+                    ->select(DB::raw('SUM(TIMESTAMPDIFF(HOUR, tblevents.start, tblevents.end)) as total_hours'))
+                    ->get(),
                 'time' => DB::table('tblevents_second')->where('user_ic', request()->id)->value('timestamps'),
             ];
 
             //dd($data['used']);
 
             return view('pendaftar_akademik.schedule.schedule', compact('data'));
+        } else {
 
-        }else{
-
-            if(request()->type == 'std')
-            {
+            if (request()->type == 'std') {
 
                 $data = [
                     'studentInfo' => DB::table('students')
-                                    ->join('sessions', 'students.session', 'sessions.SessionID')
-                                    ->where('ic', request()->id)
-                                    ->select('students.*', 'sessions.SessionName AS session')
-                                    ->first(),
+                        ->join('sessions', 'students.session', 'sessions.SessionID')
+                        ->where('ic', request()->id)
+                        ->select('students.*', 'sessions.SessionName AS session')
+                        ->first(),
                 ];
-
-            }elseif(request()->type == 'lcr'){
+            } elseif (request()->type == 'lcr') {
 
                 $data = [
                     'roomInfo' => DB::table('tbllecture_room')->where('id', request()->id)->first(),
                 ];
-
             }
 
             return view('pendaftar_akademik.schedule.schedule2', compact('data'));
-
         }
-
-        
-
     }
 
     public function getSubjectSchedule(Request $request)
     {
 
         $query1 = DB::table('user_subjek')
-                   ->join('subjek', 'user_subjek.course_id', 'subjek.sub_id')
-                   ->where([
-                      ['user_subjek.user_ic', $request->id],
-                      ['user_subjek.session_id', $request->sessionID]
-                   ])
-                   ->select(DB::raw("CONCAT(subjek.course_name, ' - ', ('Kuliah')) AS name"),'subjek.course_code AS code', 'user_subjek.id AS id', DB::raw("'Kuliah' AS Type"));
+            ->join('subjek', 'user_subjek.course_id', 'subjek.sub_id')
+            ->where([
+                ['user_subjek.user_ic', $request->id],
+                ['user_subjek.session_id', $request->sessionID]
+            ])
+            ->select(DB::raw("CONCAT(subjek.course_name, ' - ', ('Kuliah')) AS name"), 'subjek.course_code AS code', 'user_subjek.id AS id', DB::raw("'Kuliah' AS Type"));
 
         $subject = DB::table('user_subjek')
-                   ->join('subjek', 'user_subjek.course_id', 'subjek.sub_id')
-                   ->where([
-                      ['user_subjek.amali_ic', $request->id],
-                      ['user_subjek.session_id', $request->sessionID]
-                   ])
-                   ->unionAll($query1)
-                   ->select(DB::raw("CONCAT(subjek.course_name, ' - ', ('Amali')) AS name"),'subjek.course_code AS code', 'user_subjek.id AS id', DB::raw("'Amali' AS Type"))
-                   ->groupBy('user_subjek.id')
-                   ->get();
+            ->join('subjek', 'user_subjek.course_id', 'subjek.sub_id')
+            ->where([
+                ['user_subjek.amali_ic', $request->id],
+                ['user_subjek.session_id', $request->sessionID]
+            ])
+            ->unionAll($query1)
+            ->select(DB::raw("CONCAT(subjek.course_name, ' - ', ('Amali')) AS name"), 'subjek.course_code AS code', 'user_subjek.id AS id', DB::raw("'Amali' AS Type"))
+            ->groupBy('user_subjek.id')
+            ->get();
 
         return response()->json($subject);
-
     }
 
     public function getGroupSchedule(Request $request)
@@ -2098,31 +2594,28 @@ class AR_Controller extends Controller
         $lecture = DB::table('tbllecture')->where('id', $request->id)->first();
 
         $group = DB::table('student_subjek')
-                 ->where([
-                    ['student_subjek.group_id', $request->groupID]
-                 ])->groupBy('group_name')->get();
+            ->where([
+                ['student_subjek.group_id', $request->groupID]
+            ])->groupBy('group_name')->get();
 
         return response()->json($group);
-
     }
 
     public function fetchEvents()
     {
         $formattedEvents = [];
         $dayOfWeekMap = [1 => 1, 2 => 2, 3 => 3, 4 => 4, 5 => 5, 6 => 6, 7 => 0];
-        
-        if(isset(request()->type) && request()->type == 'std')
-        {
+
+        if (isset(request()->type) && request()->type == 'std') {
             // Student schedule
             $query = null;
-            
-            if(isset(Auth::guard('student')->user()->ic))
-            {
+
+            if (isset(Auth::guard('student')->user()->ic)) {
                 // Using tblevents_second table - optimize with better joins and indexing
-                $query = Tblevent2::join('student_subjek', function($join){
-                        $join->on('tblevents_second.group_id', 'student_subjek.group_id');
-                        $join->on('tblevents_second.group_name', 'student_subjek.group_name');
-                    })
+                $query = Tblevent2::join('student_subjek', function ($join) {
+                    $join->on('tblevents_second.group_id', 'student_subjek.group_id');
+                    $join->on('tblevents_second.group_name', 'student_subjek.group_name');
+                })
                     ->join('sessions', 'student_subjek.sessionid', 'sessions.SessionID')
                     ->join('tbllecture_room', 'tblevents_second.lecture_id', 'tbllecture_room.id')
                     ->join('subjek', 'student_subjek.courseid', 'subjek.sub_id')
@@ -2141,14 +2634,12 @@ class AR_Controller extends Controller
                         'tbllecture_room.name AS room',
                         'sessions.SessionName AS session'
                     );
-            }
-            else
-            {
+            } else {
                 // Using tblevents table - optimize with better joins
-                $query = Tblevent::join('student_subjek', function($join){
-                        $join->on('tblevents.group_id', 'student_subjek.group_id');
-                        $join->on('tblevents.group_name', 'student_subjek.group_name');
-                    })
+                $query = Tblevent::join('student_subjek', function ($join) {
+                    $join->on('tblevents.group_id', 'student_subjek.group_id');
+                    $join->on('tblevents.group_name', 'student_subjek.group_name');
+                })
                     ->join('sessions', 'student_subjek.sessionid', 'sessions.SessionID')
                     ->join('tbllecture_room', 'tblevents.lecture_id', 'tbllecture_room.id')
                     ->join('subjek', 'student_subjek.courseid', 'subjek.sub_id')
@@ -2168,33 +2659,33 @@ class AR_Controller extends Controller
                         'sessions.SessionName AS session'
                     );
             }
-            
+
             // Retrieve events with a limit to improve performance
             $events = $query->limit(100)->get();
-            
+
             if ($events->isEmpty()) {
                 return response()->json([]);
             }
-            
+
             // Optimize by only fetching unique group IDs and names
             $groupIds = $events->pluck('group_id')->unique()->values()->toArray();
             $groupNames = $events->pluck('group_name')->unique()->values()->toArray();
-            
+
             // Get student counts with optimized query
             $studentCounts = DB::table('student_subjek')
                 ->whereIn('group_id', $groupIds)
                 ->whereIn('group_name', $groupNames)
                 ->groupBy('group_id', 'group_name')
                 ->select(
-                    'group_id', 
-                    'group_name', 
+                    'group_id',
+                    'group_name',
                     DB::raw('COUNT(student_ic) AS total_student')
                 )
                 ->get()
-                ->keyBy(function($item) {
+                ->keyBy(function ($item) {
                     return $item->group_id . '-' . $item->group_name;
                 });
-                
+
             // Optimize program info query with indexing hints
             $programInfo = DB::table('student_subjek')
                 ->join('students', 'student_subjek.student_ic', 'students.ic')
@@ -2208,7 +2699,7 @@ class AR_Controller extends Controller
                 )
                 ->distinct() // Add distinct to reduce duplicates
                 ->get();
-                
+
             // Process program data more efficiently
             $programsByGroup = [];
             foreach ($programInfo as $program) {
@@ -2221,23 +2712,23 @@ class AR_Controller extends Controller
                     $programsByGroup[$key][] = $program->progcode;
                 }
             }
-            
+
             // Process programs arrays into strings
             foreach ($programsByGroup as $key => $programs) {
                 $programsByGroup[$key] = implode(', ', $programs);
             }
-            
+
             // Optimize event mapping with Carbon for better date handling
             $formattedEvents = $events->map(function ($event) use ($studentCounts, $programsByGroup, $dayOfWeekMap) {
                 $key = $event->group_id . '-' . $event->group_name;
                 $count = isset($studentCounts[$key]) ? $studentCounts[$key]->total_student : 0;
                 $programs = $programsByGroup[$key] ?? '';
-                
+
                 $carbonStart = Carbon::parse($event->start);
                 $carbonEnd = Carbon::parse($event->end);
                 $dayOfWeek = $carbonStart->format('N');
                 $fullCalendarDayOfWeek = $dayOfWeekMap[$dayOfWeek];
-                
+
                 return [
                     'id' => $event->id,
                     'title' => strtoupper($event->room) . ' (' . $event->session . ')',
@@ -2250,10 +2741,8 @@ class AR_Controller extends Controller
                     'lectInfo' => $event->lecturer
                 ];
             });
-        }
-        elseif(isset(request()->type))
-        {
-            if(Auth::user()->usrtype === 'AR') {
+        } elseif (isset(request()->type)) {
+            if (Auth::user()->usrtype === 'AR') {
                 // Lecture room schedule - optimize with better joins and indexing
                 $events = Tblevent::join('user_subjek', 'tblevents.group_id', 'user_subjek.id')
                     ->join('sessions', 'user_subjek.session_id', 'sessions.SessionID')
@@ -2300,30 +2789,30 @@ class AR_Controller extends Controller
                     ->limit(100) // Add limit to prevent excessive data
                     ->get();
             }
-            
+
             if ($events->isEmpty()) {
                 return response()->json([]);
             }
-            
+
             // Optimize by only fetching unique group IDs and names
             $groupIds = $events->pluck('group_id')->unique()->values()->toArray();
             $groupNames = $events->pluck('group_name')->unique()->values()->toArray();
-            
+
             // Optimize student counts query
             $studentCounts = DB::table('student_subjek')
                 ->whereIn('group_id', $groupIds)
                 ->whereIn('group_name', $groupNames)
                 ->groupBy('group_id', 'group_name')
                 ->select(
-                    'group_id', 
-                    'group_name', 
+                    'group_id',
+                    'group_name',
                     DB::raw('COUNT(student_ic) AS total_student')
                 )
                 ->get()
-                ->keyBy(function($item) {
+                ->keyBy(function ($item) {
                     return $item->group_id . '-' . $item->group_name;
                 });
-                
+
             // Optimize program info query
             $programInfo = DB::table('student_subjek')
                 ->join('students', 'student_subjek.student_ic', 'students.ic')
@@ -2337,7 +2826,7 @@ class AR_Controller extends Controller
                 )
                 ->distinct() // Add distinct to reduce duplicates
                 ->get();
-                
+
             // Process program data more efficiently
             $programsByGroup = [];
             foreach ($programInfo as $program) {
@@ -2350,23 +2839,23 @@ class AR_Controller extends Controller
                     $programsByGroup[$key][] = $program->progcode;
                 }
             }
-            
+
             // Process programs arrays into strings
             foreach ($programsByGroup as $key => $programs) {
                 $programsByGroup[$key] = implode(', ', $programs);
             }
-            
+
             // Optimize event mapping with Carbon for better date handling
             $formattedEvents = $events->map(function ($event) use ($studentCounts, $programsByGroup, $dayOfWeekMap) {
                 $key = $event->group_id . '-' . $event->group_name;
                 $count = isset($studentCounts[$key]) ? $studentCounts[$key]->total_student : 0;
                 $programs = $programsByGroup[$key] ?? '';
-                
+
                 $carbonStart = Carbon::parse($event->start);
                 $carbonEnd = Carbon::parse($event->end);
                 $dayOfWeek = $carbonStart->format('N');
                 $fullCalendarDayOfWeek = $dayOfWeekMap[$dayOfWeek];
-                
+
                 return [
                     'id' => $event->id,
                     'title' => strtoupper($event->room) . ' (' . $event->session . ')',
@@ -2379,53 +2868,51 @@ class AR_Controller extends Controller
                     'lectInfo' => $event->lecturer
                 ];
             });
-        }
-        else
-        {
+        } else {
             // Default schedule (lecturer's schedule) - optimize with better joins and indexing
             $events = Tblevent::join('user_subjek', 'tblevents.group_id', 'user_subjek.id')
-                    ->join('sessions', 'user_subjek.session_id', 'sessions.SessionID')
-                    ->join('tbllecture_room', 'tblevents.lecture_id', 'tbllecture_room.id')
-                    ->join('subjek', 'user_subjek.course_id', 'subjek.sub_id')
-                    ->where('sessions.Status', 'ACTIVE')
-                    ->where('tblevents.user_ic', request()->id)
-                    ->select(
-                        'tblevents.id',
-                        'tblevents.start',
-                        'tblevents.end',
-                        'tblevents.group_id',
-                        'tblevents.group_name',
-                        'subjek.course_code AS code',
-                        'subjek.course_name AS subject',
-                        'tbllecture_room.name AS room',
-                        'sessions.SessionName AS session'
-                    )
-                    ->limit(100) // Add limit to prevent excessive data
-                    ->get();
-                
+                ->join('sessions', 'user_subjek.session_id', 'sessions.SessionID')
+                ->join('tbllecture_room', 'tblevents.lecture_id', 'tbllecture_room.id')
+                ->join('subjek', 'user_subjek.course_id', 'subjek.sub_id')
+                ->where('sessions.Status', 'ACTIVE')
+                ->where('tblevents.user_ic', request()->id)
+                ->select(
+                    'tblevents.id',
+                    'tblevents.start',
+                    'tblevents.end',
+                    'tblevents.group_id',
+                    'tblevents.group_name',
+                    'subjek.course_code AS code',
+                    'subjek.course_name AS subject',
+                    'tbllecture_room.name AS room',
+                    'sessions.SessionName AS session'
+                )
+                ->limit(100) // Add limit to prevent excessive data
+                ->get();
+
             if ($events->isEmpty()) {
                 return response()->json([]);
             }
-            
+
             // Optimize by only fetching unique group IDs and names
             $groupIds = $events->pluck('group_id')->unique()->values()->toArray();
             $groupNames = $events->pluck('group_name')->unique()->values()->toArray();
-            
+
             // Optimize student counts query
             $studentCounts = DB::table('student_subjek')
                 ->whereIn('group_id', $groupIds)
                 ->whereIn('group_name', $groupNames)
                 ->groupBy('group_id', 'group_name')
                 ->select(
-                    'group_id', 
-                    'group_name', 
+                    'group_id',
+                    'group_name',
                     DB::raw('COUNT(student_ic) AS total_student')
                 )
                 ->get()
-                ->keyBy(function($item) {
+                ->keyBy(function ($item) {
                     return $item->group_id . '-' . $item->group_name;
                 });
-                
+
             // Optimize program info query
             $programInfo = DB::table('student_subjek')
                 ->join('students', 'student_subjek.student_ic', 'students.ic')
@@ -2439,7 +2926,7 @@ class AR_Controller extends Controller
                 )
                 ->distinct() // Add distinct to reduce duplicates
                 ->get();
-                
+
             // Process program data more efficiently
             $programsByGroup = [];
             foreach ($programInfo as $program) {
@@ -2452,23 +2939,23 @@ class AR_Controller extends Controller
                     $programsByGroup[$key][] = $program->progcode;
                 }
             }
-            
+
             // Process programs arrays into strings
             foreach ($programsByGroup as $key => $programs) {
                 $programsByGroup[$key] = implode(', ', $programs);
             }
-            
+
             // Optimize event mapping with Carbon for better date handling
             $formattedEvents = $events->map(function ($event) use ($studentCounts, $programsByGroup, $dayOfWeekMap) {
                 $key = $event->group_id . '-' . $event->group_name;
                 $count = isset($studentCounts[$key]) ? $studentCounts[$key]->total_student : 0;
                 $programs = $programsByGroup[$key] ?? '';
-                
+
                 $carbonStart = Carbon::parse($event->start);
                 $carbonEnd = Carbon::parse($event->end);
                 $dayOfWeek = $carbonStart->format('N');
                 $fullCalendarDayOfWeek = $dayOfWeekMap[$dayOfWeek];
-                
+
                 return [
                     'id' => $event->id,
                     'title' => strtoupper($event->room) . ' (' . $event->session . ')',
@@ -2490,40 +2977,40 @@ class AR_Controller extends Controller
         $event = DB::table('tblevents')->where('id', $id)->first();
 
         $students = DB::table('student_subjek')
-                            ->where([
-                                ['group_id', $event->group_id],
-                                ['group_name', $event->group_name]
-                            ])->pluck('student_ic');
+            ->where([
+                ['group_id', $event->group_id],
+                ['group_name', $event->group_name]
+            ])->pluck('student_ic');
 
         $sessions = DB::table('sessions')
-                    ->where('Status', 'ACTIVE')
-                    ->pluck('SessionID')->toArray();
+            ->where('Status', 'ACTIVE')
+            ->pluck('SessionID')->toArray();
 
         $events = DB::table('tblevents')
-                ->join('student_subjek', function($join){
-                    $join->on('tblevents.group_id', 'student_subjek.group_id')
-                         ->on('tblevents.group_name', 'student_subjek.group_name');
-                })
-                ->join('user_subjek', function($join){
-                    $join->on('tblevents.group_id', 'user_subjek.id');
-                })
-                ->where('tblevents.id', '!=', $id)
-                ->whereIn('student_subjek.student_ic', $students)
-                ->WhereIn('tblevents.session_id', $sessions)
-                ->groupBy('tblevents.id')
-                ->select('tblevents.*');
+            ->join('student_subjek', function ($join) {
+                $join->on('tblevents.group_id', 'student_subjek.group_id')
+                    ->on('tblevents.group_name', 'student_subjek.group_name');
+            })
+            ->join('user_subjek', function ($join) {
+                $join->on('tblevents.group_id', 'user_subjek.id');
+            })
+            ->where('tblevents.id', '!=', $id)
+            ->whereIn('student_subjek.student_ic', $students)
+            ->WhereIn('tblevents.session_id', $sessions)
+            ->groupBy('tblevents.id')
+            ->select('tblevents.*');
 
         $events = DB::table('tblevents')
-                ->join('user_subjek', function($join){
-                    $join->on('tblevents.group_id', 'user_subjek.id');
-                })
-                ->where('tblevents.id', '!=', $id)
-                ->where('tblevents.user_ic', $event->user_ic)
-                ->whereIn('tblevents.session_id', $sessions)
-                ->groupBy('tblevents.id')
-                ->unionAll($events)
-                ->select('tblevents.*')
-                ->get();
+            ->join('user_subjek', function ($join) {
+                $join->on('tblevents.group_id', 'user_subjek.id');
+            })
+            ->where('tblevents.id', '!=', $id)
+            ->where('tblevents.user_ic', $event->user_ic)
+            ->whereIn('tblevents.session_id', $sessions)
+            ->groupBy('tblevents.id')
+            ->unionAll($events)
+            ->select('tblevents.*')
+            ->get();
 
         $formattedEvents = $events->map(function ($event) {
 
@@ -2553,7 +3040,7 @@ class AR_Controller extends Controller
         return response()->json($formattedEvents);
     }
 
-    private function roundToNearestHalfHour($carbonInstance) 
+    private function roundToNearestHalfHour($carbonInstance)
     {
         $minute = $carbonInstance->minute;
         if ($minute < 15) {
@@ -2568,7 +3055,7 @@ class AR_Controller extends Controller
     }
 
     public function createEvent(Request $request)
-    {   
+    {
         // Parse the start and end times from the request
         $startTime = $this->roundToNearestHalfHour(Carbon::parse($request->start));
         $endTime = $this->roundToNearestHalfHour(Carbon::parse($request->end));
@@ -2586,21 +3073,18 @@ class AR_Controller extends Controller
         $endTimeOnly = $endTime->format('H:i');
 
         $roomDetails = DB::table('tbllecture_room')
-                       ->where('tbllecture_room.id', $request->roomId)
-                       ->select('tbllecture_room.*')
-                       ->first();
-        
+            ->where('tbllecture_room.id', $request->roomId)
+            ->select('tbllecture_room.*')
+            ->first();
+
         $column = null;
 
-        if($request->groupType == 'Kuliah')
-        {
+        if ($request->groupType == 'Kuliah') {
             $column = 'subjek_structure.meeting_hour AS course_credit';
-
-        }elseif($request->groupType == 'Amali')
-        {
+        } elseif ($request->groupType == 'Amali') {
             $column = 'subjek_structure.amali_hour AS course_credit';
         }
-        
+
         // Run the query only if a valid column is selected
         if ($column) {
             $courseDetails = DB::table('student_subjek')
@@ -2615,41 +3099,41 @@ class AR_Controller extends Controller
         }
 
         $session = DB::table('sessions')
-                   ->where('Status', 'ACTIVE')
-                   ->pluck('SessionID')->toArray();
-                       
- 
-        if(DB::table('tblevents')
-        ->join('user_subjek', 'tblevents.group_id', 'user_subjek.id')
-        ->where('tblevents.lecture_id', $request->roomId)
-        ->whereIn('tblevents.session_id', $session)
-        ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
-        ->where(function ($query) use ($startTimeOnly, $endTimeOnly) {
-            $query->where(function ($query) use ($startTimeOnly) {
-                $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$startTimeOnly])
-                      ->whereRaw('? != TIME(start)', [$startTimeOnly])
-                      ->whereRaw('? != TIME(end)', [$startTimeOnly]);
+            ->where('Status', 'ACTIVE')
+            ->pluck('SessionID')->toArray();
+
+
+        if (DB::table('tblevents')
+            ->join('user_subjek', 'tblevents.group_id', 'user_subjek.id')
+            ->where('tblevents.lecture_id', $request->roomId)
+            ->whereIn('tblevents.session_id', $session)
+            ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
+            ->where(function ($query) use ($startTimeOnly, $endTimeOnly) {
+                $query->where(function ($query) use ($startTimeOnly) {
+                    $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$startTimeOnly])
+                        ->whereRaw('? != TIME(start)', [$startTimeOnly])
+                        ->whereRaw('? != TIME(end)', [$startTimeOnly]);
+                })
+                    ->orWhere(function ($query) use ($endTimeOnly) {
+                        $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$endTimeOnly])
+                            ->whereRaw('? != TIME(start)', [$endTimeOnly])
+                            ->whereRaw('? != TIME(end)', [$endTimeOnly]);
+                    })
+                    ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
+                        $query->whereRaw('? < TIME(start)', [$startTimeOnly])
+                            ->whereRaw('? = TIME(end)', [$endTimeOnly]);
+                    })
+                    ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
+                        $query->whereRaw('? = TIME(start)', [$startTimeOnly])
+                            ->whereRaw('? > TIME(end)', [$endTimeOnly]);
+                    })
+                    ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
+                        $query->whereRaw('? < TIME(start)', [$startTimeOnly])
+                            ->whereRaw('? > TIME(end)', [$endTimeOnly]);
+                    });
             })
-            ->orWhere(function ($query) use ($endTimeOnly) {
-                $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$endTimeOnly])
-                      ->whereRaw('? != TIME(start)', [$endTimeOnly])
-                      ->whereRaw('? != TIME(end)', [$endTimeOnly]);
-            })
-            ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
-                $query->whereRaw('? < TIME(start)', [$startTimeOnly])
-                      ->whereRaw('? = TIME(end)', [$endTimeOnly]);
-            })
-            ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
-                $query->whereRaw('? = TIME(start)', [$startTimeOnly])
-                      ->whereRaw('? > TIME(end)', [$endTimeOnly]);
-            })
-            ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
-                $query->whereRaw('? < TIME(start)', [$startTimeOnly])
-                      ->whereRaw('? > TIME(end)', [$endTimeOnly]);
-            });
-        })  
-        ->exists())
-        {
+            ->exists()
+        ) {
 
             Log::info('Overlap detected for event on:', [
                 'dayOfWeek' => $dayOfWeek,
@@ -2660,16 +3144,14 @@ class AR_Controller extends Controller
             ]);
 
             return response()->json(['error' => 'Time selected is already occupied, please select another time! 1']);
+        } else {
 
-        }else{
+            if ($dayOfWeek == 'Friday') {
 
-            if($dayOfWeek == 'Friday')
-            {
-
-                if(($startTimeOnly <= $rehat3 && $endTimeOnly >= $rehat4) ||
-                ($startTimeOnly >= $rehat3 && $endTimeOnly <= $rehat4) ||
-                ($startTimeOnly <= $rehat3 && $endTimeOnly <= $rehat4 && $endTimeOnly > $rehat3))
-                {
+                if (($startTimeOnly <= $rehat3 && $endTimeOnly >= $rehat4) ||
+                    ($startTimeOnly >= $rehat3 && $endTimeOnly <= $rehat4) ||
+                    ($startTimeOnly <= $rehat3 && $endTimeOnly <= $rehat4 && $endTimeOnly > $rehat3)
+                ) {
 
                     Log::info('Overlap detected for event on:', [
                         'dayOfWeek' => $dayOfWeek,
@@ -2678,19 +3160,17 @@ class AR_Controller extends Controller
                         'overlapStart' => $rehat3,
                         'overlapEnd' => $rehat4,
                     ]);
-        
+
                     return response()->json(['error' => 'Time selected is already occupied, please select another time! 2']);
-
                 }
+            } else {
 
-            }else{
 
-
-                if(($startTimeOnly <= $rehat1 && $endTimeOnly >= $rehat2) ||
-                ($startTimeOnly >= $rehat1 && $endTimeOnly <= $rehat2) ||
-                ($startTimeOnly <= $rehat1 && $endTimeOnly <= $rehat2 && $endTimeOnly > $rehat1) ||
-                ($startTimeOnly >= $rehat1 && $endTimeOnly >= $rehat2 && $startTimeOnly < $rehat2))
-                {
+                if (($startTimeOnly <= $rehat1 && $endTimeOnly >= $rehat2) ||
+                    ($startTimeOnly >= $rehat1 && $endTimeOnly <= $rehat2) ||
+                    ($startTimeOnly <= $rehat1 && $endTimeOnly <= $rehat2 && $endTimeOnly > $rehat1) ||
+                    ($startTimeOnly >= $rehat1 && $endTimeOnly >= $rehat2 && $startTimeOnly < $rehat2)
+                ) {
 
                     Log::info('Overlap detected for event on:', [
                         'dayOfWeek' => $dayOfWeek,
@@ -2699,17 +3179,16 @@ class AR_Controller extends Controller
                         'overlapStart' => $rehat3,
                         'overlapEnd' => $rehat4,
                     ]);
-        
+
                     return response()->json(['error' => 'Time selected is already occupied, please select another time! 3']);
                 }
-
             }
 
             $events = DB::table('tblevents')
-            ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
-            ->where('lecture_id', $request->roomId)
-            ->select('start', 'end')
-            ->get();
+                ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
+                ->where('lecture_id', $request->roomId)
+                ->select('start', 'end')
+                ->get();
 
             $totalHours = 0;
 
@@ -2726,99 +3205,89 @@ class AR_Controller extends Controller
 
             $newTotalHours = $hours2;
 
-            if(($totalHours + $newTotalHours) > $roomDetails->total_hour)
-            {
+            if (($totalHours + $newTotalHours) > $roomDetails->total_hour) {
 
                 return response()->json(['error' => 'Total Hour for ' . $dayOfWeek . ' already exceed ' .  $roomDetails->total_hour . '. Please clear any event and try again!']);
-
-            }else{
+            } else {
 
                 $capacity = DB::table('student_subjek')->where([
-                                ['group_id', $request->groupId],
-                                ['group_name', $request->groupName]
-                            ])
-                            ->select(DB::raw('COUNT(student_subjek.id) AS capacity'))
-                            ->first();
+                    ['group_id', $request->groupId],
+                    ['group_name', $request->groupName]
+                ])
+                    ->select(DB::raw('COUNT(student_subjek.id) AS capacity'))
+                    ->first();
 
-                if($capacity->capacity > $roomDetails->capacity)
-                {
+                if ($capacity->capacity > $roomDetails->capacity) {
 
                     return response()->json(['error' => 'Total student is ' . $capacity->capacity . '. Capacity cannot exceed ' .  $roomDetails->capacity . ', Please try with a different class!']);
-                    
-                }else{
+                } else {
 
                     $credit_hour = DB::table('tblevents')
-                                    ->join('tbllecture', 'tblevents.lecture_id', 'tbllecture.id')
-                                    ->where([
-                                        ['tblevents.user_ic', $request->id],
-                                        ['tblevents.group_id', $request->groupId],
-                                        ['tblevents.group_name', $request->groupName],
-                                        ['tblevents.session_id', $request->session],
-                                        ['tblevents.title', $request->groupType]
-                                    ])->get();
+                        ->join('tbllecture', 'tblevents.lecture_id', 'tbllecture.id')
+                        ->where([
+                            ['tblevents.user_ic', $request->id],
+                            ['tblevents.group_id', $request->groupId],
+                            ['tblevents.group_name', $request->groupName],
+                            ['tblevents.session_id', $request->session],
+                            ['tblevents.title', $request->groupType]
+                        ])->get();
 
                     $totalCredit = 0;
 
-                    foreach($credit_hour as $cr)
-                    {
+                    foreach ($credit_hour as $cr) {
 
                         $start3 = Carbon::parse($cr->start);
                         $end3 = Carbon::parse($cr->end);
                         $hours3 = $end3->diffInHours($start3);
                         $totalCredit += $hours3;
-
                     }
 
-                    if(($totalCredit + $newTotalHours) > $courseDetails->course_credit)
-                    {
+                    if (($totalCredit + $newTotalHours) > $courseDetails->course_credit) {
 
                         return response()->json(['error' => 'Total meeting hour is already at ' . $totalCredit . ' for this subject. Trying to add ' .  $newTotalHours . ' more will exceed ' .  $courseDetails->course_credit . '!']);
-
-                    }else{
+                    } else {
 
                         $students = DB::table('student_subjek')
-                                    ->where([
-                                        ['group_id', $request->groupId],
-                                        ['group_name', $request->groupName]
-                                    ])->pluck('student_ic'); 
+                            ->where([
+                                ['group_id', $request->groupId],
+                                ['group_name', $request->groupName]
+                            ])->pluck('student_ic');
 
-                        if(DB::table('tblevents')
-                        ->join('tbllecture', 'tblevents.lecture_id', 'tbllecture.id')
-                        ->join('student_subjek', function($join){
-                            $join->on('tblevents.group_id', 'student_subjek.group_id');
-                            $join->on('tblevents.group_name', 'student_subjek.group_name');
-                        })
-                        ->whereIn('student_subjek.student_ic', $students)
-                        ->where('tbllecture.session_id', $request->session)
-                        ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
-                        ->where(function ($query) use ($startTimeOnly, $endTimeOnly) {
-                            $query->where(function ($query) use ($startTimeOnly) {
-                                $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$startTimeOnly])
-                                      ->whereRaw('? != TIME(start)', [$startTimeOnly])
-                                      ->whereRaw('? != TIME(end)', [$startTimeOnly]);
+                        if (DB::table('tblevents')
+                            ->join('tbllecture', 'tblevents.lecture_id', 'tbllecture.id')
+                            ->join('student_subjek', function ($join) {
+                                $join->on('tblevents.group_id', 'student_subjek.group_id');
+                                $join->on('tblevents.group_name', 'student_subjek.group_name');
                             })
-                            ->orWhere(function ($query) use ($endTimeOnly) {
-                                $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$endTimeOnly])
-                                      ->whereRaw('? != TIME(start)', [$endTimeOnly])
-                                      ->whereRaw('? != TIME(end)', [$endTimeOnly]);
+                            ->whereIn('student_subjek.student_ic', $students)
+                            ->where('tbllecture.session_id', $request->session)
+                            ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
+                            ->where(function ($query) use ($startTimeOnly, $endTimeOnly) {
+                                $query->where(function ($query) use ($startTimeOnly) {
+                                    $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$startTimeOnly])
+                                        ->whereRaw('? != TIME(start)', [$startTimeOnly])
+                                        ->whereRaw('? != TIME(end)', [$startTimeOnly]);
+                                })
+                                    ->orWhere(function ($query) use ($endTimeOnly) {
+                                        $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$endTimeOnly])
+                                            ->whereRaw('? != TIME(start)', [$endTimeOnly])
+                                            ->whereRaw('? != TIME(end)', [$endTimeOnly]);
+                                    })
+                                    ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
+                                        $query->whereRaw('? <= TIME(start)', [$startTimeOnly])
+                                            ->whereRaw('? >= TIME(end)', [$endTimeOnly]);
+                                    });
                             })
-                            ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
-                                $query->whereRaw('? <= TIME(start)', [$startTimeOnly])
-                                      ->whereRaw('? >= TIME(end)', [$endTimeOnly]);
-                            });
-                        })
-                        ->exists()){
+                            ->exists()
+                        ) {
 
                             return response()->json(['error' => 'Students in this class is already booked with the same period in another room/class!']);
+                        } else {
 
-                        }else{
-
-                            if($startTimeOnly < $roomDetails->start || $endTimeOnly < $roomDetails->start || $startTimeOnly > $roomDetails->end || $endTimeOnly > $roomDetails->end)
-                            {
+                            if ($startTimeOnly < $roomDetails->start || $endTimeOnly < $roomDetails->start || $startTimeOnly > $roomDetails->end || $endTimeOnly > $roomDetails->end) {
 
                                 return response()->json(['error' => 'Event must be created inside the room time range of ' . date('h:i A', (strtotime($roomDetails->start))) . ' - ' . date('h:i A', (strtotime($roomDetails->end)))]);
-
-                            }else{
+                            } else {
 
                                 $event = new Tblevent;
                                 $event->lecture_id = $request->roomId;
@@ -2832,79 +3301,72 @@ class AR_Controller extends Controller
                                 $event->save();
 
                                 $events = Tblevent::join('user_subjek', 'tblevents.group_id', 'user_subjek.id')
-                                        ->join('sessions', 'user_subjek.session_id', 'sessions.SessionID')
-                                        ->join('tbllecture_room', 'tblevents.lecture_id', 'tbllecture_room.id')
-                                        ->join('subjek', 'user_subjek.course_id', 'subjek.sub_id')
-                                        ->where([
-                                            ['sessions.Status', 'ACTIVE']
-                                            ])
-                                        ->where('tblevents.id', $event->id)
-                                        ->groupBy('subjek.sub_id', 'tblevents.id')
-                                        ->select('tblevents.*', 'subjek.course_code AS code' , 'subjek.course_name AS subject', 'tbllecture_room.name AS room', 'sessions.SessionName AS session')->first();
+                                    ->join('sessions', 'user_subjek.session_id', 'sessions.SessionID')
+                                    ->join('tbllecture_room', 'tblevents.lecture_id', 'tbllecture_room.id')
+                                    ->join('subjek', 'user_subjek.course_id', 'subjek.sub_id')
+                                    ->where([
+                                        ['sessions.Status', 'ACTIVE']
+                                    ])
+                                    ->where('tblevents.id', $event->id)
+                                    ->groupBy('subjek.sub_id', 'tblevents.id')
+                                    ->select('tblevents.*', 'subjek.course_code AS code', 'subjek.course_name AS subject', 'tbllecture_room.name AS room', 'sessions.SessionName AS session')->first();
 
                                 $program = DB::table('student_subjek')
-                                            ->join('students', 'student_subjek.student_ic', 'students.ic')
-                                            ->join('tblprogramme', 'students.program', 'tblprogramme.id')
-                                            ->where([
-                                            ['student_subjek.group_id', $events->group_id],
-                                            ['student_subjek.group_name', $events->group_name]
-                                            ])
-                                            ->groupBy('tblprogramme.id')
-                                            ->select('tblprogramme.*')
-                                            ->get();
+                                    ->join('students', 'student_subjek.student_ic', 'students.ic')
+                                    ->join('tblprogramme', 'students.program', 'tblprogramme.id')
+                                    ->where([
+                                        ['student_subjek.group_id', $events->group_id],
+                                        ['student_subjek.group_name', $events->group_name]
+                                    ])
+                                    ->groupBy('tblprogramme.id')
+                                    ->select('tblprogramme.*')
+                                    ->get();
 
                                 // Convert program information into a string
-                                $programInfo = $program->map(function($prog) {
+                                $programInfo = $program->map(function ($prog) {
                                     return $prog->progcode; // Assuming 'progname' is the relevant field you want to display
                                 })->implode(', ');
-        
+
 
                                 $count = DB::table('student_subjek')
-                                        ->where([
+                                    ->where([
                                         ['group_id', $events->group_id],
                                         ['group_name', $events->group_name]
-                                        ])
-                                        ->select(DB::raw('COUNT(student_ic) AS total_student'))
-                                        ->first();
+                                    ])
+                                    ->select(DB::raw('COUNT(student_ic) AS total_student'))
+                                    ->first();
 
                                 return response()->json([
 
                                     'event' => [
                                         'id' => $events->id,
-                                        'title' => strtoupper($events->room) . ' (' . $events->session . ')', 
-                                        'description' => $events->code . ' - ' . $events->subject . ' (' . $events->group_name .') ' . '|' . ' Total Student :' . ' ' .$count->total_student,
+                                        'title' => strtoupper($events->room) . ' (' . $events->session . ')',
+                                        'description' => $events->code . ' - ' . $events->subject . ' (' . $events->group_name . ') ' . '|' . ' Total Student :' . ' ' . $count->total_student,
                                         'start' => $events->start,
                                         'end' => $events->end,
                                         'programInfo' => $programInfo // Add program info to the event object
                                     ]
 
                                 ]);
-                                
                             }
-
                         }
-
                     }
-
                 }
-
             }
-
         }
     }
 
     public function publishEvent(Request $request)
     {
 
-        try{
+        try {
 
             DB::table('tblevents_second')->where('user_ic', $request->id)->delete();
 
             $event = Tblevent::where('user_ic', $request->id)->get();
-    
-            foreach($event as $ev)
-            {
-    
+
+            foreach ($event as $ev) {
+
                 $events = new Tblevent2;
                 $events->lecture_id = $ev->lecture_id;
                 $events->user_ic = $ev->user_ic;
@@ -2915,31 +3377,26 @@ class AR_Controller extends Controller
                 $events->start = $ev->start;
                 $events->end = $ev->end;
                 $events->save();
-    
             }
-    
-            return response()->json(['success' => 'Event has been published successfully!']);
 
-        }catch(Exception $e){
+            return response()->json(['success' => 'Event has been published successfully!']);
+        } catch (Exception $e) {
 
             return response()->json(['error' => 'Error: ' . $e->getMessage()]);
-
         }
-
     }
 
     public function resetEvent(Request $request)
     {
 
-        try{
+        try {
 
             DB::table('tblevents')->where('user_ic', $request->id)->delete();
 
             $event = Tblevent2::where('user_ic', $request->id)->get();
-    
-            foreach($event as $ev)
-            {
-    
+
+            foreach ($event as $ev) {
+
                 $events = new Tblevent;
                 $events->lecture_id = $ev->lecture_id;
                 $events->user_ic = $ev->user_ic;
@@ -2949,33 +3406,28 @@ class AR_Controller extends Controller
                 $events->start = $ev->start;
                 $events->end = $ev->end;
                 $events->save();
-    
             }
-    
-            return response()->json(['success' => 'Event has been resetted successfully!']);
 
-        }catch(Exception $e){
+            return response()->json(['success' => 'Event has been resetted successfully!']);
+        } catch (Exception $e) {
 
             return response()->json(['error' => 'Error: ' . $e->getMessage()]);
-
         }
-
     }
 
     public function logEvent(Request $request)
     {
 
-        try{
+        try {
 
             DB::table('tblevents_log')
-            ->where('user_ic', $request->id)
-            ->whereDate('date', now()->toDateString())
-            ->delete();
+                ->where('user_ic', $request->id)
+                ->whereDate('date', now()->toDateString())
+                ->delete();
 
             $event = Tblevent::where('user_ic', $request->id)->get();
-    
-            foreach($event as $ev)
-            {
+
+            foreach ($event as $ev) {
 
                 DB::table('tblevents_log')->insert([
                     'event_id' => $ev->id,
@@ -2989,89 +3441,80 @@ class AR_Controller extends Controller
                     'end' => $ev->end,
                     'date' => now()->toDateString()
                 ]);
-    
             }
-    
-            return response()->json(['success' => 'Event has been logged successfully!']);
 
-        }catch(Exception $e){
+            return response()->json(['success' => 'Event has been logged successfully!']);
+        } catch (Exception $e) {
 
             return response()->json(['error' => 'Error: ' . $e->getMessage()]);
-
         }
-
     }
 
     public function getLoggedSchedule(Request $request)
     {
 
         $data = DB::table('tblevents_log')
-                ->where([
-                    ['user_ic', $request->id]
-                ])
-                ->groupBy('date')
-                ->get();
+            ->where([
+                ['user_ic', $request->id]
+            ])
+            ->groupBy('date')
+            ->get();
 
         return response()->json($data);
-
     }
 
     public function deleteLogEvent(Request $request)
     {
 
-        try{
+        try {
 
             DB::table('tblevents_log')
-            ->where('user_ic', $request->id)
-            ->where('date', $request->idS)
-            ->delete();
+                ->where('user_ic', $request->id)
+                ->where('date', $request->idS)
+                ->delete();
 
             return response()->json(['success' => 'Event log has been deleted successfully!']);
-
-        }catch(Exception $e){
+        } catch (Exception $e) {
 
             return response()->json(['error' => 'Error: ' . $e->getMessage()]);
-
         }
-
     }
 
     public function viewLogEvent()
     {
 
-            $data = [
-                // 'lectureInfo' => DB::table('tbllecture')
-                //                  ->join('tbllecture_room', 'tbllecture.room_id', 'tbllecture_room.id')
-                //                  ->join('sessions', 'tbllecture.session_id', 'sessions.SessionID')
-                //                  ->select('tbllecture_room.*', 'sessions.SessionName AS session')
-                //                  ->where('tbllecture.id', request()->id)
-                //                  ->first(),
-                // 'totalBooking' => DB::table('tblevents')->where('lecture_id', request()->id)
-                //                   ->select(DB::raw('COUNT(tblevents.id) AS total_booking'))
-                //                   ->first(),
-                // 'lecturer' => DB::table('users')
-                //               ->whereIn('usrtype', ['LCT', 'PL', 'AO'])
-                //               ->get(),
-                'lecturerInfo' => DB::table('users')->where('ic', request()->id)->first(),
-                'session' => DB::table('sessions')->where('Status', 'ACTIVE')->get(),
-                'lecture_room' => DB::table('tbllecture_room')->get(),
-                'details' => DB::table('user_subjek')
-                             ->join('subjek_structure', 'user_subjek.course_id', 'subjek_structure.courseID')
-                             ->join('sessions', 'user_subjek.session_id', 'sessions.SessionID')
-                             ->where([
-                                ['user_subjek.user_ic', request()->id],
-                                ['sessions.Status', 'ACTIVE']
-                                ])
-                             ->select(DB::raw('SUM(subjek_structure.meeting_hour) AS total_hour'))
-                             ->groupBy('user_subjek.id')
-                             ->get(),
-                'time' => DB::table('tblevents_second')->where('user_ic', request()->id)->value('timestamps'),
-            ];
+        $data = [
+            // 'lectureInfo' => DB::table('tbllecture')
+            //                  ->join('tbllecture_room', 'tbllecture.room_id', 'tbllecture_room.id')
+            //                  ->join('sessions', 'tbllecture.session_id', 'sessions.SessionID')
+            //                  ->select('tbllecture_room.*', 'sessions.SessionName AS session')
+            //                  ->where('tbllecture.id', request()->id)
+            //                  ->first(),
+            // 'totalBooking' => DB::table('tblevents')->where('lecture_id', request()->id)
+            //                   ->select(DB::raw('COUNT(tblevents.id) AS total_booking'))
+            //                   ->first(),
+            // 'lecturer' => DB::table('users')
+            //               ->whereIn('usrtype', ['LCT', 'PL', 'AO'])
+            //               ->get(),
+            'lecturerInfo' => DB::table('users')->where('ic', request()->id)->first(),
+            'session' => DB::table('sessions')->where('Status', 'ACTIVE')->get(),
+            'lecture_room' => DB::table('tbllecture_room')->get(),
+            'details' => DB::table('user_subjek')
+                ->join('subjek_structure', 'user_subjek.course_id', 'subjek_structure.courseID')
+                ->join('sessions', 'user_subjek.session_id', 'sessions.SessionID')
+                ->where([
+                    ['user_subjek.user_ic', request()->id],
+                    ['sessions.Status', 'ACTIVE']
+                ])
+                ->select(DB::raw('SUM(subjek_structure.meeting_hour) AS total_hour'))
+                ->groupBy('user_subjek.id')
+                ->get(),
+            'time' => DB::table('tblevents_second')->where('user_ic', request()->id)->value('timestamps'),
+        ];
 
-            //dd($data['used']);
+        //dd($data['used']);
 
-            return view('pendaftar_akademik.schedule.schedule3', compact('data'));
-
+        return view('pendaftar_akademik.schedule.schedule3', compact('data'));
     }
 
     public function fetchLogEvent(Request $request)
@@ -3084,39 +3527,39 @@ class AR_Controller extends Controller
         //        ->pluck('event_id');
 
         $events = DB::table('tblevents_log')->join('user_subjek', 'tblevents_log.group_id', 'user_subjek.id')
-                ->join('sessions', 'user_subjek.session_id', 'sessions.SessionID')
-                ->join('tbllecture_room', 'tblevents_log.lecture_id', 'tbllecture_room.id')
-                ->join('subjek', 'user_subjek.course_id', 'subjek.sub_id')
-                ->where([
-                    ['tblevents_log.date', $request->idS]
-                    ])
-                ->where('tblevents_log.user_ic', $request->id)
-                ->groupBy('subjek.sub_id', 'tblevents_log.id')
-                ->select('tblevents_log.*', 'subjek.course_code AS code' , 'subjek.course_name AS subject', 'tbllecture_room.name AS room', 'sessions.SessionName AS session')->get();
+            ->join('sessions', 'user_subjek.session_id', 'sessions.SessionID')
+            ->join('tbllecture_room', 'tblevents_log.lecture_id', 'tbllecture_room.id')
+            ->join('subjek', 'user_subjek.course_id', 'subjek.sub_id')
+            ->where([
+                ['tblevents_log.date', $request->idS]
+            ])
+            ->where('tblevents_log.user_ic', $request->id)
+            ->groupBy('subjek.sub_id', 'tblevents_log.id')
+            ->select('tblevents_log.*', 'subjek.course_code AS code', 'subjek.course_name AS subject', 'tbllecture_room.name AS room', 'sessions.SessionName AS session')->get();
 
         $formattedEvents = $events->map(function ($event) {
 
             $count = DB::table('student_subjek')
-                    ->where([
+                ->where([
                     ['group_id', $event->group_id],
                     ['group_name', $event->group_name]
-                    ])
-                    ->select(DB::raw('COUNT(student_ic) AS total_student'))
-                    ->first();
+                ])
+                ->select(DB::raw('COUNT(student_ic) AS total_student'))
+                ->first();
 
             $program = DB::table('student_subjek')
-                        ->join('students', 'student_subjek.student_ic', 'students.ic')
-                        ->join('tblprogramme', 'students.program', 'tblprogramme.id')
-                        ->where([
-                        ['student_subjek.group_id', $event->group_id],
-                        ['student_subjek.group_name', $event->group_name]
-                        ])
-                        ->groupBy('tblprogramme.id')
-                        ->select('tblprogramme.*')
-                        ->get();
+                ->join('students', 'student_subjek.student_ic', 'students.ic')
+                ->join('tblprogramme', 'students.program', 'tblprogramme.id')
+                ->where([
+                    ['student_subjek.group_id', $event->group_id],
+                    ['student_subjek.group_name', $event->group_name]
+                ])
+                ->groupBy('tblprogramme.id')
+                ->select('tblprogramme.*')
+                ->get();
 
             // Convert program information into a string
-            $programInfo = $program->map(function($prog) {
+            $programInfo = $program->map(function ($prog) {
                 return $prog->progcode; // Assuming 'progname' is the relevant field you want to display
             })->implode(', ');
 
@@ -3150,424 +3593,424 @@ class AR_Controller extends Controller
     }
 
     /**
- * Update an existing event in the timetable system
- * 
- * @param Request $request
- * @param int $id Event ID to update
- * @return JsonResponse
- */
-public function updateEvent(Request $request, $id)
-{
-    $event = DB::table('tblevents')->where('id', $id)->first();
-    if (!$event) {
-        return response()->json(['error' => 'Event not found'], 404);
-    }
-
-    // Parse time data
-    $timeData = $this->parseTimeData($request);
-    extract($timeData); // Creates $startTime, $endTime, $dayOfWeek, $startTimeOnly, $endTimeOnly
-
-    // Check all constraints before updating
-    $constraintValidations = [
-        $this->validateRoomAvailability($id, $event->lecture_id, $dayOfWeek, $startTimeOnly, $endTimeOnly),
-        $this->validateLecturerAvailability($id, $event->user_ic, $dayOfWeek, $startTimeOnly, $endTimeOnly),
-        $this->validateBreakTimeConflict($dayOfWeek, $startTimeOnly, $endTimeOnly),
-        $this->validateCreditHourLimit($id, $event, $request->start, $request->end),
-        $this->validateStudentScheduleConflicts($id, $event, $dayOfWeek, $startTimeOnly, $endTimeOnly)
-    ];
-
-    // Check if any constraint validation returned an error
-    foreach ($constraintValidations as $validation) {
-        if ($validation !== true) {
-            return $validation; // Return the error response
+     * Update an existing event in the timetable system
+     * 
+     * @param Request $request
+     * @param int $id Event ID to update
+     * @return JsonResponse
+     */
+    public function updateEvent(Request $request, $id)
+    {
+        $event = DB::table('tblevents')->where('id', $id)->first();
+        if (!$event) {
+            return response()->json(['error' => 'Event not found'], 404);
         }
-    }
 
-    // All validations passed, update the event
-    $eventModel = Tblevent::find($id);
-    $eventModel->start = $request->start;
-    $eventModel->end = $request->end;
-    $eventModel->save();
+        // Parse time data
+        $timeData = $this->parseTimeData($request);
+        extract($timeData); // Creates $startTime, $endTime, $dayOfWeek, $startTimeOnly, $endTimeOnly
 
-    return response()->json(['message' => 'Event updated successfully']);
-}
+        // Check all constraints before updating
+        $constraintValidations = [
+            $this->validateRoomAvailability($id, $event->lecture_id, $dayOfWeek, $startTimeOnly, $endTimeOnly),
+            $this->validateLecturerAvailability($id, $event->user_ic, $dayOfWeek, $startTimeOnly, $endTimeOnly),
+            $this->validateBreakTimeConflict($dayOfWeek, $startTimeOnly, $endTimeOnly),
+            $this->validateCreditHourLimit($id, $event, $request->start, $request->end),
+            $this->validateStudentScheduleConflicts($id, $event, $dayOfWeek, $startTimeOnly, $endTimeOnly)
+        ];
 
-/**
- * Update an event with additional title modifications
- * 
- * @param Request $request
- * @param int $id Event ID to update
- * @return JsonResponse
- */
-public function updateEvent2(Request $request, $id)
-{
-    $event = DB::table('tblevents')->where('id', $id)->first();
-    if (!$event) {
-        return response()->json(['error' => 'Event not found'], 404);
-    }
-
-    // Parse time data
-    $timeData = $this->parseTimeData($request);
-    extract($timeData); // Creates $startTime, $endTime, $dayOfWeek, $startTimeOnly, $endTimeOnly
-
-    // Check all constraints before updating
-    $constraintValidations = [
-        $this->validateRoomAvailability($id, $event->lecture_id, $dayOfWeek, $startTimeOnly, $endTimeOnly),
-        $this->validateLecturerAvailability($id, $event->user_ic, $dayOfWeek, $startTimeOnly, $endTimeOnly),
-        $this->validateBreakTimeConflict($dayOfWeek, $startTimeOnly, $endTimeOnly),
-        $this->validateCreditHourLimit($id, $event, $request->start, $request->end),
-        $this->validateStudentScheduleConflicts($id, $event, $dayOfWeek, $startTimeOnly, $endTimeOnly)
-    ];
-
-    // Check if any constraint validation returned an error
-    foreach ($constraintValidations as $validation) {
-        if ($validation !== true) {
-            return $validation; // Return the error response
+        // Check if any constraint validation returned an error
+        foreach ($constraintValidations as $validation) {
+            if ($validation !== true) {
+                return $validation; // Return the error response
+            }
         }
+
+        // All validations passed, update the event
+        $eventModel = Tblevent::find($id);
+        $eventModel->start = $request->start;
+        $eventModel->end = $request->end;
+        $eventModel->save();
+
+        return response()->json(['message' => 'Event updated successfully']);
     }
 
-    // All validations passed, update the event with title
-    $eventModel = Tblevent::find($id);
-    $eventModel->title = $request->input('title');
-    $eventModel->start = $request->start;
-    $eventModel->end = $request->end;
-    $eventModel->save();
+    /**
+     * Update an event with additional title modifications
+     * 
+     * @param Request $request
+     * @param int $id Event ID to update
+     * @return JsonResponse
+     */
+    public function updateEvent2(Request $request, $id)
+    {
+        $event = DB::table('tblevents')->where('id', $id)->first();
+        if (!$event) {
+            return response()->json(['error' => 'Event not found'], 404);
+        }
 
-    return response()->json(['status' => 'success']);
-}
+        // Parse time data
+        $timeData = $this->parseTimeData($request);
+        extract($timeData); // Creates $startTime, $endTime, $dayOfWeek, $startTimeOnly, $endTimeOnly
 
-/**
- * Parse time-related data from the request
- * 
- * @param Request $request
- * @return array
- */
-private function parseTimeData(Request $request)
-{
-    $startTime = Carbon::parse($request->start);
-    $endTime = Carbon::parse($request->end);
-    $dayOfWeek = $startTime->format('l');
-    $startTimeOnly = $startTime->format('H:i:s');
-    $endTimeOnly = $endTime->format('H:i:s');
+        // Check all constraints before updating
+        $constraintValidations = [
+            $this->validateRoomAvailability($id, $event->lecture_id, $dayOfWeek, $startTimeOnly, $endTimeOnly),
+            $this->validateLecturerAvailability($id, $event->user_ic, $dayOfWeek, $startTimeOnly, $endTimeOnly),
+            $this->validateBreakTimeConflict($dayOfWeek, $startTimeOnly, $endTimeOnly),
+            $this->validateCreditHourLimit($id, $event, $request->start, $request->end),
+            $this->validateStudentScheduleConflicts($id, $event, $dayOfWeek, $startTimeOnly, $endTimeOnly)
+        ];
 
-    return [
-        'startTime' => $startTime,
-        'endTime' => $endTime,
-        'dayOfWeek' => $dayOfWeek,
-        'startTimeOnly' => $startTimeOnly,
-        'endTimeOnly' => $endTimeOnly
-    ];
-}
+        // Check if any constraint validation returned an error
+        foreach ($constraintValidations as $validation) {
+            if ($validation !== true) {
+                return $validation; // Return the error response
+            }
+        }
 
-/**
- * Validate if the room is available at the specified time
- * 
- * @param int $eventId
- * @param int $lectureId
- * @param string $dayOfWeek
- * @param string $startTimeOnly
- * @param string $endTimeOnly
- * @return bool|JsonResponse True if valid, JsonResponse with error if invalid
- */
-private function validateRoomAvailability($eventId, $lectureId, $dayOfWeek, $startTimeOnly, $endTimeOnly)
-{
-    $session = $this->getActiveSessions();
+        // All validations passed, update the event with title
+        $eventModel = Tblevent::find($id);
+        $eventModel->title = $request->input('title');
+        $eventModel->start = $request->start;
+        $eventModel->end = $request->end;
+        $eventModel->save();
 
-    $roomConflictExists = DB::table('tblevents')
-        ->join('user_subjek', 'tblevents.group_id', 'user_subjek.id')
-        ->where('tblevents.id', '!=', $eventId)
-        ->where('tblevents.lecture_id', $lectureId)
-        ->whereIn('tblevents.session_id', $session)
-        ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
-        ->where(function ($query) use ($startTimeOnly, $endTimeOnly) {
-            $this->applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly);
-        })
-        ->exists();
-
-    if ($roomConflictExists) {
-        return response()->json(['error' => 'Time selected is already occupied in the same room. Please select another time!']);
+        return response()->json(['status' => 'success']);
     }
 
-    return true;
-}
+    /**
+     * Parse time-related data from the request
+     * 
+     * @param Request $request
+     * @return array
+     */
+    private function parseTimeData(Request $request)
+    {
+        $startTime = Carbon::parse($request->start);
+        $endTime = Carbon::parse($request->end);
+        $dayOfWeek = $startTime->format('l');
+        $startTimeOnly = $startTime->format('H:i:s');
+        $endTimeOnly = $endTime->format('H:i:s');
 
-/**
- * Validate if the lecturer is available at the specified time
- * 
- * @param int $eventId
- * @param string $lecturerIc
- * @param string $dayOfWeek
- * @param string $startTimeOnly
- * @param string $endTimeOnly
- * @return bool|JsonResponse True if valid, JsonResponse with error if invalid
- */
-private function validateLecturerAvailability($eventId, $lecturerIc, $dayOfWeek, $startTimeOnly, $endTimeOnly)
-{
-    $session = $this->getActiveSessions();
-
-    $lecturerConflictExists = DB::table('tblevents')
-        ->join('user_subjek', 'tblevents.group_id', 'user_subjek.id')
-        ->where('tblevents.user_ic', $lecturerIc)
-        ->where('tblevents.id', '!=', $eventId)
-        ->whereIn('tblevents.session_id', $session)
-        ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
-        ->where(function ($query) use ($startTimeOnly, $endTimeOnly) {
-            $this->applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly);
-        })
-        ->exists();
-
-    if ($lecturerConflictExists) {
-        return response()->json(['error' => 'Time selected is already occupied by the same lecturer. Please select another time!']);
-    }
-
-    return true;
-}
-
-/**
- * Validate that the time doesn't conflict with break times
- * 
- * @param string $dayOfWeek
- * @param string $startTimeOnly
- * @param string $endTimeOnly
- * @return bool|JsonResponse True if valid, JsonResponse with error if invalid
- */
-private function validateBreakTimeConflict($dayOfWeek, $startTimeOnly, $endTimeOnly)
-{
-    // Define break times
-    $breakTimes = [
-        'regular' => ['start' => '13:15:00', 'end' => '14:15:00'],
-        'friday' => ['start' => '12:30:00', 'end' => '14:30:00']
-    ];
-
-    if ($dayOfWeek == 'Friday') {
-        $rehatStart = $breakTimes['friday']['start'];
-        $rehatEnd = $breakTimes['friday']['end'];
-    } else {
-        $rehatStart = $breakTimes['regular']['start'];
-        $rehatEnd = $breakTimes['regular']['end'];
-    }
-
-    $hasConflict = ($startTimeOnly <= $rehatStart && $endTimeOnly >= $rehatEnd) ||
-                   ($startTimeOnly >= $rehatStart && $startTimeOnly < $rehatEnd) ||
-                   ($endTimeOnly > $rehatStart && $endTimeOnly <= $rehatEnd) ||
-                   ($startTimeOnly <= $rehatStart && $endTimeOnly > $rehatStart && $endTimeOnly <= $rehatEnd);
-
-    if ($hasConflict) {
-        Log::info('Break time overlap detected:', [
+        return [
+            'startTime' => $startTime,
+            'endTime' => $endTime,
             'dayOfWeek' => $dayOfWeek,
-            'startTime' => $startTimeOnly,
-            'endTime' => $endTimeOnly,
-            'breakStart' => $rehatStart,
-            'breakEnd' => $rehatEnd,
-        ]);
-
-        return response()->json(['error' => 'Time selected conflicts with break time. Please select another time!']);
+            'startTimeOnly' => $startTimeOnly,
+            'endTimeOnly' => $endTimeOnly
+        ];
     }
 
-    return true;
-}
+    /**
+     * Validate if the room is available at the specified time
+     * 
+     * @param int $eventId
+     * @param int $lectureId
+     * @param string $dayOfWeek
+     * @param string $startTimeOnly
+     * @param string $endTimeOnly
+     * @return bool|JsonResponse True if valid, JsonResponse with error if invalid
+     */
+    private function validateRoomAvailability($eventId, $lectureId, $dayOfWeek, $startTimeOnly, $endTimeOnly)
+    {
+        $session = $this->getActiveSessions();
 
-/**
- * Validate that the credit hour limit won't be exceeded
- * 
- * @param int $eventId
- * @param object $event
- * @param string $startTime
- * @param string $endTime
- * @return bool|JsonResponse True if valid, JsonResponse with error if invalid
- */
-private function validateCreditHourLimit($eventId, $event, $startTime, $endTime)
-{
-    $courseDetails = $this->getCourseDetails($event);
-    if (!$courseDetails) {
-        // If course details can't be found, we'll assume there's no credit hour limit
+        $roomConflictExists = DB::table('tblevents')
+            ->join('user_subjek', 'tblevents.group_id', 'user_subjek.id')
+            ->where('tblevents.id', '!=', $eventId)
+            ->where('tblevents.lecture_id', $lectureId)
+            ->whereIn('tblevents.session_id', $session)
+            ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
+            ->where(function ($query) use ($startTimeOnly, $endTimeOnly) {
+                $this->applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly);
+            })
+            ->exists();
+
+        if ($roomConflictExists) {
+            return response()->json(['error' => 'Time selected is already occupied in the same room. Please select another time!']);
+        }
+
         return true;
     }
 
-    // Calculate total credit hours used for this course
-    $creditHours = DB::table('tblevents')
-        ->where([
-            ['tblevents.user_ic', $event->user_ic],
-            ['tblevents.group_id', $event->group_id],
-            ['tblevents.group_name', $event->group_name],
-            ['tblevents.session_id', $event->session_id],
-            ['tblevents.title', $event->title],
-            ['tblevents.id', '!=', $eventId]
-        ])->get();
+    /**
+     * Validate if the lecturer is available at the specified time
+     * 
+     * @param int $eventId
+     * @param string $lecturerIc
+     * @param string $dayOfWeek
+     * @param string $startTimeOnly
+     * @param string $endTimeOnly
+     * @return bool|JsonResponse True if valid, JsonResponse with error if invalid
+     */
+    private function validateLecturerAvailability($eventId, $lecturerIc, $dayOfWeek, $startTimeOnly, $endTimeOnly)
+    {
+        $session = $this->getActiveSessions();
 
-    $totalCredit = 0;
-    foreach ($creditHours as $credit) {
-        $creditStart = Carbon::parse($credit->start);
-        $creditEnd = Carbon::parse($credit->end);
-        $totalCredit += $creditEnd->diffInHours($creditStart);
+        $lecturerConflictExists = DB::table('tblevents')
+            ->join('user_subjek', 'tblevents.group_id', 'user_subjek.id')
+            ->where('tblevents.user_ic', $lecturerIc)
+            ->where('tblevents.id', '!=', $eventId)
+            ->whereIn('tblevents.session_id', $session)
+            ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
+            ->where(function ($query) use ($startTimeOnly, $endTimeOnly) {
+                $this->applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly);
+            })
+            ->exists();
+
+        if ($lecturerConflictExists) {
+            return response()->json(['error' => 'Time selected is already occupied by the same lecturer. Please select another time!']);
+        }
+
+        return true;
     }
 
-    // Calculate new hours being added
-    $newStart = Carbon::parse($startTime);
-    $newEnd = Carbon::parse($endTime);
-    $newHours = $newEnd->diffInHours($newStart);
+    /**
+     * Validate that the time doesn't conflict with break times
+     * 
+     * @param string $dayOfWeek
+     * @param string $startTimeOnly
+     * @param string $endTimeOnly
+     * @return bool|JsonResponse True if valid, JsonResponse with error if invalid
+     */
+    private function validateBreakTimeConflict($dayOfWeek, $startTimeOnly, $endTimeOnly)
+    {
+        // Define break times
+        $breakTimes = [
+            'regular' => ['start' => '13:15:00', 'end' => '14:15:00'],
+            'friday' => ['start' => '12:30:00', 'end' => '14:30:00']
+        ];
 
-    // Check if total will exceed limit
-    if (($totalCredit + $newHours) > $courseDetails->course_credit) {
-        return response()->json([
-            'error' => "Total meeting hour is already at {$totalCredit} for this subject. " .
-                      "Adding {$newHours} more will exceed {$courseDetails->course_credit}!"
-        ]);
+        if ($dayOfWeek == 'Friday') {
+            $rehatStart = $breakTimes['friday']['start'];
+            $rehatEnd = $breakTimes['friday']['end'];
+        } else {
+            $rehatStart = $breakTimes['regular']['start'];
+            $rehatEnd = $breakTimes['regular']['end'];
+        }
+
+        $hasConflict = ($startTimeOnly <= $rehatStart && $endTimeOnly >= $rehatEnd) ||
+            ($startTimeOnly >= $rehatStart && $startTimeOnly < $rehatEnd) ||
+            ($endTimeOnly > $rehatStart && $endTimeOnly <= $rehatEnd) ||
+            ($startTimeOnly <= $rehatStart && $endTimeOnly > $rehatStart && $endTimeOnly <= $rehatEnd);
+
+        if ($hasConflict) {
+            Log::info('Break time overlap detected:', [
+                'dayOfWeek' => $dayOfWeek,
+                'startTime' => $startTimeOnly,
+                'endTime' => $endTimeOnly,
+                'breakStart' => $rehatStart,
+                'breakEnd' => $rehatEnd,
+            ]);
+
+            return response()->json(['error' => 'Time selected conflicts with break time. Please select another time!']);
+        }
+
+        return true;
     }
 
-    return true;
-}
+    /**
+     * Validate that the credit hour limit won't be exceeded
+     * 
+     * @param int $eventId
+     * @param object $event
+     * @param string $startTime
+     * @param string $endTime
+     * @return bool|JsonResponse True if valid, JsonResponse with error if invalid
+     */
+    private function validateCreditHourLimit($eventId, $event, $startTime, $endTime)
+    {
+        $courseDetails = $this->getCourseDetails($event);
+        if (!$courseDetails) {
+            // If course details can't be found, we'll assume there's no credit hour limit
+            return true;
+        }
 
-/**
- * Validate that there are no student schedule conflicts
- * 
- * @param int $eventId
- * @param object $event
- * @param string $dayOfWeek
- * @param string $startTimeOnly
- * @param string $endTimeOnly
- * @return bool|JsonResponse True if valid, JsonResponse with error if invalid
- */
-private function validateStudentScheduleConflicts($eventId, $event, $dayOfWeek, $startTimeOnly, $endTimeOnly)
-{
-    $session = $this->getActiveSessions();
-    
-    // Get all students in this group
-    $students = DB::table('student_subjek')
-        ->where([
-            ['group_id', $event->group_id],
-            ['group_name', $event->group_name]
-        ])->pluck('student_ic');
+        // Calculate total credit hours used for this course
+        $creditHours = DB::table('tblevents')
+            ->where([
+                ['tblevents.user_ic', $event->user_ic],
+                ['tblevents.group_id', $event->group_id],
+                ['tblevents.group_name', $event->group_name],
+                ['tblevents.session_id', $event->session_id],
+                ['tblevents.title', $event->title],
+                ['tblevents.id', '!=', $eventId]
+            ])->get();
 
-    // Check if any of these students have conflicts
-    $conflictingStudents = DB::table('tblevents')
-        ->join('student_subjek', function($join) {
-            $join->on('tblevents.group_id', 'student_subjek.group_id')
-                ->on('tblevents.group_name', 'student_subjek.group_name');
-        })
-        ->join('students', 'student_subjek.student_ic', 'students.ic')
-        ->where('tblevents.id', '!=', $eventId)
-        ->whereIn('session_id', $session)
-        ->whereIn('student_subjek.student_ic', $students)
-        ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
-        ->where(function ($query) use ($startTimeOnly, $endTimeOnly) {
-            $this->applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly);
-        })
-        ->select('students.no_matric')
-        ->distinct()
-        ->get();
+        $totalCredit = 0;
+        foreach ($creditHours as $credit) {
+            $creditStart = Carbon::parse($credit->start);
+            $creditEnd = Carbon::parse($credit->end);
+            $totalCredit += $creditEnd->diffInHours($creditStart);
+        }
 
-    if ($conflictingStudents->count() > 0) {
-        return response()->json([
-            'error' => 'Students in this class are already booked with the same period in another room/class!',
-            'conflicting_students' => $conflictingStudents
-        ]);
+        // Calculate new hours being added
+        $newStart = Carbon::parse($startTime);
+        $newEnd = Carbon::parse($endTime);
+        $newHours = $newEnd->diffInHours($newStart);
+
+        // Check if total will exceed limit
+        if (($totalCredit + $newHours) > $courseDetails->course_credit) {
+            return response()->json([
+                'error' => "Total meeting hour is already at {$totalCredit} for this subject. " .
+                    "Adding {$newHours} more will exceed {$courseDetails->course_credit}!"
+            ]);
+        }
+
+        return true;
     }
 
-    return true;
-}
+    /**
+     * Validate that there are no student schedule conflicts
+     * 
+     * @param int $eventId
+     * @param object $event
+     * @param string $dayOfWeek
+     * @param string $startTimeOnly
+     * @param string $endTimeOnly
+     * @return bool|JsonResponse True if valid, JsonResponse with error if invalid
+     */
+    private function validateStudentScheduleConflicts($eventId, $event, $dayOfWeek, $startTimeOnly, $endTimeOnly)
+    {
+        $session = $this->getActiveSessions();
 
-/**
- * Get course details including credit hours
- * 
- * @param object $event
- * @return object|null
- */
-private function getCourseDetails($event)
-{
-    $column = $this->determineCreditHourColumn($event);
-    
-    if (!$column) {
+        // Get all students in this group
+        $students = DB::table('student_subjek')
+            ->where([
+                ['group_id', $event->group_id],
+                ['group_name', $event->group_name]
+            ])->pluck('student_ic');
+
+        // Check if any of these students have conflicts
+        $conflictingStudents = DB::table('tblevents')
+            ->join('student_subjek', function ($join) {
+                $join->on('tblevents.group_id', 'student_subjek.group_id')
+                    ->on('tblevents.group_name', 'student_subjek.group_name');
+            })
+            ->join('students', 'student_subjek.student_ic', 'students.ic')
+            ->where('tblevents.id', '!=', $eventId)
+            ->whereIn('session_id', $session)
+            ->whereIn('student_subjek.student_ic', $students)
+            ->whereRaw('DAYNAME(start) = ?', [$dayOfWeek])
+            ->where(function ($query) use ($startTimeOnly, $endTimeOnly) {
+                $this->applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly);
+            })
+            ->select('students.no_matric')
+            ->distinct()
+            ->get();
+
+        if ($conflictingStudents->count() > 0) {
+            return response()->json([
+                'error' => 'Students in this class are already booked with the same period in another room/class!',
+                'conflicting_students' => $conflictingStudents
+            ]);
+        }
+
+        return true;
+    }
+
+    /**
+     * Get course details including credit hours
+     * 
+     * @param object $event
+     * @return object|null
+     */
+    private function getCourseDetails($event)
+    {
+        $column = $this->determineCreditHourColumn($event);
+
+        if (!$column) {
+            return null;
+        }
+
+        return DB::table('student_subjek')
+            ->join('subjek', 'student_subjek.courseid', '=', 'subjek.sub_id')
+            ->join('subjek_structure', 'subjek.sub_id', '=', 'subjek_structure.courseID')
+            ->where([
+                ['group_id', '=', $event->group_id],
+                ['group_name', '=', $event->group_name]
+            ])
+            ->select(DB::raw($column))
+            ->first();
+    }
+
+    /**
+     * Determine which column to use for credit hour based on event
+     * 
+     * @param object $event
+     * @return string|null
+     */
+    private function determineCreditHourColumn($event)
+    {
+        if ($event->title == null) {
+            if (DB::table('user_subjek')->where([
+                'user_ic' => $event->user_ic,
+                'id' => $event->group_id
+            ])->exists()) {
+                return 'subjek_structure.meeting_hour AS course_credit';
+            } elseif (DB::table('user_subjek')->where([
+                'amali_ic' => $event->user_ic,
+                'id' => $event->group_id
+            ])->exists()) {
+                return 'subjek_structure.amali_hour AS course_credit';
+            }
+        } else {
+            if ($event->title == 'Kuliah') {
+                return 'subjek_structure.meeting_hour AS course_credit';
+            } elseif ($event->title == 'Amali') {
+                return 'subjek_structure.amali_hour AS course_credit';
+            }
+        }
+
         return null;
     }
-    
-    return DB::table('student_subjek')
-        ->join('subjek', 'student_subjek.courseid', '=', 'subjek.sub_id')
-        ->join('subjek_structure', 'subjek.sub_id', '=', 'subjek_structure.courseID')
-        ->where([
-            ['group_id', '=', $event->group_id],
-            ['group_name', '=', $event->group_name]
-        ])
-        ->select(DB::raw($column))
-        ->first();
-}
 
-/**
- * Determine which column to use for credit hour based on event
- * 
- * @param object $event
- * @return string|null
- */
-private function determineCreditHourColumn($event)
-{
-    if ($event->title == null) {
-        if (DB::table('user_subjek')->where([
-            'user_ic' => $event->user_ic,
-            'id' => $event->group_id
-        ])->exists()) {
-            return 'subjek_structure.meeting_hour AS course_credit';
-        } elseif (DB::table('user_subjek')->where([
-            'amali_ic' => $event->user_ic,
-            'id' => $event->group_id
-        ])->exists()) {
-            return 'subjek_structure.amali_hour AS course_credit';
-        }
-    } else {
-        if ($event->title == 'Kuliah') {
-            return 'subjek_structure.meeting_hour AS course_credit';
-        } elseif ($event->title == 'Amali') {
-            return 'subjek_structure.amali_hour AS course_credit';
-        }
+    /**
+     * Get IDs of active sessions
+     * 
+     * @return array
+     */
+    private function getActiveSessions()
+    {
+        return DB::table('sessions')
+            ->where('Status', 'ACTIVE')
+            ->pluck('SessionID')
+            ->toArray();
     }
-    
-    return null;
-}
 
-/**
- * Get IDs of active sessions
- * 
- * @return array
- */
-private function getActiveSessions()
-{
-    return DB::table('sessions')
-        ->where('Status', 'ACTIVE')
-        ->pluck('SessionID')
-        ->toArray();
-}
-
-/**
- * Apply time overlap conditions to a query builder
- * 
- * @param Builder $query
- * @param string $startTimeOnly
- * @param string $endTimeOnly
- */
-private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly)
-{
-    $query->where(function ($query) use ($startTimeOnly) {
-        $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$startTimeOnly])
-              ->whereRaw('? != TIME(start)', [$startTimeOnly])
-              ->whereRaw('? != TIME(end)', [$startTimeOnly]);
-    })
-    ->orWhere(function ($query) use ($endTimeOnly) {
-        $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$endTimeOnly])
-              ->whereRaw('? != TIME(start)', [$endTimeOnly])
-              ->whereRaw('? != TIME(end)', [$endTimeOnly]);
-    })
-    ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
-        $query->whereRaw('? < TIME(start)', [$startTimeOnly])
-              ->whereRaw('? = TIME(end)', [$endTimeOnly]);
-    })
-    ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
-        $query->whereRaw('? = TIME(start)', [$startTimeOnly])
-              ->whereRaw('? > TIME(end)', [$endTimeOnly]);
-    })
-    ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
-        $query->whereRaw('? < TIME(start)', [$startTimeOnly])
-              ->whereRaw('? > TIME(end)', [$endTimeOnly]);
-    });
-}
+    /**
+     * Apply time overlap conditions to a query builder
+     * 
+     * @param Builder $query
+     * @param string $startTimeOnly
+     * @param string $endTimeOnly
+     */
+    private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly)
+    {
+        $query->where(function ($query) use ($startTimeOnly) {
+            $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$startTimeOnly])
+                ->whereRaw('? != TIME(start)', [$startTimeOnly])
+                ->whereRaw('? != TIME(end)', [$startTimeOnly]);
+        })
+            ->orWhere(function ($query) use ($endTimeOnly) {
+                $query->whereRaw('? BETWEEN TIME(start) AND TIME(end)', [$endTimeOnly])
+                    ->whereRaw('? != TIME(start)', [$endTimeOnly])
+                    ->whereRaw('? != TIME(end)', [$endTimeOnly]);
+            })
+            ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
+                $query->whereRaw('? < TIME(start)', [$startTimeOnly])
+                    ->whereRaw('? = TIME(end)', [$endTimeOnly]);
+            })
+            ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
+                $query->whereRaw('? = TIME(start)', [$startTimeOnly])
+                    ->whereRaw('? > TIME(end)', [$endTimeOnly]);
+            })
+            ->orWhere(function ($query) use ($startTimeOnly, $endTimeOnly) {
+                $query->whereRaw('? < TIME(start)', [$startTimeOnly])
+                    ->whereRaw('? > TIME(end)', [$endTimeOnly]);
+            });
+    }
 
     public function deleteEvent($id)
     {
@@ -3586,76 +4029,68 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
         $session = DB::table('sessions')->where('Status', 'ACTIVE')->pluck('SessionID')->toArray();
 
         $data['lecturer'] = DB::table('users')
-                            ->join('user_subjek', 'users.ic', 'user_subjek.user_ic')
-                            ->where([['users.status', 'ACTIVE']])
-                            ->whereIn('users.usrtype', ['LCT', 'PL', 'AO'])
-                            ->whereIn('user_subjek.session_id', $session)
-                            ->groupBy('users.ic')
-                            ->get();
+            ->join('user_subjek', 'users.ic', 'user_subjek.user_ic')
+            ->where([['users.status', 'ACTIVE']])
+            ->whereIn('users.usrtype', ['LCT', 'PL', 'AO'])
+            ->whereIn('user_subjek.session_id', $session)
+            ->groupBy('users.ic')
+            ->get();
 
-        foreach($data['lecturer'] as $key => $lct)
-        {
+        foreach ($data['lecturer'] as $key => $lct) {
 
             $data['subject'][$key] = DB::table('user_subjek')
-                                    ->join('subjek', 'user_subjek.course_id', '=', 'subjek.sub_id')
-                                    ->join('sessions', 'user_subjek.session_id', '=', 'sessions.SessionID')
-                                    ->join('subjek_structure', 'subjek.sub_id', '=', 'subjek_structure.courseID')
-                                    ->where(function($query) use ($lct) {
-                                        // Combine both conditions in one query using OR
-                                        $query->where('user_subjek.user_ic', $lct->ic)
-                                            ->orWhere('user_subjek.amali_ic', $lct->ic);
-                                    })
-                                    ->whereIn('user_subjek.session_id', $session)
-                                    ->select(
-                                        'user_subjek.id AS ids', 
-                                        'subjek.*', 
-                                        'sessions.SessionName AS session',
-                                        DB::raw("CASE 
+                ->join('subjek', 'user_subjek.course_id', '=', 'subjek.sub_id')
+                ->join('sessions', 'user_subjek.session_id', '=', 'sessions.SessionID')
+                ->join('subjek_structure', 'subjek.sub_id', '=', 'subjek_structure.courseID')
+                ->where(function ($query) use ($lct) {
+                    // Combine both conditions in one query using OR
+                    $query->where('user_subjek.user_ic', $lct->ic)
+                        ->orWhere('user_subjek.amali_ic', $lct->ic);
+                })
+                ->whereIn('user_subjek.session_id', $session)
+                ->select(
+                    'user_subjek.id AS ids',
+                    'subjek.*',
+                    'sessions.SessionName AS session',
+                    DB::raw("CASE 
                                                     WHEN user_subjek.user_ic = '$lct->ic' THEN subjek_structure.meeting_hour 
                                                     ELSE subjek_structure.amali_hour 
                                                 END AS meeting_hour") // Conditionally select meeting_hour or amali_hour
-                                    )
-                                    ->groupBy('user_subjek.course_id')
-                                    ->get();
+                )
+                ->groupBy('user_subjek.course_id')
+                ->get();
 
 
-            foreach($data['subject'][$key] as $key2 => $sbj)
-            {
+            foreach ($data['subject'][$key] as $key2 => $sbj) {
 
                 $data['group'][$key][$key2] = DB::table('student_subjek')
-                                 ->where([
-                                    ['group_id', $sbj->ids]
-                                 ])
-                                 ->groupBy('group_name')
-                                 ->select('group_name')
-                                 ->get();
+                    ->where([
+                        ['group_id', $sbj->ids]
+                    ])
+                    ->groupBy('group_name')
+                    ->select('group_name')
+                    ->get();
 
 
-                foreach($data['group'][$key][$key2] as $key3 => $grp)
-                {
+                foreach ($data['group'][$key][$key2] as $key3 => $grp) {
 
                     $data['detail'][$key][$key2][$key3] = DB::table('tblevents')
-                                      ->where([
-                                        ['user_ic', $lct->ic],
-                                        ['group_id', $sbj->ids],
-                                        ['group_name', $grp->group_name]
-                                      ])
-                                      ->select(DB::raw('SUM(TIMESTAMPDIFF(HOUR, `start`, `end`)) as total_hours'))
-                                      ->first();
+                        ->where([
+                            ['user_ic', $lct->ic],
+                            ['group_id', $sbj->ids],
+                            ['group_name', $grp->group_name]
+                        ])
+                        ->select(DB::raw('SUM(TIMESTAMPDIFF(HOUR, `start`, `end`)) as total_hours'))
+                        ->first();
 
                     $data['hour_left'][$key][$key2][$key3] = $sbj->meeting_hour - $data['detail'][$key][$key2][$key3]->total_hours;
-                                      
                 }
-
             }
-
-
         }
 
         //dd($data['hour_left']);
 
         return view('pendaftar_akademik.schedule.report_schedule.reportSchedule', compact('data'));
-
     }
 
     public function scheduleReport2()
@@ -3693,56 +4128,48 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
             5 => 'Friday',
         ];
 
-        foreach($data['room'] as $key => $room)
-        {
+        foreach ($data['room'] as $key => $room) {
 
-            foreach($data['days'] as $key2 => $day)
-            {
+            foreach ($data['days'] as $key2 => $day) {
 
-                foreach($data['time'] as $key3 => $t)
-                {
+                foreach ($data['time'] as $key3 => $t) {
 
                     $time = explode('/', $t);
 
                     $data['times'][$key][$key2][$key3] = DB::table('tblevents')
-                                 ->join('user_subjek', 'tblevents.group_id', 'user_subjek.id')
-                                 ->join('sessions', 'user_subjek.session_id', 'sessions.SessionID')
-                                 ->where('tblevents.lecture_id', $room->id)
-                                 ->whereRaw('DAYNAME(tblevents.start) = ?', $day)
-                                 ->whereRaw('TIME(tblevents.start) >= ?',$time[0])
-                                 ->whereRaw('TIME(tblevents.end) >= ?',$time[1])
-                                 ->where('sessions.Status', 'ACTIVE')
-                                 ->select('tblevents.*')
-                                 ->first();
-
+                        ->join('user_subjek', 'tblevents.group_id', 'user_subjek.id')
+                        ->join('sessions', 'user_subjek.session_id', 'sessions.SessionID')
+                        ->where('tblevents.lecture_id', $room->id)
+                        ->whereRaw('DAYNAME(tblevents.start) = ?', $day)
+                        ->whereRaw('TIME(tblevents.start) >= ?', $time[0])
+                        ->whereRaw('TIME(tblevents.end) >= ?', $time[1])
+                        ->where('sessions.Status', 'ACTIVE')
+                        ->select('tblevents.*')
+                        ->first();
                 }
-
             }
-
         }
-        
+
 
         //dd($data['times']);
 
         return view('pendaftar_akademik.schedule.report_schedule.reportSchedule2', compact('data'));
-
     }
 
     public function getEventDetails()
     {
 
         $data['event'] = DB::table('tblevents')
-                        ->join('user_subjek', 'tblevents.group_id', 'user_subjek.id')
-                        ->join('subjek', 'user_subjek.course_id', 'subjek.sub_id')
-                        ->join('sessions', 'user_subjek.session_id', 'sessions.SessionID')
-                        ->join('tbllecture_room', 'tblevents.lecture_id', 'tbllecture_room.id')
-                        ->join('users', 'tblevents.user_ic', 'users.ic')
-                        ->where('tblevents.id', request()->id)
-                        ->select('tblevents.*', 'subjek.course_code', 'subjek.course_name', 'sessions.SessionName', 'tbllecture_room.name AS room', 'users.name AS lecturer')
-                        ->first();
+            ->join('user_subjek', 'tblevents.group_id', 'user_subjek.id')
+            ->join('subjek', 'user_subjek.course_id', 'subjek.sub_id')
+            ->join('sessions', 'user_subjek.session_id', 'sessions.SessionID')
+            ->join('tbllecture_room', 'tblevents.lecture_id', 'tbllecture_room.id')
+            ->join('users', 'tblevents.user_ic', 'users.ic')
+            ->where('tblevents.id', request()->id)
+            ->select('tblevents.*', 'subjek.course_code', 'subjek.course_name', 'sessions.SessionName', 'tbllecture_room.name AS room', 'users.name AS lecturer')
+            ->first();
 
         return view('pendaftar_akademik.schedule.report_schedule.getEventDetails', compact('data'));
-
     }
 
     public function studentReportR()
@@ -3753,63 +4180,57 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
         $data['EA'] = DB::table('tbledu_advisor')->get();
 
         return view('pendaftar_akademik.reportR.reportR', compact('data'));
-
     }
 
     public function getStudentReportR(Request $request)
     {
 
-        if($request->from && $request->to)
-        {
+        if ($request->from && $request->to) {
             $query = DB::table('tblpayment as p1')
-            ->join('students', 'p1.student_ic', '=', 'students.ic')
-            ->leftjoin('tblstudent_personal', 'students.ic', 'tblstudent_personal.student_ic')
-            ->leftjoin('tblsex', 'tblstudent_personal.sex_id', '=', 'tblsex.id')
-            ->leftjoin('sessions', 'students.intake', 'sessions.SessionID')
-            ->leftjoin('tblprogramme', 'students.program', 'tblprogramme.id')
-            ->leftjoin('tbledu_advisor', 'tblstudent_personal.advisor_id', 'tbledu_advisor.id')
-            ->join(DB::raw('(SELECT student_ic, MIN(date) as first_payment_date 
+                ->join('students', 'p1.student_ic', '=', 'students.ic')
+                ->leftjoin('tblstudent_personal', 'students.ic', 'tblstudent_personal.student_ic')
+                ->leftjoin('tblsex', 'tblstudent_personal.sex_id', '=', 'tblsex.id')
+                ->leftjoin('sessions', 'students.intake', 'sessions.SessionID')
+                ->leftjoin('tblprogramme', 'students.program', 'tblprogramme.id')
+                ->leftjoin('tbledu_advisor', 'tblstudent_personal.advisor_id', 'tbledu_advisor.id')
+                ->join(DB::raw('(SELECT student_ic, MIN(date) as first_payment_date 
                     FROM tblpayment 
                     WHERE process_status_id = 2 
                     AND process_type_id = 1 
                     AND semester_id = 1
-                    GROUP BY student_ic) as p2'), function($join) {
-                $join->on('p1.student_ic', '=', 'p2.student_ic')
-                     ->on('p1.date', '=', 'p2.first_payment_date');
-            })
-            ->where([
-                ['p1.process_status_id', '=', 2],
-                ['p1.process_type_id', '=', 1],
-                ['p1.semester_id', '=', 1],
-            ])->when($request->session != '', function ($query) use ($request){
-                return $query->where('students.intake', $request->session);
-            })
-            ->when($request->EA != '', function ($query) use ($request){
+                    GROUP BY student_ic) as p2'), function ($join) {
+                    $join->on('p1.student_ic', '=', 'p2.student_ic')
+                        ->on('p1.date', '=', 'p2.first_payment_date');
+                })
+                ->where([
+                    ['p1.process_status_id', '=', 2],
+                    ['p1.process_type_id', '=', 1],
+                    ['p1.semester_id', '=', 1],
+                ])->when($request->session != '', function ($query) use ($request) {
+                    return $query->where('students.intake', $request->session);
+                })
+                ->when($request->EA != '', function ($query) use ($request) {
                     return $query->where('tblstudent_personal.advisor_id', $request->EA);
-            })
-            ->whereBetween('p1.date', [$request->from, $request->to])
-            ->select('p1.id')
-            ->groupBy('p1.student_ic')
-            ->select('students.*', 'tblstudent_personal.no_tel','tblstudent_personal.qualification', 'tblsex.code AS sex', 'sessions.SessionName', 'tblprogramme.progcode', 'tbledu_advisor.name AS ea', 'p1.date as date_register');
+                })
+                ->whereBetween('p1.date', [$request->from, $request->to])
+                ->select('p1.id')
+                ->groupBy('p1.student_ic')
+                ->select('students.*', 'tblstudent_personal.no_tel', 'tblstudent_personal.qualification', 'tblsex.code AS sex', 'sessions.SessionName', 'tblprogramme.progcode', 'tbledu_advisor.name AS ea', 'p1.date as date_register');
 
             // By default, include all statuses (combined)
             // Handle the filter logic based on convert and offered parameters
-            if($request->has('convert') && $request->has('offered')) {
-                if($request->convert == "false" && $request->offered == "false") {
+            if ($request->has('convert') && $request->has('offered')) {
+                if ($request->convert == "false" && $request->offered == "false") {
                     // This would be contradictory (no results), so we'll default to showing all
                     // Or you could return an error message instead
-                } 
-                else if($request->convert == "false") {
+                } else if ($request->convert == "false") {
                     $query->where('students.status', '=', 1);
-                }
-                else if($request->offered == "false") {
+                } else if ($request->offered == "false") {
                     $query->where('students.status', '!=', 1);
                 }
-            }
-            else if($request->has('convert') && $request->convert == "false") {
+            } else if ($request->has('convert') && $request->convert == "false") {
                 $query->where('students.status', '=', 1);
-            }
-            else if($request->has('offered') && $request->offered == "false") {
+            } else if ($request->has('offered') && $request->offered == "false") {
                 $query->where('students.status', '!=', 1);
             }
 
@@ -3817,7 +4238,7 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
             // $query->where('students.semester', '=', 1);
 
             $data['student'] = $query->get();
-            
+
             $data['below5'] = 0;
             $data['below5willregister'] = 0;
             $data['below5KIV'] = 0;
@@ -3874,261 +4295,184 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
             $data['above30rejected'] = 0;
             $data['above30others'] = 0;
 
-            foreach($data['student'] as $key => $student)
-            {
+            foreach ($data['student'] as $key => $student) {
 
-                $daysDiff = Carbon::parse($student->date_add)->diffInDays(now() );
+                $daysDiff = Carbon::parse($student->date_add)->diffInDays(now());
 
-                if($daysDiff < 5)
-                {
+                if ($daysDiff < 5) {
                     $data['below5']++;
 
-                    if(now() > $student->date_offer && $student->status == 1)
-                    {
+                    if (now() > $student->date_offer && $student->status == 1) {
                         $data['below5KIV']++;
-                    }
-                    elseif(now() <= $student->date_offer && $student->status == 1)
-                    {
+                    } elseif (now() <= $student->date_offer && $student->status == 1) {
                         $data['below5willregister']++;
                     }
 
-                    if($student->status == 2)
-                    {
+                    if ($student->status == 2) {
                         $data['below5active']++;
-                    }
-                    elseif($student->status == 14)
-                    {
+                    } elseif ($student->status == 14) {
                         $data['below5rejected']++;
                     }
 
-                    if($student->status != 1 && $student->status != 14)
-                    {
+                    if ($student->status != 1 && $student->status != 14) {
                         $data['below5convert']++;
                     }
 
-                    if($student->status != 1 && $student->status != 2 && $student->status != 14)
-                    {
+                    if ($student->status != 1 && $student->status != 2 && $student->status != 14) {
                         $data['below5others']++;
                     }
-
-                }
-                elseif($daysDiff < 10)
-                {
+                } elseif ($daysDiff < 10) {
                     $data['below10']++;
 
-                    if(now() > $student->date_offer && $student->status == 1)
-                    {
+                    if (now() > $student->date_offer && $student->status == 1) {
                         $data['below10KIV']++;
-                    }
-                    elseif(now() <= $student->date_offer && $student->status == 1)
-                    {
+                    } elseif (now() <= $student->date_offer && $student->status == 1) {
                         $data['below10willregister']++;
                     }
 
-                    if($student->status == 2)
-                    {
+                    if ($student->status == 2) {
                         $data['below10active']++;
-                    }
-                    elseif($student->status == 14)
-                    {
+                    } elseif ($student->status == 14) {
                         $data['below10rejected']++;
                     }
 
-                    if($student->status != 1 && $student->status != 14)
-                    {
+                    if ($student->status != 1 && $student->status != 14) {
                         $data['below10convert']++;
                     }
 
-                    if($student->status != 1 && $student->status != 2 && $student->status != 14)
-                    {
+                    if ($student->status != 1 && $student->status != 2 && $student->status != 14) {
                         $data['below10others']++;
                     }
-
-                }
-                elseif($daysDiff < 15)
-                {
+                } elseif ($daysDiff < 15) {
                     $data['below15']++;
 
-                    if(now() > $student->date_offer && $student->status == 1)
-                    {
+                    if (now() > $student->date_offer && $student->status == 1) {
                         $data['below15KIV']++;
-                    }
-                    elseif(now() <= $student->date_offer && $student->status == 1)
-                    {
+                    } elseif (now() <= $student->date_offer && $student->status == 1) {
                         $data['below15willregister']++;
                     }
 
-                    if($student->status == 2)
-                    {
+                    if ($student->status == 2) {
                         $data['below15active']++;
-                    }
-                    elseif($student->status == 14)
-                    {
+                    } elseif ($student->status == 14) {
                         $data['below15rejected']++;
                     }
 
-                    if($student->status != 1 && $student->status != 14)
-                    {
+                    if ($student->status != 1 && $student->status != 14) {
                         $data['below15convert']++;
                     }
 
-                    if($student->status != 1 && $student->status != 2 && $student->status != 14)
-                    {
+                    if ($student->status != 1 && $student->status != 2 && $student->status != 14) {
                         $data['below15others']++;
                     }
-
-                }
-                elseif($daysDiff < 20)
-                {
+                } elseif ($daysDiff < 20) {
                     $data['below20']++;
 
-                    if(now() > $student->date_offer && $student->status == 1)
-                    {
+                    if (now() > $student->date_offer && $student->status == 1) {
                         $data['below20KIV']++;
-                    }
-                    elseif(now() <= $student->date_offer && $student->status == 1)
-                    {
+                    } elseif (now() <= $student->date_offer && $student->status == 1) {
                         $data['below20willregister']++;
                     }
 
-                    if($student->status == 2)
-                    {
+                    if ($student->status == 2) {
                         $data['below20active']++;
-                    }
-                    elseif($student->status == 14)
-                    {
+                    } elseif ($student->status == 14) {
                         $data['below20rejected']++;
                     }
 
-                    if($student->status != 1 && $student->status != 14)
-                    {
+                    if ($student->status != 1 && $student->status != 14) {
                         $data['below20convert']++;
                     }
 
-                    if($student->status != 1 && $student->status != 2 && $student->status != 14)
-                    {
+                    if ($student->status != 1 && $student->status != 2 && $student->status != 14) {
                         $data['below20others']++;
                     }
-
-                }
-                elseif($daysDiff < 25)
-                {
+                } elseif ($daysDiff < 25) {
                     $data['below25']++;
 
-                    if(now() > $student->date_offer && $student->status == 1)
-                    {
+                    if (now() > $student->date_offer && $student->status == 1) {
                         $data['below25KIV']++;
-                    }
-                    elseif(now() <= $student->date_offer && $student->status == 1)
-                    {
+                    } elseif (now() <= $student->date_offer && $student->status == 1) {
                         $data['below25willregister']++;
                     }
 
-                    if($student->status == 2)
-                    {
+                    if ($student->status == 2) {
                         $data['below25active']++;
-                    }
-                    elseif($student->status == 14)
-                    {
+                    } elseif ($student->status == 14) {
                         $data['below25rejected']++;
                     }
 
-                    if($student->status != 1 && $student->status != 14)
-                    {
+                    if ($student->status != 1 && $student->status != 14) {
                         $data['below25convert']++;
                     }
 
-                    if($student->status != 1 && $student->status != 2 && $student->status != 14)
-                    {
+                    if ($student->status != 1 && $student->status != 2 && $student->status != 14) {
                         $data['below25others']++;
                     }
-
-                }
-                elseif($daysDiff < 30)
-                {
+                } elseif ($daysDiff < 30) {
                     $data['below30']++;
 
-                    if(now() > $student->date_offer && $student->status == 1)
-                    {
+                    if (now() > $student->date_offer && $student->status == 1) {
                         $data['below30KIV']++;
-                    }
-                    elseif(now() <= $student->date_offer && $student->status == 1)
-                    {
+                    } elseif (now() <= $student->date_offer && $student->status == 1) {
                         $data['below30willregister']++;
                     }
 
-                    if($student->status == 2)
-                    {
+                    if ($student->status == 2) {
                         $data['below30active']++;
-                    }
-                    elseif($student->status == 14)
-                    {
+                    } elseif ($student->status == 14) {
                         $data['below30rejected']++;
                     }
 
-                    if($student->status != 1 && $student->status != 14)
-                    {
+                    if ($student->status != 1 && $student->status != 14) {
                         $data['below30convert']++;
                     }
 
-                    if($student->status != 1 && $student->status != 2 && $student->status != 14)
-                    {
+                    if ($student->status != 1 && $student->status != 2 && $student->status != 14) {
                         $data['below30others']++;
                     }
-
-                }
-                else
-                {
+                } else {
                     $data['above30']++;
 
-                    if(now() > $student->date_offer && $student->status == 1)
-                    {
+                    if (now() > $student->date_offer && $student->status == 1) {
                         $data['above30KIV']++;
-                    }
-                    elseif(now() <= $student->date_offer && $student->status == 1)
-                    {
+                    } elseif (now() <= $student->date_offer && $student->status == 1) {
                         $data['above30willregister']++;
                     }
 
-                    if($student->status == 2)
-                    {
+                    if ($student->status == 2) {
                         $data['above30active']++;
-                    }
-                    elseif($student->status == 14)
-                    {
+                    } elseif ($student->status == 14) {
                         $data['above30rejected']++;
                     }
-                    
-                    if($student->status != 1 && $student->status != 14)
-                    {
+
+                    if ($student->status != 1 && $student->status != 14) {
                         $data['above30convert']++;
                     }
 
-                    if($student->status != 1 && $student->status != 2 && $student->status != 14)
-                    {
+                    if ($student->status != 1 && $student->status != 2 && $student->status != 14) {
                         $data['above30others']++;
                     }
-
                 }
 
                 $payment_query = DB::table('tblpayment')
-                                ->leftjoin('tblpaymentdtl', 'tblpayment.id', 'tblpaymentdtl.payment_id')
-                                ->leftjoin('tblstudentclaim', 'tblpaymentdtl.claim_type_id', 'tblstudentclaim.id')
-                                ->where('tblpayment.student_ic', $student->ic)
-                                ->where('tblpayment.process_status_id', 2)
-                                ->whereNotIn('tblpayment.process_type_id', [8])
-                                ->select(
-                                    'tblpayment.*',
-                                    'tblpaymentdtl.amount',
-                                    DB::raw('IF(tblpayment.id IS NOT NULL, 
+                    ->leftjoin('tblpaymentdtl', 'tblpayment.id', 'tblpaymentdtl.payment_id')
+                    ->leftjoin('tblstudentclaim', 'tblpaymentdtl.claim_type_id', 'tblstudentclaim.id')
+                    ->where('tblpayment.student_ic', $student->ic)
+                    ->where('tblpayment.process_status_id', 2)
+                    ->whereNotIn('tblpayment.process_type_id', [8])
+                    ->select(
+                        'tblpayment.*',
+                        'tblpaymentdtl.amount',
+                        DB::raw('IF(tblpayment.id IS NOT NULL, 
                                         CASE
                                             WHEN IFNULL(tblpaymentdtl.amount, 0) < 250 THEN "R"
                                             WHEN IFNULL(tblpaymentdtl.amount, 0) >= 250 THEN "R1"
                                         END,
                                         NULL) AS group_alias')
-                                )
-                                ->orderBy('tblpayment.id', 'asc')
-                                ->first();
+                    )
+                    ->orderBy('tblpayment.id', 'asc')
+                    ->first();
 
                 $data['result'][] = $payment_query ?? (object)[
                     'id' => null,
@@ -4138,7 +4482,6 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
                 ];
 
                 $data['qua'][$key] = DB::table('tblqualification_std')->where('id', $student->qualification)->value('name');
-
             }
 
             // Calculate date ranges for aging report
@@ -4175,9 +4518,7 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
             ];
 
             return view('pendaftar_akademik.reportR.getReportR', compact('data'));
-
         }
-
     }
 
     public function getAgingStudents(Request $request)
@@ -4208,55 +4549,51 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
                         WHERE process_status_id = 2 
                         AND process_type_id = 1 
                         AND semester_id = 1
-                        GROUP BY student_ic) as p2'), function($join) {
+                        GROUP BY student_ic) as p2'), function ($join) {
                     $join->on('p1.student_ic', '=', 'p2.student_ic')
-                         ->on('p1.date', '=', 'p2.first_payment_date');
+                        ->on('p1.date', '=', 'p2.first_payment_date');
                 })
                 ->where([
                     ['p1.process_status_id', '=', 2],
                     ['p1.process_type_id', '=', 1],
                     ['p1.semester_id', '=', 1],
-                ])->when($request->session != '', function ($query) use ($request){
+                ])->when($request->session != '', function ($query) use ($request) {
                     return $query->where('students.intake', $request->session);
                 })
-                ->when($request->EA != '', function ($query) use ($request){
-                        return $query->where('tblstudent_personal.advisor_id', $request->EA);
+                ->when($request->EA != '', function ($query) use ($request) {
+                    return $query->where('tblstudent_personal.advisor_id', $request->EA);
                 })
                 ->whereBetween('p1.date', [$request->from, $request->to])
                 ->select('p1.id')
                 ->groupBy('p1.student_ic')
-                ->select('students.*', 'tblstudent_personal.no_tel','tblstudent_personal.qualification', 'tblsex.code AS sex', 'sessions.SessionName', 'tblprogramme.progcode', 'tbledu_advisor.name AS ea', 'p1.date as date_register');
+                ->select('students.*', 'tblstudent_personal.no_tel', 'tblstudent_personal.qualification', 'tblsex.code AS sex', 'sessions.SessionName', 'tblprogramme.progcode', 'tbledu_advisor.name AS ea', 'p1.date as date_register');
 
             // Apply filters based on convert and offered parameters (same as main method)
-            if($request->has('convert') && $request->has('offered')) {
-                if($request->convert == "false" && $request->offered == "false") {
+            if ($request->has('convert') && $request->has('offered')) {
+                if ($request->convert == "false" && $request->offered == "false") {
                     // This would be contradictory, so default to showing all
-                } 
-                else if($request->convert == "false") {
+                } else if ($request->convert == "false") {
                     $query->where('students.status', '=', 1);
-                }
-                else if($request->offered == "false") {
+                } else if ($request->offered == "false") {
                     $query->where('students.status', '!=', 1);
                 }
-            }
-            else if($request->has('convert') && $request->convert == "false") {
+            } else if ($request->has('convert') && $request->convert == "false") {
                 $query->where('students.status', '=', 1);
-            }
-            else if($request->has('offered') && $request->offered == "false") {
+            } else if ($request->has('offered') && $request->offered == "false") {
                 $query->where('students.status', '!=', 1);
             }
 
             $students = $query->get();
-            
+
             // Filter students based on the aging category and status type
-            $filteredStudents = $students->filter(function($student) use ($request) {
+            $filteredStudents = $students->filter(function ($student) use ($request) {
                 $daysDiff = Carbon::parse($student->date_add)->diffInDays(now());
                 $category = $request->category;
                 $statusType = $request->status_type;
-                
+
                 // Check if student falls into the requested day range
                 $inRange = false;
-                switch($category) {
+                switch ($category) {
                     case 'below5':
                         $inRange = $daysDiff < 5;
                         break;
@@ -4282,13 +4619,13 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
                         $inRange = true; // Total includes all students
                         break;
                 }
-                
+
                 if (!$inRange) {
                     return false;
                 }
-                
+
                 // Check if student matches the requested status type
-                switch($statusType) {
+                switch ($statusType) {
                     case 'total':
                         return true; // Total includes all students in the range
                     case 'willregister':
@@ -4310,8 +4647,8 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
             // Get qualifications for the filtered students
             $qualifications = [];
-            foreach($filteredStudents as $student) {
-                if($student->qualification) {
+            foreach ($filteredStudents as $student) {
+                if ($student->qualification) {
                     $qualifications[$student->ic] = DB::table('tblqualification_std')->where('id', $student->qualification)->value('name');
                 }
             }
@@ -4322,7 +4659,6 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
                 'qualifications' => $qualifications,
                 'count' => $filteredStudents->count()
             ]);
-
         } catch (\Exception $e) {
             return response()->json(["message" => "Error: " . $e->getMessage()], 500);
         }
@@ -4332,37 +4668,35 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
     {
 
         return view('pendaftar_akademik.student.warning_letter.warningLetter');
-
     }
 
     public function getWarningLetter(Request $request)
     {
 
         $data['student'] = DB::table('students')
-                           ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
-                           ->join('tblprogramme', 'students.program', 'tblprogramme.id')
-                           ->join('sessions AS t1', 'students.intake', 't1.SessionID')
-                           ->join('sessions AS t2', 'students.session', 't2.SessionID')
-                           ->select('students.*', 'tblstudent_status.name AS statusName', 'tblprogramme.progname AS program', 'students.program AS progid', 't1.SessionName AS intake_name', 't2.SessionName AS session_name')
-                           ->where('ic', $request->student)->first();
+            ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
+            ->join('tblprogramme', 'students.program', 'tblprogramme.id')
+            ->join('sessions AS t1', 'students.intake', 't1.SessionID')
+            ->join('sessions AS t2', 'students.session', 't2.SessionID')
+            ->select('students.*', 'tblstudent_status.name AS statusName', 'tblprogramme.progname AS program', 'students.program AS progid', 't1.SessionName AS intake_name', 't2.SessionName AS session_name')
+            ->where('ic', $request->student)->first();
 
         $data['warning'] = DB::table('tblstudent_warning')
-                           ->join('student_subjek', function($join){
-                                $join->on('tblstudent_warning.groupid', 'student_subjek.group_id');
-                                $join->on('tblstudent_warning.groupname', 'student_subjek.group_name');
-                           })
-                           ->join('user_subjek', 'student_subjek.group_id', 'user_subjek.id')
-                           ->join('users', 'user_subjek.user_ic', 'users.ic')
-                           ->join('subjek', 'student_subjek.courseid', 'subjek.sub_id')
-                           ->join('sessions', 'student_subjek.sessionid', 'sessions.SessionID')
-                           ->where('tblstudent_warning.student_ic', $request->student)
-                           ->orderBy('subjek.course_name')
-                           ->groupBy('tblstudent_warning.id')
-                           ->select('tblstudent_warning.*', 'subjek.course_name', 'subjek.course_code', 'sessions.SessionName', 'users.name AS lecturer')
-                           ->get();
+            ->join('student_subjek', function ($join) {
+                $join->on('tblstudent_warning.groupid', 'student_subjek.group_id');
+                $join->on('tblstudent_warning.groupname', 'student_subjek.group_name');
+            })
+            ->join('user_subjek', 'student_subjek.group_id', 'user_subjek.id')
+            ->join('users', 'user_subjek.user_ic', 'users.ic')
+            ->join('subjek', 'student_subjek.courseid', 'subjek.sub_id')
+            ->join('sessions', 'student_subjek.sessionid', 'sessions.SessionID')
+            ->where('tblstudent_warning.student_ic', $request->student)
+            ->orderBy('subjek.course_name')
+            ->groupBy('tblstudent_warning.id')
+            ->select('tblstudent_warning.*', 'subjek.course_name', 'subjek.course_code', 'sessions.SessionName', 'users.name AS lecturer')
+            ->get();
 
         return view('pendaftar_akademik.student.warning_letter.getWarningLetter', compact('data'));
-
     }
 
     public function printWarningLetter(Request $request)
@@ -4370,17 +4704,17 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
         //dd($request->id);
         $data['warning'] = DB::table('tblstudent_warning')
-                           ->join('student_subjek', function($join){
-                                $join->on('tblstudent_warning.groupid', 'student_subjek.group_id');
-                                $join->on('tblstudent_warning.groupname', 'student_subjek.group_name');
-                           })
-                           ->join('subjek', 'student_subjek.courseid', 'subjek.sub_id')
-                           ->join('sessions', 'student_subjek.sessionid', 'sessions.SessionID')
-                           ->where('tblstudent_warning.id', $request->id)
-                           ->orderBy('subjek.course_name')
-                           ->groupBy('tblstudent_warning.id')
-                           ->select('tblstudent_warning.*', 'subjek.course_name', 'subjek.course_code', 'subjek.course_credit', 'subjek.id AS subID','sessions.SessionName')
-                           ->first();
+            ->join('student_subjek', function ($join) {
+                $join->on('tblstudent_warning.groupid', 'student_subjek.group_id');
+                $join->on('tblstudent_warning.groupname', 'student_subjek.group_name');
+            })
+            ->join('subjek', 'student_subjek.courseid', 'subjek.sub_id')
+            ->join('sessions', 'student_subjek.sessionid', 'sessions.SessionID')
+            ->where('tblstudent_warning.id', $request->id)
+            ->orderBy('subjek.course_name')
+            ->groupBy('tblstudent_warning.id')
+            ->select('tblstudent_warning.*', 'subjek.course_name', 'subjek.course_code', 'subjek.course_credit', 'subjek.id AS subID', 'sessions.SessionName')
+            ->first();
 
         // Define a function to create the base query
         // $baseQuery = function () use ($data) {
@@ -4396,7 +4730,7 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
         //     ->select('tblclassattendance.*');
         // };
 
-        
+
         // if($data['warning']->warning == 1)
         // {
 
@@ -4441,34 +4775,29 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
         $totalhours = 0;
 
-        foreach($data['absents'] as $abs)
-        {
+        foreach ($data['absents'] as $abs) {
 
             $data['absent'][] = $abs;
 
             $totalhours += $abs->total_hours;
 
             if ($data['warning']->warning == 1) {
-                if($totalhours >= $data['warning']->course_credit)
-                {
+                if ($totalhours >= $data['warning']->course_credit) {
                     break;
                 }
             } elseif ($data['warning']->warning == 2) {
-                if($totalhours >= $data['warning']->course_credit*2)
-                {
+                if ($totalhours >= $data['warning']->course_credit * 2) {
                     break;
                 }
             } elseif ($data['warning']->warning == 3) {
-                if($totalhours >= $data['warning']->course_credit*3)
-                {
+                if ($totalhours >= $data['warning']->course_credit * 3) {
                     break;
                 }
             }
-
         }
 
         //dd(collect($data['absent']));
-        
+
         // if ($data['warning']->warning == 1) {
         //     $data['absent'] = $baseQuery()->take($data['warning']->course_credit)->get();
         // } elseif ($data['warning']->warning == 2) {
@@ -4508,7 +4837,7 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
         $data['absent'] = collect($data['absent'])->map(function ($item) {
             // Parse 'classdate' once since it's used multiple times
             $classdateParsed = Carbon::parse($item->classdate);
-            
+
             return [
                 'date' => $classdateParsed->format('d-m-Y'),
                 'day' => $classdateParsed->translatedFormat('l'),
@@ -4518,7 +4847,7 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
         });
 
         $data['courseCredit'] = DB::table('subjek')->where('id', $data['warning']->subID)
-                  ->select('course_credit', DB::raw('(course_credit * 14) as total'))->first();
+            ->select('course_credit', DB::raw('(course_credit * 14) as total'))->first();
 
         // Now $data['time2'] is a collection containing the dates with their respective day names
         // To see the result
@@ -4526,19 +4855,19 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
 
         $data['student'] = DB::table('students')
-                            ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
-                            ->join('tblprogramme', 'students.program', 'tblprogramme.id')
-                            ->join('sessions', 'students.intake', 'sessions.SessionID')
-                            ->select('students.*', 'tblstudent_status.name AS status', 'tblprogramme.progname', 'tblprogramme.progcode', 'sessions.SessionName AS intake')
-                            ->where('ic', $data['warning']->student_ic)->first();
+            ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
+            ->join('tblprogramme', 'students.program', 'tblprogramme.id')
+            ->join('sessions', 'students.intake', 'sessions.SessionID')
+            ->select('students.*', 'tblstudent_status.name AS status', 'tblprogramme.progname', 'tblprogramme.progcode', 'sessions.SessionName AS intake')
+            ->where('ic', $data['warning']->student_ic)->first();
 
         $data['address'] = DB::table('tblstudent_address')
-                           ->leftJoin('tblstate', 'tblstudent_address.state_id', 'tblstate.id')
-                           ->leftJoin('tblcountry', 'tblstudent_address.country_id', 'tblcountry.id')
-                           ->select('tblstudent_address.*', 'tblstate.state_name AS state', 'tblcountry.name AS country')
-                           ->where('tblstudent_address.student_ic', $data['warning']->student_ic)->first();
+            ->leftJoin('tblstate', 'tblstudent_address.state_id', 'tblstate.id')
+            ->leftJoin('tblcountry', 'tblstudent_address.country_id', 'tblcountry.id')
+            ->select('tblstudent_address.*', 'tblstate.state_name AS state', 'tblcountry.name AS country')
+            ->where('tblstudent_address.student_ic', $data['warning']->student_ic)->first();
 
- 
+
         $data['originalDate'] = Carbon::createFromFormat('Y-m-d H:i:s', $data['warning']->created_at)->toDateString();
 
         // Add one week to the date
@@ -4554,13 +4883,10 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
         if ($data['warning']->warning == 1 || $data['warning']->warning == 2) {
 
             return view('pendaftar_akademik.student.warning_letter.printWarningLetter', compact('data'));
-
         } elseif ($data['warning']->warning == 3) {
 
             return view('pendaftar_akademik.student.warning_letter.printWarningLetter2', compact('data'));
-
         }
-
     }
 
     public function senateReport()
@@ -4573,7 +4899,6 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
         ];
 
         return view('pendaftar_akademik.student.senate_report.senateReport', compact('data'));
-
     }
 
     public function getSenateReport(Request $request)
@@ -4581,35 +4906,33 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
         $datas = json_decode($request->submitData);
 
-        if($datas->program != '' && $datas->session != '' && $datas->semester != '')
-        {
+        if ($datas->program != '' && $datas->session != '' && $datas->semester != '') {
 
-            if(isset($request->print))
-            {
+            if (isset($request->print)) {
 
                 $data['student'] = DB::table('student_transcript')
-                        ->join('students', 'student_transcript.student_ic', 'students.ic')
-                        ->join('transcript_status', 'student_transcript.transcript_status_id', 'transcript_status.id')
-                        ->where([
-                            ['students.program', $datas->program],
-                            ['student_transcript.session_id', $datas->session],
-                            ['student_transcript.semester', $datas->semester]
-                        ])
-                        ->select('student_transcript.*', 'students.name', 'students.ic','students.no_matric', 'transcript_status.status_name AS status')
-                        ->orderBy('students.name')
-                        ->get();
+                    ->join('students', 'student_transcript.student_ic', 'students.ic')
+                    ->join('transcript_status', 'student_transcript.transcript_status_id', 'transcript_status.id')
+                    ->where([
+                        ['students.program', $datas->program],
+                        ['student_transcript.session_id', $datas->session],
+                        ['student_transcript.semester', $datas->semester]
+                    ])
+                    ->select('student_transcript.*', 'students.name', 'students.ic', 'students.no_matric', 'transcript_status.status_name AS status')
+                    ->orderBy('students.name')
+                    ->get();
 
                 $data['course'] = DB::table('student_subjek')
-                                  ->join('students', 'student_subjek.student_ic', 'students.ic')
-                                  ->join('subjek', 'student_subjek.courseid', 'subjek.sub_id')
-                                  ->where([
-                                    ['students.program', $datas->program],
-                                    ['student_subjek.sessionid', $datas->session],
-                                    ['student_subjek.semesterid', $datas->semester]
-                                  ])
-                                  ->groupBy('subjek.sub_id')
-                                  ->orderBy('subjek.course_code')
-                                  ->get();
+                    ->join('students', 'student_subjek.student_ic', 'students.ic')
+                    ->join('subjek', 'student_subjek.courseid', 'subjek.sub_id')
+                    ->where([
+                        ['students.program', $datas->program],
+                        ['student_subjek.sessionid', $datas->session],
+                        ['student_subjek.semesterid', $datas->semester]
+                    ])
+                    ->groupBy('subjek.sub_id')
+                    ->orderBy('subjek.course_code')
+                    ->get();
 
                 $data['program'] = DB::table('tblprogramme')->where('id', $datas->program)->first();
                 $data['session'] = DB::table('sessions')->where('SessionID', $datas->session)->first();
@@ -4621,8 +4944,7 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
                 $data['total'] = array_fill(0, count($data['status']), 0);
 
 
-                foreach($data['student'] as $key => $std)
-                {
+                foreach ($data['student'] as $key => $std) {
 
                     foreach ($data['status'] as $key2 => $sts) {
                         if ($sts->status_name == $std->status) {
@@ -4630,52 +4952,43 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
                         }
                     }
 
-                    foreach($data['course'] as $key2 => $crs)
-                    {
+                    foreach ($data['course'] as $key2 => $crs) {
 
                         $data['dtl'][$key][$key2] = DB::table('student_subjek')
-                                       ->join('students', 'student_subjek.student_ic', 'students.ic')
-                                       ->where([
-                                         ['students.ic', $std->ic],
-                                         ['student_subjek.sessionid', $datas->session],
-                                         ['student_subjek.semesterid', $datas->semester],
-                                         ['student_subjek.courseid', $crs->sub_id]
-                                       ])->select('student_subjek.pointer', 'student_subjek.grade')->first();
-
+                            ->join('students', 'student_subjek.student_ic', 'students.ic')
+                            ->where([
+                                ['students.ic', $std->ic],
+                                ['student_subjek.sessionid', $datas->session],
+                                ['student_subjek.semesterid', $datas->semester],
+                                ['student_subjek.courseid', $crs->sub_id]
+                            ])->select('student_subjek.pointer', 'student_subjek.grade')->first();
                     }
-
                 }
 
 
                 return view('pendaftar_akademik.student.senate_report.printSenateReport', compact('data'));
+            } else {
 
-            
-            }else{
 
-                
 
-                    $data = DB::table('student_transcript')
-                                    ->join('students', 'student_transcript.student_ic', 'students.ic')
-                                    ->join('transcript_status', 'student_transcript.transcript_status_id', 'transcript_status.id')
-                                    ->where([
-                                        ['students.program', $datas->program],
-                                        ['student_transcript.session_id', $datas->session],
-                                        ['student_transcript.semester', $datas->semester]
-                                    ])
-                                    ->select('student_transcript.*', 'students.name', 'transcript_status.status_name AS status')
-                                    ->orderBy('students.name')
-                                    ->get();
+                $data = DB::table('student_transcript')
+                    ->join('students', 'student_transcript.student_ic', 'students.ic')
+                    ->join('transcript_status', 'student_transcript.transcript_status_id', 'transcript_status.id')
+                    ->where([
+                        ['students.program', $datas->program],
+                        ['student_transcript.session_id', $datas->session],
+                        ['student_transcript.semester', $datas->semester]
+                    ])
+                    ->select('student_transcript.*', 'students.name', 'transcript_status.status_name AS status')
+                    ->orderBy('students.name')
+                    ->get();
 
-                    return response()->json(['data' => $data]);
-
+                return response()->json(['data' => $data]);
             }
-
-        }else{
+        } else {
 
             return response()->json(['error' => 'Please fill in all input!']);
-
         }
-
     }
 
     public function resultReport()
@@ -4686,7 +4999,6 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
         ];
 
         return view('pendaftar_akademik.student.result_report.resultReport', compact('data'));
-
     }
 
     public function getResultReport(Request $request)
@@ -4694,8 +5006,7 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
         $datas = json_decode($request->submitData);
 
-        if($datas->session !=  '' && $datas->start != '' && $datas->end != '')
-        {
+        if ($datas->session !=  '' && $datas->start != '' && $datas->end != '') {
 
             $gpa_column = ($datas->type == 'gpa') ? 'GPAs' : 'CGPAs';
 
@@ -4705,10 +5016,10 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
                 ->join('transcript_status', 'student_transcript.transcript_status_id', 'transcript_status.id')
                 ->select(
                     'student_transcript.*',
-                    'students.name', 
-                    'students.ic', 
-                    'students.no_matric', 
-                    'tblprogramme.progcode', 
+                    'students.name',
+                    'students.ic',
+                    'students.no_matric',
+                    'tblprogramme.progcode',
                     'transcript_status.status_name',
                     DB::raw("'$gpa_column' AS type") // Explicitly cast the gpa or cgpa column as string
                 )
@@ -4725,13 +5036,10 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
 
             return response()->json(['data' => $data]);
-
-        }else{
+        } else {
 
             return response()->json(['error' => 'Please fill in all the input fields!']);
-
         }
-
     }
 
     public function studentAssessment()
@@ -4739,31 +5047,29 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
         $data = [
             'lecturer' => DB::table('users')
-                          ->whereIn('usrtype', ['LCT', 'PL', 'AO'])
-                          ->get(),
+                ->whereIn('usrtype', ['LCT', 'PL', 'AO'])
+                ->get(),
             'intake' => DB::table('sessions')->orderBy('SessionID', 'DESC')->get()
         ];
 
         return view('pendaftar_akademik.student.assessment.studentAssessment', compact('data'));
-
     }
 
     public function getStudentAssessment(Request $request)
     {
 
-        if($request->lecturer != '' && $request->subject != '' && $request->group != '' && $request->assessment != '')
-        {
+        if ($request->lecturer != '' && $request->subject != '' && $request->group != '' && $request->assessment != '') {
             $subject = DB::table('user_subjek')
-                       ->join('subjek', 'user_subjek.course_id', 'subjek.sub_id')
-                       ->join('student_subjek', 'user_subjek.id', 'student_subjek.group_id')
-                       ->where([
-                        ['user_subjek.user_ic', $request->lecturer],
-                        ['user_subjek.id', $request->subject],
-                        ['student_subjek.group_name', $request->group],
-                        ['user_subjek.session_id', '=', DB::raw('student_subjek.sessionid')],
-                       ])
-                       ->select('user_subjek.*', 'subjek.id AS id')
-                       ->first();
+                ->join('subjek', 'user_subjek.course_id', 'subjek.sub_id')
+                ->join('student_subjek', 'user_subjek.id', 'student_subjek.group_id')
+                ->where([
+                    ['user_subjek.user_ic', $request->lecturer],
+                    ['user_subjek.id', $request->subject],
+                    ['student_subjek.group_name', $request->group],
+                    ['user_subjek.session_id', '=', DB::raw('student_subjek.sessionid')],
+                ])
+                ->select('user_subjek.*', 'subjek.id AS id')
+                ->first();
 
             $data['type'] = $request->assessment;
 
@@ -4771,203 +5077,179 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
             //return response()->json($subject);
 
-            if($request->assessment == 'quiz')
-            {
+            if ($request->assessment == 'quiz') {
 
                 $data['assessment'] = DB::table('tblclassquiz')
-                ->join('users', 'tblclassquiz.addby', 'users.ic')
-                ->join('tblclassquizstatus', 'tblclassquiz.status', 'tblclassquizstatus.id')
-                ->where([
-                    ['tblclassquiz.classid', $subject->id],
-                    ['tblclassquiz.sessionid', $subject->session_id],
-                    ['tblclassquiz.addby', $subject->user_ic],
-                    ['tblclassquiz.status', '!=', 3]
-                ])
-                ->select('tblclassquiz.*', 'users.name AS addby', 'tblclassquizstatus.statusname')->get();
+                    ->join('users', 'tblclassquiz.addby', 'users.ic')
+                    ->join('tblclassquizstatus', 'tblclassquiz.status', 'tblclassquizstatus.id')
+                    ->where([
+                        ['tblclassquiz.classid', $subject->id],
+                        ['tblclassquiz.sessionid', $subject->session_id],
+                        ['tblclassquiz.addby', $subject->user_ic],
+                        ['tblclassquiz.status', '!=', 3]
+                    ])
+                    ->select('tblclassquiz.*', 'users.name AS addby', 'tblclassquizstatus.statusname')->get();
 
-                foreach($data['assessment'] as $dt)
-                {
+                foreach ($data['assessment'] as $dt) {
                     $data['group'][] = DB::table('tblclassquiz_group')
-                            ->join('user_subjek', 'tblclassquiz_group.groupid', 'user_subjek.id')
-                            ->where('tblclassquiz_group.quizid', $dt->id)->get();
+                        ->join('user_subjek', 'tblclassquiz_group.groupid', 'user_subjek.id')
+                        ->where('tblclassquiz_group.quizid', $dt->id)->get();
 
                     $data['chapter'][] = DB::table('tblclassquiz_chapter')
-                            ->join('material_dir', 'tblclassquiz_chapter.chapterid', 'material_dir.DrID')
-                            ->where('tblclassquiz_chapter.quizid', $dt->id)->get();
+                        ->join('material_dir', 'tblclassquiz_chapter.chapterid', 'material_dir.DrID')
+                        ->where('tblclassquiz_chapter.quizid', $dt->id)->get();
                 }
-                
             }
 
-            if($request->assessment == 'test')
-            {
+            if ($request->assessment == 'test') {
 
                 $data['assessment'] = DB::table('tblclasstest')
-                ->join('users', 'tblclasstest.addby', 'users.ic')
-                ->join('tblclassteststatus', 'tblclasstest.status', 'tblclassteststatus.id')
-                ->where([
-                    ['tblclasstest.classid', $subject->id],
-                    ['tblclasstest.sessionid', $subject->session_id],
-                    ['tblclasstest.addby', $subject->user_ic],
-                    ['tblclasstest.status', '!=', 3]
-                ])
-                ->select('tblclasstest.*', 'users.name AS addby', 'tblclassteststatus.statusname')->get();
+                    ->join('users', 'tblclasstest.addby', 'users.ic')
+                    ->join('tblclassteststatus', 'tblclasstest.status', 'tblclassteststatus.id')
+                    ->where([
+                        ['tblclasstest.classid', $subject->id],
+                        ['tblclasstest.sessionid', $subject->session_id],
+                        ['tblclasstest.addby', $subject->user_ic],
+                        ['tblclasstest.status', '!=', 3]
+                    ])
+                    ->select('tblclasstest.*', 'users.name AS addby', 'tblclassteststatus.statusname')->get();
 
-                foreach($data['assessment'] as $dt)
-                {
+                foreach ($data['assessment'] as $dt) {
                     $data['group'][] = DB::table('tblclasstest_group')
-                            ->join('user_subjek', 'tblclasstest_group.groupid', 'user_subjek.id')
-                            ->where('tblclasstest_group.testid', $dt->id)->get();
+                        ->join('user_subjek', 'tblclasstest_group.groupid', 'user_subjek.id')
+                        ->where('tblclasstest_group.testid', $dt->id)->get();
 
                     $data['chapter'][] = DB::table('tblclasstest_chapter')
-                            ->join('material_dir', 'tblclasstest_chapter.chapterid', 'material_dir.DrID')
-                            ->where('tblclasstest_chapter.testid', $dt->id)->get();
+                        ->join('material_dir', 'tblclasstest_chapter.chapterid', 'material_dir.DrID')
+                        ->where('tblclasstest_chapter.testid', $dt->id)->get();
                 }
-                
             }
 
-            if($request->assessment == 'assignment')
-            {
+            if ($request->assessment == 'assignment') {
 
                 $data['assessment'] = DB::table('tblclassassign')
-                ->join('users', 'tblclassassign.addby', 'users.ic')
-                ->join('tblclassassignstatus', 'tblclassassign.status', 'tblclassassignstatus.id')
-                ->where([
-                    ['tblclassassign.classid', $subject->id],
-                    ['tblclassassign.sessionid', $subject->session_id],
-                    ['tblclassassign.addby', $subject->user_ic],
-                    ['tblclassassign.status', '!=', 3]
-                ])
-                ->select('tblclassassign.*', 'users.name AS addby', 'tblclassassignstatus.statusname')->get();
+                    ->join('users', 'tblclassassign.addby', 'users.ic')
+                    ->join('tblclassassignstatus', 'tblclassassign.status', 'tblclassassignstatus.id')
+                    ->where([
+                        ['tblclassassign.classid', $subject->id],
+                        ['tblclassassign.sessionid', $subject->session_id],
+                        ['tblclassassign.addby', $subject->user_ic],
+                        ['tblclassassign.status', '!=', 3]
+                    ])
+                    ->select('tblclassassign.*', 'users.name AS addby', 'tblclassassignstatus.statusname')->get();
 
-                foreach($data['assessment'] as $dt)
-                {
+                foreach ($data['assessment'] as $dt) {
                     $data['group'][] = DB::table('tblclassassign_group')
-                            ->join('user_subjek', 'tblclassassign_group.groupid', 'user_subjek.id')
-                            ->where('tblclassassign_group.assignid', $dt->id)->get();
+                        ->join('user_subjek', 'tblclassassign_group.groupid', 'user_subjek.id')
+                        ->where('tblclassassign_group.assignid', $dt->id)->get();
 
                     $data['chapter'][] = DB::table('tblclassassign_chapter')
-                            ->join('material_dir', 'tblclassassign_chapter.chapterid', 'material_dir.DrID')
-                            ->where('tblclassassign_chapter.assignid', $dt->id)->get();
+                        ->join('material_dir', 'tblclassassign_chapter.chapterid', 'material_dir.DrID')
+                        ->where('tblclassassign_chapter.assignid', $dt->id)->get();
                 }
-                
             }
 
-            if($request->assessment == 'midterm')
-            {
+            if ($request->assessment == 'midterm') {
 
                 $data['assessment'] = DB::table('tblclassmidterm')
-                ->join('users', 'tblclassmidterm.addby', 'users.ic')
-                ->join('tblclassmidtermstatus', 'tblclassmidterm.status', 'tblclassmidtermstatus.id')
-                ->where([
-                    ['tblclassmidterm.classid', $subject->id],
-                    ['tblclassmidterm.sessionid', $subject->session_id],
-                    ['tblclassmidterm.addby', $subject->user_ic],
-                    ['tblclassmidterm.status', '!=', 3]
-                ])
-                ->select('tblclassmidterm.*', 'users.name AS addby', 'tblclassmidtermstatus.statusname')->get();
+                    ->join('users', 'tblclassmidterm.addby', 'users.ic')
+                    ->join('tblclassmidtermstatus', 'tblclassmidterm.status', 'tblclassmidtermstatus.id')
+                    ->where([
+                        ['tblclassmidterm.classid', $subject->id],
+                        ['tblclassmidterm.sessionid', $subject->session_id],
+                        ['tblclassmidterm.addby', $subject->user_ic],
+                        ['tblclassmidterm.status', '!=', 3]
+                    ])
+                    ->select('tblclassmidterm.*', 'users.name AS addby', 'tblclassmidtermstatus.statusname')->get();
 
-                foreach($data['assessment'] as $dt)
-                {
+                foreach ($data['assessment'] as $dt) {
                     $data['group'][] = DB::table('tblclassmidterm_group')
-                            ->join('user_subjek', 'tblclassmidterm_group.groupid', 'user_subjek.id')
-                            ->where('tblclassmidterm_group.midtermid', $dt->id)->get();
+                        ->join('user_subjek', 'tblclassmidterm_group.groupid', 'user_subjek.id')
+                        ->where('tblclassmidterm_group.midtermid', $dt->id)->get();
 
                     $data['chapter'][] = DB::table('tblclassmidterm_chapter')
-                            ->join('material_dir', 'tblclassmidterm_chapter.chapterid', 'material_dir.DrID')
-                            ->where('tblclassmidterm_chapter.midtermid', $dt->id)->get();
+                        ->join('material_dir', 'tblclassmidterm_chapter.chapterid', 'material_dir.DrID')
+                        ->where('tblclassmidterm_chapter.midtermid', $dt->id)->get();
                 }
-                
             }
 
-            if($request->assessment == 'other')
-            {
+            if ($request->assessment == 'other') {
 
                 $data['assessment'] = DB::table('tblclassother')
-                ->join('users', 'tblclassother.addby', 'users.ic')
-                ->join('tblclassotherstatus', 'tblclassother.status', 'tblclassotherstatus.id')
-                ->where([
-                    ['tblclassother.classid', $subject->id],
-                    ['tblclassother.sessionid', $subject->session_id],
-                    ['tblclassother.addby', $subject->user_ic],
-                    ['tblclassother.status', '!=', 3]
-                ])
-                ->select('tblclassother.*', 'users.name AS addby', 'tblclassotherstatus.statusname')->get();
+                    ->join('users', 'tblclassother.addby', 'users.ic')
+                    ->join('tblclassotherstatus', 'tblclassother.status', 'tblclassotherstatus.id')
+                    ->where([
+                        ['tblclassother.classid', $subject->id],
+                        ['tblclassother.sessionid', $subject->session_id],
+                        ['tblclassother.addby', $subject->user_ic],
+                        ['tblclassother.status', '!=', 3]
+                    ])
+                    ->select('tblclassother.*', 'users.name AS addby', 'tblclassotherstatus.statusname')->get();
 
-                foreach($data['assessment'] as $dt)
-                {
+                foreach ($data['assessment'] as $dt) {
                     $data['group'][] = DB::table('tblclassother_group')
-                            ->join('user_subjek', 'tblclassother_group.groupid', 'user_subjek.id')
-                            ->where('tblclassother_group.otherid', $dt->id)->get();
+                        ->join('user_subjek', 'tblclassother_group.groupid', 'user_subjek.id')
+                        ->where('tblclassother_group.otherid', $dt->id)->get();
 
                     $data['chapter'][] = DB::table('tblclassother_chapter')
-                            ->join('material_dir', 'tblclassother_chapter.chapterid', 'material_dir.DrID')
-                            ->where('tblclassother_chapter.otherid', $dt->id)->get();
+                        ->join('material_dir', 'tblclassother_chapter.chapterid', 'material_dir.DrID')
+                        ->where('tblclassother_chapter.otherid', $dt->id)->get();
                 }
-                
             }
 
-            if($request->assessment == 'extra')
-            {
+            if ($request->assessment == 'extra') {
 
                 $data['assessment'] = DB::table('tblclassextra')
-                ->join('users', 'tblclassextra.addby', 'users.ic')
-                ->join('tblclassextrastatus', 'tblclassextra.status', 'tblclassextrastatus.id')
-                ->where([
-                    ['tblclassextra.classid', $subject->id],
-                    ['tblclassextra.sessionid', $subject->session_id],
-                    ['tblclassextra.addby', $subject->user_ic],
-                    ['tblclassextra.status', '!=', 3]
-                ])
-                ->select('tblclassextra.*', 'users.name AS addby', 'tblclassextrastatus.statusname')->get();
+                    ->join('users', 'tblclassextra.addby', 'users.ic')
+                    ->join('tblclassextrastatus', 'tblclassextra.status', 'tblclassextrastatus.id')
+                    ->where([
+                        ['tblclassextra.classid', $subject->id],
+                        ['tblclassextra.sessionid', $subject->session_id],
+                        ['tblclassextra.addby', $subject->user_ic],
+                        ['tblclassextra.status', '!=', 3]
+                    ])
+                    ->select('tblclassextra.*', 'users.name AS addby', 'tblclassextrastatus.statusname')->get();
 
-                foreach($data['assessment'] as $dt)
-                {
+                foreach ($data['assessment'] as $dt) {
                     $data['group'][] = DB::table('tblclassextra_group')
-                            ->join('user_subjek', 'tblclassextra_group.groupid', 'user_subjek.id')
-                            ->where('tblclassextra_group.extraid', $dt->id)->get();
+                        ->join('user_subjek', 'tblclassextra_group.groupid', 'user_subjek.id')
+                        ->where('tblclassextra_group.extraid', $dt->id)->get();
 
                     $data['chapter'][] = DB::table('tblclassextra_chapter')
-                            ->join('material_dir', 'tblclassextra_chapter.chapterid', 'material_dir.DrID')
-                            ->where('tblclassextra_chapter.extraid', $dt->id)->get();
+                        ->join('material_dir', 'tblclassextra_chapter.chapterid', 'material_dir.DrID')
+                        ->where('tblclassextra_chapter.extraid', $dt->id)->get();
                 }
-                
             }
 
-            if($request->assessment == 'final')
-            {
+            if ($request->assessment == 'final') {
 
                 $data['assessment'] = DB::table('tblclassfinal')
-                ->join('users', 'tblclassfinal.addby', 'users.ic')
-                ->join('tblclassfinalstatus', 'tblclassfinal.status', 'tblclassfinalstatus.id')
-                ->where([
-                    ['tblclassfinal.classid', $subject->id],
-                    ['tblclassfinal.sessionid', $subject->session_id],
-                    ['tblclassfinal.addby', $subject->user_ic],
-                    ['tblclassfinal.status', '!=', 3]
-                ])
-                ->select('tblclassfinal.*', 'users.name AS addby', 'tblclassfinalstatus.statusname')->get();
+                    ->join('users', 'tblclassfinal.addby', 'users.ic')
+                    ->join('tblclassfinalstatus', 'tblclassfinal.status', 'tblclassfinalstatus.id')
+                    ->where([
+                        ['tblclassfinal.classid', $subject->id],
+                        ['tblclassfinal.sessionid', $subject->session_id],
+                        ['tblclassfinal.addby', $subject->user_ic],
+                        ['tblclassfinal.status', '!=', 3]
+                    ])
+                    ->select('tblclassfinal.*', 'users.name AS addby', 'tblclassfinalstatus.statusname')->get();
 
-                foreach($data['assessment'] as $dt)
-                {
+                foreach ($data['assessment'] as $dt) {
                     $data['group'][] = DB::table('tblclassfinal_group')
-                            ->join('user_subjek', 'tblclassfinal_group.groupid', 'user_subjek.id')
-                            ->where('tblclassfinal_group.finalid', $dt->id)->get();
+                        ->join('user_subjek', 'tblclassfinal_group.groupid', 'user_subjek.id')
+                        ->where('tblclassfinal_group.finalid', $dt->id)->get();
 
                     $data['chapter'][] = DB::table('tblclassfinal_chapter')
-                            ->join('material_dir', 'tblclassfinal_chapter.chapterid', 'material_dir.DrID')
-                            ->where('tblclassfinal_chapter.finalid', $dt->id)->get();
+                        ->join('material_dir', 'tblclassfinal_chapter.chapterid', 'material_dir.DrID')
+                        ->where('tblclassfinal_chapter.finalid', $dt->id)->get();
                 }
-                
             }
 
             return view('pendaftar_akademik.student.assessment.getStudentAssessment', compact('data'));
-
-        }else{
+        } else {
 
             return response()->json(['error' => 'Please make sure that all input fields are filled!']);
-
         }
-
     }
 
     public function assessmentStatus()
@@ -4979,350 +5261,320 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
         $data['intake'] = request()->intake;
 
-        if(request()->type == 'quiz')
-        {
+        if (request()->type == 'quiz') {
 
             $data['group'] = DB::table('user_subjek')
-                    ->join('tblclassquiz_group', 'user_subjek.id', 'tblclassquiz_group.groupid')
-                    ->join('tblclassquiz', 'tblclassquiz_group.quizid', 'tblclassquiz.id')
-                    ->where([
-                        ['tblclassquiz.id', request()->id]
-                    ])->get();
+                ->join('tblclassquiz_group', 'user_subjek.id', 'tblclassquiz_group.groupid')
+                ->join('tblclassquiz', 'tblclassquiz_group.quizid', 'tblclassquiz.id')
+                ->where([
+                    ['tblclassquiz.id', request()->id]
+                ])->get();
 
             $data['assessment'] = DB::table('student_subjek')
-                    ->join('tblclassquiz_group', function($join){
-                        $join->on('student_subjek.group_id', 'tblclassquiz_group.groupid');
-                        $join->on('student_subjek.group_name', 'tblclassquiz_group.groupname');
-                    })
-                    ->join('tblclassquiz', 'tblclassquiz_group.quizid', 'tblclassquiz.id')
-                    ->join('students', 'student_subjek.student_ic', 'students.ic')
-                    ->when(request()->intake != '', function($query){
-                        return $query->where('students.intake', request()->intake);
-                    })
-                    ->select('student_subjek.*', 'tblclassquiz.id AS clssid', 'tblclassquiz.total_mark', 'students.no_matric', 'students.name')
-                    ->where([
-                        ['tblclassquiz.id', request()->id]
-                    ])->whereNotIn('students.status', [4,5,6,7,16])->orderBy('students.name')->get();
+                ->join('tblclassquiz_group', function ($join) {
+                    $join->on('student_subjek.group_id', 'tblclassquiz_group.groupid');
+                    $join->on('student_subjek.group_name', 'tblclassquiz_group.groupname');
+                })
+                ->join('tblclassquiz', 'tblclassquiz_group.quizid', 'tblclassquiz.id')
+                ->join('students', 'student_subjek.student_ic', 'students.ic')
+                ->when(request()->intake != '', function ($query) {
+                    return $query->where('students.intake', request()->intake);
+                })
+                ->select('student_subjek.*', 'tblclassquiz.id AS clssid', 'tblclassquiz.total_mark', 'students.no_matric', 'students.name')
+                ->where([
+                    ['tblclassquiz.id', request()->id]
+                ])->whereNotIn('students.status', [4, 5, 6, 7, 16])->orderBy('students.name')->get();
 
-            foreach($data['assessment'] as $qz)
-            {
+            foreach ($data['assessment'] as $qz) {
 
-                if(!DB::table('tblclassstudentquiz')->where([['quizid', $qz->clssid],['userid', $qz->student_ic]])->exists()){
+                if (!DB::table('tblclassstudentquiz')->where([['quizid', $qz->clssid], ['userid', $qz->student_ic]])->exists()) {
 
                     DB::table('tblclassstudentquiz')->insert([
                         'quizid' => $qz->clssid,
                         'userid' => $qz->student_ic
                     ]);
-    
                 }
 
                 $data['status'][] = DB::table('tblclassstudentquiz')
-                ->where([
-                    ['quizid', $qz->clssid],
-                    ['userid', $qz->student_ic]
-                ])->first();
+                    ->where([
+                        ['quizid', $qz->clssid],
+                        ['userid', $qz->student_ic]
+                    ])->first();
             }
 
             return view('pendaftar_akademik.student.assessment.assessmentStatus', compact('data'));
-
         }
 
-        if(request()->type == 'test')
-        {
+        if (request()->type == 'test') {
 
             $data['group'] = DB::table('user_subjek')
-                    ->join('tblclasstest_group', 'user_subjek.id', 'tblclasstest_group.groupid')
-                    ->join('tblclasstest', 'tblclasstest_group.testid', 'tblclasstest.id')
-                    ->where([
-                        ['tblclasstest.id', request()->id]
-                    ])->get();
+                ->join('tblclasstest_group', 'user_subjek.id', 'tblclasstest_group.groupid')
+                ->join('tblclasstest', 'tblclasstest_group.testid', 'tblclasstest.id')
+                ->where([
+                    ['tblclasstest.id', request()->id]
+                ])->get();
 
             $data['assessment'] = DB::table('student_subjek')
-                    ->join('tblclasstest_group', function($join){
-                        $join->on('student_subjek.group_id', 'tblclasstest_group.groupid');
-                        $join->on('student_subjek.group_name', 'tblclasstest_group.groupname');
-                    })
-                    ->join('tblclasstest', 'tblclasstest_group.testid', 'tblclasstest.id')
-                    ->join('students', 'student_subjek.student_ic', 'students.ic')
-                    ->when(request()->intake != '', function($query){
-                        return $query->where('students.intake', request()->intake);
-                    })
-                    ->select('student_subjek.*', 'tblclasstest.id AS clssid', 'tblclasstest.total_mark', 'students.no_matric', 'students.name')
-                    ->where([
-                        ['tblclasstest.id', request()->id]
-                    ])->whereNotIn('students.status', [4,5,6,7,16])->orderBy('students.name')->get();
+                ->join('tblclasstest_group', function ($join) {
+                    $join->on('student_subjek.group_id', 'tblclasstest_group.groupid');
+                    $join->on('student_subjek.group_name', 'tblclasstest_group.groupname');
+                })
+                ->join('tblclasstest', 'tblclasstest_group.testid', 'tblclasstest.id')
+                ->join('students', 'student_subjek.student_ic', 'students.ic')
+                ->when(request()->intake != '', function ($query) {
+                    return $query->where('students.intake', request()->intake);
+                })
+                ->select('student_subjek.*', 'tblclasstest.id AS clssid', 'tblclasstest.total_mark', 'students.no_matric', 'students.name')
+                ->where([
+                    ['tblclasstest.id', request()->id]
+                ])->whereNotIn('students.status', [4, 5, 6, 7, 16])->orderBy('students.name')->get();
 
-            foreach($data['assessment'] as $qz)
-            {
+            foreach ($data['assessment'] as $qz) {
 
-                if(!DB::table('tblclassstudenttest')->where([['testid', $qz->clssid],['userid', $qz->student_ic]])->exists()){
+                if (!DB::table('tblclassstudenttest')->where([['testid', $qz->clssid], ['userid', $qz->student_ic]])->exists()) {
 
                     DB::table('tblclassstudenttest')->insert([
                         'testid' => $qz->clssid,
                         'userid' => $qz->student_ic
                     ]);
-    
                 }
 
                 $data['status'][] = DB::table('tblclassstudenttest')
-                ->where([
-                    ['testid', $qz->clssid],
-                    ['userid', $qz->student_ic]
-                ])->first();
+                    ->where([
+                        ['testid', $qz->clssid],
+                        ['userid', $qz->student_ic]
+                    ])->first();
             }
 
             return view('pendaftar_akademik.student.assessment.assessmentStatus', compact('data'));
-
         }
 
-        if(request()->type == 'assignment')
-        {
+        if (request()->type == 'assignment') {
 
             $data['group'] = DB::table('user_subjek')
-                    ->join('tblclassassign_group', 'user_subjek.id', 'tblclassassign_group.groupid')
-                    ->join('tblclassassign', 'tblclassassign_group.assignid', 'tblclassassign.id')
-                    ->where([
-                        ['tblclassassign.id', request()->id]
-                    ])->get();
+                ->join('tblclassassign_group', 'user_subjek.id', 'tblclassassign_group.groupid')
+                ->join('tblclassassign', 'tblclassassign_group.assignid', 'tblclassassign.id')
+                ->where([
+                    ['tblclassassign.id', request()->id]
+                ])->get();
 
             $data['assessment'] = DB::table('student_subjek')
-                    ->join('tblclassassign_group', function($join){
-                        $join->on('student_subjek.group_id', 'tblclassassign_group.groupid');
-                        $join->on('student_subjek.group_name', 'tblclassassign_group.groupname');
-                    })
-                    ->join('tblclassassign', 'tblclassassign_group.assignid', 'tblclassassign.id')
-                    ->join('students', 'student_subjek.student_ic', 'students.ic')
-                    ->when(request()->intake != '', function($query){
-                        return $query->where('students.intake', request()->intake);
-                    })
-                    ->select('student_subjek.*', 'tblclassassign.id AS clssid', 'tblclassassign.total_mark', 'students.no_matric', 'students.name')
-                    ->where([
-                        ['tblclassassign.id', request()->id]
-                    ])->whereNotIn('students.status', [4,5,6,7,16])->orderBy('students.name')->get();
+                ->join('tblclassassign_group', function ($join) {
+                    $join->on('student_subjek.group_id', 'tblclassassign_group.groupid');
+                    $join->on('student_subjek.group_name', 'tblclassassign_group.groupname');
+                })
+                ->join('tblclassassign', 'tblclassassign_group.assignid', 'tblclassassign.id')
+                ->join('students', 'student_subjek.student_ic', 'students.ic')
+                ->when(request()->intake != '', function ($query) {
+                    return $query->where('students.intake', request()->intake);
+                })
+                ->select('student_subjek.*', 'tblclassassign.id AS clssid', 'tblclassassign.total_mark', 'students.no_matric', 'students.name')
+                ->where([
+                    ['tblclassassign.id', request()->id]
+                ])->whereNotIn('students.status', [4, 5, 6, 7, 16])->orderBy('students.name')->get();
 
-            foreach($data['assessment'] as $qz)
-            {
+            foreach ($data['assessment'] as $qz) {
 
-                if(!DB::table('tblclassstudentassign')->where([['assignid', $qz->clssid],['userid', $qz->student_ic]])->exists()){
+                if (!DB::table('tblclassstudentassign')->where([['assignid', $qz->clssid], ['userid', $qz->student_ic]])->exists()) {
 
                     DB::table('tblclassstudentassign')->insert([
                         'assignid' => $qz->clssid,
                         'userid' => $qz->student_ic
                     ]);
-    
                 }
 
                 $data['status'][] = DB::table('tblclassstudentassign')
-                ->where([
-                    ['assignid', $qz->clssid],
-                    ['userid', $qz->student_ic]
-                ])->first();
+                    ->where([
+                        ['assignid', $qz->clssid],
+                        ['userid', $qz->student_ic]
+                    ])->first();
             }
 
             return view('pendaftar_akademik.student.assessment.assessmentStatus', compact('data'));
-
         }
 
-        if(request()->type == 'midterm')
-        {
+        if (request()->type == 'midterm') {
 
             $data['group'] = DB::table('user_subjek')
-                    ->join('tblclassmidterm_group', 'user_subjek.id', 'tblclassmidterm_group.groupid')
-                    ->join('tblclassmidterm', 'tblclassmidterm_group.midtermid', 'tblclassmidterm.id')
-                    ->where([
-                        ['tblclassmidterm.id', request()->id]
-                    ])->get();
+                ->join('tblclassmidterm_group', 'user_subjek.id', 'tblclassmidterm_group.groupid')
+                ->join('tblclassmidterm', 'tblclassmidterm_group.midtermid', 'tblclassmidterm.id')
+                ->where([
+                    ['tblclassmidterm.id', request()->id]
+                ])->get();
 
             $data['assessment'] = DB::table('student_subjek')
-                    ->join('tblclassmidterm_group', function($join){
-                        $join->on('student_subjek.group_id', 'tblclassmidterm_group.groupid');
-                        $join->on('student_subjek.group_name', 'tblclassmidterm_group.groupname');
-                    })
-                    ->join('tblclassmidterm', 'tblclassmidterm_group.midtermid', 'tblclassmidterm.id')
-                    ->join('students', 'student_subjek.student_ic', 'students.ic')
-                    ->when(request()->intake != '', function($query){
-                        return $query->where('students.intake', request()->intake);
-                    })
-                    ->select('student_subjek.*', 'tblclassmidterm.id AS clssid', 'tblclassmidterm.total_mark', 'students.no_matric', 'students.name')
-                    ->where([
-                        ['tblclassmidterm.id', request()->id]
-                    ])->whereNotIn('students.status', [4,5,6,7,16])->orderBy('students.name')->get();
+                ->join('tblclassmidterm_group', function ($join) {
+                    $join->on('student_subjek.group_id', 'tblclassmidterm_group.groupid');
+                    $join->on('student_subjek.group_name', 'tblclassmidterm_group.groupname');
+                })
+                ->join('tblclassmidterm', 'tblclassmidterm_group.midtermid', 'tblclassmidterm.id')
+                ->join('students', 'student_subjek.student_ic', 'students.ic')
+                ->when(request()->intake != '', function ($query) {
+                    return $query->where('students.intake', request()->intake);
+                })
+                ->select('student_subjek.*', 'tblclassmidterm.id AS clssid', 'tblclassmidterm.total_mark', 'students.no_matric', 'students.name')
+                ->where([
+                    ['tblclassmidterm.id', request()->id]
+                ])->whereNotIn('students.status', [4, 5, 6, 7, 16])->orderBy('students.name')->get();
 
-            foreach($data['assessment'] as $qz)
-            {
+            foreach ($data['assessment'] as $qz) {
 
-                if(!DB::table('tblclassstudentmidterm')->where([['midtermid', $qz->clssid],['userid', $qz->student_ic]])->exists()){
+                if (!DB::table('tblclassstudentmidterm')->where([['midtermid', $qz->clssid], ['userid', $qz->student_ic]])->exists()) {
 
                     DB::table('tblclassstudentmidterm')->insert([
                         'midtermid' => $qz->clssid,
                         'userid' => $qz->student_ic
                     ]);
-    
                 }
 
                 $data['status'][] = DB::table('tblclassstudentmidterm')
-                ->where([
-                    ['midtermid', $qz->clssid],
-                    ['userid', $qz->student_ic]
-                ])->first();
+                    ->where([
+                        ['midtermid', $qz->clssid],
+                        ['userid', $qz->student_ic]
+                    ])->first();
             }
 
             return view('pendaftar_akademik.student.assessment.assessmentStatus', compact('data'));
-
         }
 
-        if(request()->type == 'other')
-        {
+        if (request()->type == 'other') {
 
             $data['group'] = DB::table('user_subjek')
-                    ->join('tblclassother_group', 'user_subjek.id', 'tblclassother_group.groupid')
-                    ->join('tblclassother', 'tblclassother_group.otherid', 'tblclassother.id')
-                    ->where([
-                        ['tblclassother.id', request()->id]
-                    ])->get();
+                ->join('tblclassother_group', 'user_subjek.id', 'tblclassother_group.groupid')
+                ->join('tblclassother', 'tblclassother_group.otherid', 'tblclassother.id')
+                ->where([
+                    ['tblclassother.id', request()->id]
+                ])->get();
 
             $data['assessment'] = DB::table('student_subjek')
-                    ->join('tblclassother_group', function($join){
-                        $join->on('student_subjek.group_id', 'tblclassother_group.groupid');
-                        $join->on('student_subjek.group_name', 'tblclassother_group.groupname');
-                    })
-                    ->join('tblclassother', 'tblclassother_group.otherid', 'tblclassother.id')
-                    ->join('students', 'student_subjek.student_ic', 'students.ic')
-                    ->when(request()->intake != '', function($query){
-                        return $query->where('students.intake', request()->intake);
-                    })
-                    ->select('student_subjek.*', 'tblclassother.id AS clssid', 'tblclassother.total_mark', 'students.no_matric', 'students.name')
-                    ->where([
-                        ['tblclassother.id', request()->id]
-                    ])->whereNotIn('students.status', [4,5,6,7,16])->orderBy('students.name')->get();
+                ->join('tblclassother_group', function ($join) {
+                    $join->on('student_subjek.group_id', 'tblclassother_group.groupid');
+                    $join->on('student_subjek.group_name', 'tblclassother_group.groupname');
+                })
+                ->join('tblclassother', 'tblclassother_group.otherid', 'tblclassother.id')
+                ->join('students', 'student_subjek.student_ic', 'students.ic')
+                ->when(request()->intake != '', function ($query) {
+                    return $query->where('students.intake', request()->intake);
+                })
+                ->select('student_subjek.*', 'tblclassother.id AS clssid', 'tblclassother.total_mark', 'students.no_matric', 'students.name')
+                ->where([
+                    ['tblclassother.id', request()->id]
+                ])->whereNotIn('students.status', [4, 5, 6, 7, 16])->orderBy('students.name')->get();
 
-            foreach($data['assessment'] as $qz)
-            {
+            foreach ($data['assessment'] as $qz) {
 
-                if(!DB::table('tblclassstudentother')->where([['otherid', $qz->clssid],['userid', $qz->student_ic]])->exists()){
+                if (!DB::table('tblclassstudentother')->where([['otherid', $qz->clssid], ['userid', $qz->student_ic]])->exists()) {
 
                     DB::table('tblclassstudentother')->insert([
                         'otherid' => $qz->clssid,
                         'userid' => $qz->student_ic
                     ]);
-    
                 }
 
                 $data['status'][] = DB::table('tblclassstudentother')
-                ->where([
-                    ['otherid', $qz->clssid],
-                    ['userid', $qz->student_ic]
-                ])->first();
+                    ->where([
+                        ['otherid', $qz->clssid],
+                        ['userid', $qz->student_ic]
+                    ])->first();
             }
 
             return view('pendaftar_akademik.student.assessment.assessmentStatus', compact('data'));
-
         }
 
-        if(request()->type == 'extra')
-        {
+        if (request()->type == 'extra') {
 
             $data['group'] = DB::table('user_subjek')
-                    ->join('tblclassextra_group', 'user_subjek.id', 'tblclassextra_group.groupid')
-                    ->join('tblclassextra', 'tblclassextra_group.extraid', 'tblclassextra.id')
-                    ->where([
-                        ['tblclassextra.id', request()->id]
-                    ])->get();
+                ->join('tblclassextra_group', 'user_subjek.id', 'tblclassextra_group.groupid')
+                ->join('tblclassextra', 'tblclassextra_group.extraid', 'tblclassextra.id')
+                ->where([
+                    ['tblclassextra.id', request()->id]
+                ])->get();
 
             $data['assessment'] = DB::table('student_subjek')
-                    ->join('tblclassextra_group', function($join){
-                        $join->on('student_subjek.group_id', 'tblclassextra_group.groupid');
-                        $join->on('student_subjek.group_name', 'tblclassextra_group.groupname');
-                    })
-                    ->join('tblclassextra', 'tblclassextra_group.extraid', 'tblclassextra.id')
-                    ->join('students', 'student_subjek.student_ic', 'students.ic')
-                    ->when(request()->intake != '', function($query){
-                        return $query->where('students.intake', request()->intake);
-                    })
-                    ->select('student_subjek.*', 'tblclassextra.id AS clssid', 'tblclassextra.total_mark', 'students.no_matric', 'students.name')
-                    ->where([
-                        ['tblclassextra.id', request()->id]
-                    ])->whereNotIn('students.status', [4,5,6,7,16])->orderBy('students.name')->get();
+                ->join('tblclassextra_group', function ($join) {
+                    $join->on('student_subjek.group_id', 'tblclassextra_group.groupid');
+                    $join->on('student_subjek.group_name', 'tblclassextra_group.groupname');
+                })
+                ->join('tblclassextra', 'tblclassextra_group.extraid', 'tblclassextra.id')
+                ->join('students', 'student_subjek.student_ic', 'students.ic')
+                ->when(request()->intake != '', function ($query) {
+                    return $query->where('students.intake', request()->intake);
+                })
+                ->select('student_subjek.*', 'tblclassextra.id AS clssid', 'tblclassextra.total_mark', 'students.no_matric', 'students.name')
+                ->where([
+                    ['tblclassextra.id', request()->id]
+                ])->whereNotIn('students.status', [4, 5, 6, 7, 16])->orderBy('students.name')->get();
 
-            foreach($data['assessment'] as $qz)
-            {
+            foreach ($data['assessment'] as $qz) {
 
-                if(!DB::table('tblclassstudentextra')->where([['extraid', $qz->clssid],['userid', $qz->student_ic]])->exists()){
+                if (!DB::table('tblclassstudentextra')->where([['extraid', $qz->clssid], ['userid', $qz->student_ic]])->exists()) {
 
                     DB::table('tblclassstudentextra')->insert([
                         'extraid' => $qz->clssid,
                         'userid' => $qz->student_ic
                     ]);
-    
                 }
 
                 $data['status'][] = DB::table('tblclassstudentextra')
-                ->where([
-                    ['extraid', $qz->clssid],
-                    ['userid', $qz->student_ic]
-                ])->first();
+                    ->where([
+                        ['extraid', $qz->clssid],
+                        ['userid', $qz->student_ic]
+                    ])->first();
             }
 
             return view('pendaftar_akademik.student.assessment.assessmentStatus', compact('data'));
-
         }
 
-        if(request()->type == 'final')
-        {
+        if (request()->type == 'final') {
 
             $data['group'] = DB::table('user_subjek')
-                    ->join('tblclassfinal_group', 'user_subjek.id', 'tblclassfinal_group.groupid')
-                    ->join('tblclassfinal', 'tblclassfinal_group.finalid', 'tblclassfinal.id')
-                    ->where([
-                        ['tblclassfinal.id', request()->id]
-                    ])->get();
+                ->join('tblclassfinal_group', 'user_subjek.id', 'tblclassfinal_group.groupid')
+                ->join('tblclassfinal', 'tblclassfinal_group.finalid', 'tblclassfinal.id')
+                ->where([
+                    ['tblclassfinal.id', request()->id]
+                ])->get();
 
             $data['assessment'] = DB::table('student_subjek')
-                    ->join('tblclassfinal_group', function($join){
-                        $join->on('student_subjek.group_id', 'tblclassfinal_group.groupid');
-                        $join->on('student_subjek.group_name', 'tblclassfinal_group.groupname');
-                    })
-                    ->join('tblclassfinal', 'tblclassfinal_group.finalid', 'tblclassfinal.id')
-                    ->join('students', 'student_subjek.student_ic', 'students.ic')
-                    ->when(request()->intake != '', function($query){
-                        return $query->where('students.intake', request()->intake);
-                    })
-                    ->select('student_subjek.*', 'tblclassfinal.id AS clssid', 'tblclassfinal.total_mark', 'students.no_matric', 'students.name')
-                    ->where([
-                        ['tblclassfinal.id', request()->id]
-                    ])
-                    ->whereNotIn('students.status', [4,5,6,7,16])->orderBy('students.name')
-                    ->get();
+                ->join('tblclassfinal_group', function ($join) {
+                    $join->on('student_subjek.group_id', 'tblclassfinal_group.groupid');
+                    $join->on('student_subjek.group_name', 'tblclassfinal_group.groupname');
+                })
+                ->join('tblclassfinal', 'tblclassfinal_group.finalid', 'tblclassfinal.id')
+                ->join('students', 'student_subjek.student_ic', 'students.ic')
+                ->when(request()->intake != '', function ($query) {
+                    return $query->where('students.intake', request()->intake);
+                })
+                ->select('student_subjek.*', 'tblclassfinal.id AS clssid', 'tblclassfinal.total_mark', 'students.no_matric', 'students.name')
+                ->where([
+                    ['tblclassfinal.id', request()->id]
+                ])
+                ->whereNotIn('students.status', [4, 5, 6, 7, 16])->orderBy('students.name')
+                ->get();
 
-            foreach($data['assessment'] as $qz)
-            {
+            foreach ($data['assessment'] as $qz) {
 
-                if(!DB::table('tblclassstudentfinal')->where([['finalid', $qz->clssid],['userid', $qz->student_ic]])->exists()){
+                if (!DB::table('tblclassstudentfinal')->where([['finalid', $qz->clssid], ['userid', $qz->student_ic]])->exists()) {
 
                     DB::table('tblclassstudentfinal')->insert([
                         'finalid' => $qz->clssid,
                         'userid' => $qz->student_ic
                     ]);
-    
                 }
 
                 $data['status'][] = DB::table('tblclassstudentfinal')
-                ->where([
-                    ['finalid', $qz->clssid],
-                    ['userid', $qz->student_ic]
-                ])->first();
+                    ->where([
+                        ['finalid', $qz->clssid],
+                        ['userid', $qz->student_ic]
+                    ])->first();
             }
 
             return view('pendaftar_akademik.student.assessment.assessmentStatus', compact('data'));
-
         }
-
     }
 
     public function updateAssessmentStatus(Request $request)
     {
-        if($request->type == 'quiz')
-        {
+        if ($request->type == 'quiz') {
 
             $marks = json_decode($request->marks);
 
@@ -5332,34 +5584,29 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
             $limitpercen = DB::table('tblclassquiz')->where('id', $assessmentid)->first();
 
-            foreach($marks as $key => $mrk)
-            {
+            foreach ($marks as $key => $mrk) {
 
-                if($mrk > $limitpercen->total_mark)
-                {
-                    return ["message"=>"Field Error", "id" => $ics];
+                if ($mrk > $limitpercen->total_mark) {
+                    return ["message" => "Field Error", "id" => $ics];
                 }
-
             }
 
-        
+
             $upsert = [];
-            foreach($marks as $key => $mrk){
+            foreach ($marks as $key => $mrk) {
                 array_push($upsert, [
-                'userid' => $ics[$key],
-                'quizid' => $assessmentid,
-                'submittime' => date("Y-m-d H:i:s"),
-                'final_mark' => $mrk,
-                'status' => 1
+                    'userid' => $ics[$key],
+                    'quizid' => $assessmentid,
+                    'submittime' => date("Y-m-d H:i:s"),
+                    'final_mark' => $mrk,
+                    'status' => 1
                 ]);
             }
 
             DB::table('tblclassstudentquiz')->upsert($upsert, ['userid', 'quizid']);
-
         }
 
-        if($request->type == 'test')
-        {
+        if ($request->type == 'test') {
 
             $marks = json_decode($request->marks);
 
@@ -5369,34 +5616,29 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
             $limitpercen = DB::table('tblclasstest')->where('id', $assessmentid)->first();
 
-            foreach($marks as $key => $mrk)
-            {
+            foreach ($marks as $key => $mrk) {
 
-                if($mrk > $limitpercen->total_mark)
-                {
-                    return ["message"=>"Field Error", "id" => $ics];
+                if ($mrk > $limitpercen->total_mark) {
+                    return ["message" => "Field Error", "id" => $ics];
                 }
-
             }
 
-        
+
             $upsert = [];
-            foreach($marks as $key => $mrk){
+            foreach ($marks as $key => $mrk) {
                 array_push($upsert, [
-                'userid' => $ics[$key],
-                'testid' => $assessmentid,
-                'submittime' => date("Y-m-d H:i:s"),
-                'final_mark' => $mrk,
-                'status' => 1
+                    'userid' => $ics[$key],
+                    'testid' => $assessmentid,
+                    'submittime' => date("Y-m-d H:i:s"),
+                    'final_mark' => $mrk,
+                    'status' => 1
                 ]);
             }
 
             DB::table('tblclassstudenttest')->upsert($upsert, ['userid', 'testid']);
-
         }
 
-        if($request->type == 'assignment')
-        {
+        if ($request->type == 'assignment') {
 
             $marks = json_decode($request->marks);
 
@@ -5406,34 +5648,29 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
             $limitpercen = DB::table('tblclassassign')->where('id', $assessmentid)->first();
 
-            foreach($marks as $key => $mrk)
-            {
+            foreach ($marks as $key => $mrk) {
 
-                if($mrk > $limitpercen->total_mark)
-                {
-                    return ["message"=>"Field Error", "id" => $ics];
+                if ($mrk > $limitpercen->total_mark) {
+                    return ["message" => "Field Error", "id" => $ics];
                 }
-
             }
 
-        
+
             $upsert = [];
-            foreach($marks as $key => $mrk){
+            foreach ($marks as $key => $mrk) {
                 array_push($upsert, [
-                'userid' => $ics[$key],
-                'assignid' => $assessmentid,
-                'submittime' => date("Y-m-d H:i:s"),
-                'final_mark' => $mrk,
-                'status' => 1
+                    'userid' => $ics[$key],
+                    'assignid' => $assessmentid,
+                    'submittime' => date("Y-m-d H:i:s"),
+                    'final_mark' => $mrk,
+                    'status' => 1
                 ]);
             }
 
             DB::table('tblclassstudentassign')->upsert($upsert, ['userid', 'assignid']);
-
         }
 
-        if($request->type == 'midterm')
-        {
+        if ($request->type == 'midterm') {
 
             $marks = json_decode($request->marks);
 
@@ -5443,34 +5680,29 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
             $limitpercen = DB::table('tblclassmidterm')->where('id', $assessmentid)->first();
 
-            foreach($marks as $key => $mrk)
-            {
+            foreach ($marks as $key => $mrk) {
 
-                if($mrk > $limitpercen->total_mark)
-                {
-                    return ["message"=>"Field Error", "id" => $ics];
+                if ($mrk > $limitpercen->total_mark) {
+                    return ["message" => "Field Error", "id" => $ics];
                 }
-
             }
 
-        
+
             $upsert = [];
-            foreach($marks as $key => $mrk){
+            foreach ($marks as $key => $mrk) {
                 array_push($upsert, [
-                'userid' => $ics[$key],
-                'midtermid' => $assessmentid,
-                'submittime' => date("Y-m-d H:i:s"),
-                'final_mark' => $mrk,
-                'status' => 1
+                    'userid' => $ics[$key],
+                    'midtermid' => $assessmentid,
+                    'submittime' => date("Y-m-d H:i:s"),
+                    'final_mark' => $mrk,
+                    'status' => 1
                 ]);
             }
 
             DB::table('tblclassstudentmidterm')->upsert($upsert, ['userid', 'midtermid']);
-
         }
 
-        if($request->type == 'other')
-        {
+        if ($request->type == 'other') {
 
             $marks = json_decode($request->marks);
 
@@ -5480,34 +5712,29 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
             $limitpercen = DB::table('tblclassother')->where('id', $assessmentid)->first();
 
-            foreach($marks as $key => $mrk)
-            {
+            foreach ($marks as $key => $mrk) {
 
-                if($mrk > $limitpercen->total_mark)
-                {
-                    return ["message"=>"Field Error", "id" => $ics];
+                if ($mrk > $limitpercen->total_mark) {
+                    return ["message" => "Field Error", "id" => $ics];
                 }
-
             }
 
-        
+
             $upsert = [];
-            foreach($marks as $key => $mrk){
+            foreach ($marks as $key => $mrk) {
                 array_push($upsert, [
-                'userid' => $ics[$key],
-                'otherid' => $assessmentid,
-                'submittime' => date("Y-m-d H:i:s"),
-                'final_mark' => $mrk,
-                'status' => 1
+                    'userid' => $ics[$key],
+                    'otherid' => $assessmentid,
+                    'submittime' => date("Y-m-d H:i:s"),
+                    'final_mark' => $mrk,
+                    'status' => 1
                 ]);
             }
 
             DB::table('tblclassstudentother')->upsert($upsert, ['userid', 'otherid']);
-
         }
 
-        if($request->type == 'extra')
-        {
+        if ($request->type == 'extra') {
 
             $marks = json_decode($request->marks);
 
@@ -5517,34 +5744,29 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
             $limitpercen = DB::table('tblclassextra')->where('id', $assessmentid)->first();
 
-            foreach($marks as $key => $mrk)
-            {
+            foreach ($marks as $key => $mrk) {
 
-                if($mrk > $limitpercen->total_mark)
-                {
-                    return ["message"=>"Field Error", "id" => $ics];
+                if ($mrk > $limitpercen->total_mark) {
+                    return ["message" => "Field Error", "id" => $ics];
                 }
-
             }
 
-        
+
             $upsert = [];
-            foreach($marks as $key => $mrk){
+            foreach ($marks as $key => $mrk) {
                 array_push($upsert, [
-                'userid' => $ics[$key],
-                'extraid' => $assessmentid,
-                'submittime' => date("Y-m-d H:i:s"),
-                'final_mark' => $mrk,
-                'status' => 1
+                    'userid' => $ics[$key],
+                    'extraid' => $assessmentid,
+                    'submittime' => date("Y-m-d H:i:s"),
+                    'final_mark' => $mrk,
+                    'status' => 1
                 ]);
             }
 
             DB::table('tblclassstudentextra')->upsert($upsert, ['userid', 'extraid']);
-
         }
 
-        if($request->type == 'final')
-        {
+        if ($request->type == 'final') {
 
             $marks = json_decode($request->marks);
 
@@ -5554,34 +5776,29 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
             $limitpercen = DB::table('tblclassfinal')->where('id', $assessmentid)->first();
 
-            foreach($marks as $key => $mrk)
-            {
+            foreach ($marks as $key => $mrk) {
 
-                if($mrk > $limitpercen->total_mark)
-                {
-                    return ["message"=>"Field Error", "id" => $ics];
+                if ($mrk > $limitpercen->total_mark) {
+                    return ["message" => "Field Error", "id" => $ics];
                 }
-
             }
 
-        
+
             $upsert = [];
-            foreach($marks as $key => $mrk){
+            foreach ($marks as $key => $mrk) {
                 array_push($upsert, [
-                'userid' => $ics[$key],
-                'finalid' => $assessmentid,
-                'submittime' => date("Y-m-d H:i:s"),
-                'final_mark' => $mrk,
-                'status' => 1
+                    'userid' => $ics[$key],
+                    'finalid' => $assessmentid,
+                    'submittime' => date("Y-m-d H:i:s"),
+                    'final_mark' => $mrk,
+                    'status' => 1
                 ]);
             }
 
             DB::table('tblclassstudentfinal')->upsert($upsert, ['userid', 'finalid']);
-
         }
 
-        return ["message"=>"Success", "id" => $ics];
-
+        return ["message" => "Success", "id" => $ics];
     }
 
     public function getSubjectLecturer(Request $request)
@@ -5590,36 +5807,33 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
         $session = DB::table('sessions')->where('status', 'ACTIVE')->pluck('SessionID')->toArray();
 
         $subject = DB::table('user_subjek')
-                   ->join('sessions', 'user_subjek.session_id', 'sessions.SessionID')
-                   ->join('subjek', 'user_subjek.course_id', 'subjek.sub_id')
-                   ->where([
-                      ['user_subjek.user_ic', $request->lecturerId]
-                   ])
-                   ->whereIn('session_id', $session)
-                   ->select('subjek.course_name AS name','subjek.course_code AS code','sessions.SessionName AS session', 'user_subjek.id AS id')->get();
+            ->join('sessions', 'user_subjek.session_id', 'sessions.SessionID')
+            ->join('subjek', 'user_subjek.course_id', 'subjek.sub_id')
+            ->where([
+                ['user_subjek.user_ic', $request->lecturerId]
+            ])
+            ->whereIn('session_id', $session)
+            ->select('subjek.course_name AS name', 'subjek.course_code AS code', 'sessions.SessionName AS session', 'user_subjek.id AS id')->get();
 
         return response()->json($subject);
-
     }
 
     public function getGroupLecturer(Request $request)
     {
 
         $group = DB::table('student_subjek')
-                 ->where([
-                    ['student_subjek.group_id', $request->groupID]
-                 ])
-                 ->groupBy('group_name')->get();
+            ->where([
+                ['student_subjek.group_id', $request->groupID]
+            ])
+            ->groupBy('group_name')->get();
 
         return response()->json($group);
-
     }
 
     public function transcript()
     {
 
         return view('pendaftar_akademik.student.transcript.transcript');
-
     }
 
     public function getStudentTranscript(Request $request)
@@ -5629,11 +5843,16 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
             ->join('sessions AS a', 'students.intake', 'a.SessionID')
             ->join('sessions AS b', 'students.session', 'b.SessionID')
             ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
-            ->select('students.*', 'tblprogramme.progname', 'a.SessionName AS intake', 
-                     'b.SessionName AS session', 'tblstudent_status.name AS status')
-            ->where('students.name', 'LIKE', "%".$request->search."%")
-            ->orwhere('students.ic', 'LIKE', "%".$request->search."%")
-            ->orwhere('students.no_matric', 'LIKE', "%".$request->search."%")->get();
+            ->select(
+                'students.*',
+                'tblprogramme.progname',
+                'a.SessionName AS intake',
+                'b.SessionName AS session',
+                'tblstudent_status.name AS status'
+            )
+            ->where('students.name', 'LIKE', "%" . $request->search . "%")
+            ->orwhere('students.ic', 'LIKE', "%" . $request->search . "%")
+            ->orwhere('students.no_matric', 'LIKE', "%" . $request->search . "%")->get();
 
         $content = "";
         $content .= '<thead>
@@ -5658,46 +5877,44 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
                         </tr>
                     </thead>
                     <tbody id="table">';
-                    
-        foreach($students as $key => $student){
+
+        foreach ($students as $key => $student) {
             //$registered = ($student->status == 'ACTIVE') ? 'checked' : '';
             $content .= '
             <tr>
                 <td style="width: 1%">
-                '. $key+1 .'
+                ' . $key + 1 . '
                 </td>
                 <td>
-                '. $student->name .'
+                ' . $student->name . '
                 </td>
                 <td>
-                '. $student->ic .'
+                ' . $student->ic . '
                 </td>
                 <td>
-                '. $student->no_matric .'
+                ' . $student->no_matric . '
                 </td>
                 <td>
                   <div class="col-md-6">
                     <div class="form-group">
-                      <input type="date" class="form-control" id="date-'. $student->ic .'">
+                      <input type="date" class="form-control" id="date-' . $student->ic . '">
                     </div>
                   </div>
                 </td>
                 <td>';
-                
-                $content .= '<a class="btn btn-primary btn-sm btn-sm mr-2 mb-2" onClick="print(\''. $student->ic .'\')">
+
+            $content .= '<a class="btn btn-primary btn-sm btn-sm mr-2 mb-2" onClick="print(\'' . $student->ic . '\')">
                                 <i class="ti-ruler-pencil">
                                 </i>
                                 Print
                             </a>';
 
-                $content .= '</td></tr>';
+            $content .= '</td></tr>';
+        }
 
-            }
+        $content .= '</tbody>';
 
-            $content .= '</tbody>';
-
-            return $content;
-
+        return $content;
     }
 
     public function printStudentTranscript(Request $request)
@@ -5710,56 +5927,52 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
         $data['date'] = $classdateParsed->isoFormat('D MMMM Y');
 
         $data['student'] = DB::table('students')
-                           ->join('tblprogramme', 'students.program', 'tblprogramme.id')
-                           ->select('students.*', 'tblprogramme.progname AS program', 'tblprogramme.mqa_code AS mqa')
-                           ->where('students.ic', $request->ic)
-                           ->first();
+            ->join('tblprogramme', 'students.program', 'tblprogramme.id')
+            ->select('students.*', 'tblprogramme.progname AS program', 'tblprogramme.mqa_code AS mqa')
+            ->where('students.ic', $request->ic)
+            ->first();
 
         $data['semesters'] = DB::table('student_subjek')
-                             ->groupBy('semesterid')
-                             ->where([
-                                ['student_ic', $request->ic],
-                                ['group_id','!=', null],
-                                ['grade', '!=', null]
-                                ])
-                             ->pluck('semesterid');
+            ->groupBy('semesterid')
+            ->where([
+                ['student_ic', $request->ic],
+                ['group_id', '!=', null],
+                ['grade', '!=', null]
+            ])
+            ->pluck('semesterid');
 
-        foreach($data['semesters'] as $key => $sm)
-        {
+        foreach ($data['semesters'] as $key => $sm) {
 
             $data['course'][$key] = DB::table('student_subjek')
-                                    ->leftJoin('subjek', 'student_subjek.courseid', 'subjek.sub_id')
-                                    ->where([
-                                        ['student_subjek.student_ic', $request->ic],
-                                        ['student_subjek.semesterid', $sm]
-                                    ])
-                                    ->groupBy('student_subjek.id')
-                                    ->select('student_subjek.*','subjek.course_name', 'subjek.course_code')
-                                    ->get();
+                ->leftJoin('subjek', 'student_subjek.courseid', 'subjek.sub_id')
+                ->where([
+                    ['student_subjek.student_ic', $request->ic],
+                    ['student_subjek.semesterid', $sm]
+                ])
+                ->groupBy('student_subjek.id')
+                ->select('student_subjek.*', 'subjek.course_name', 'subjek.course_code')
+                ->get();
 
             $data['detail'][$key] = DB::table('student_transcript')
-                                    ->leftJoin('sessions', 'sessions.SessionID', 'student_transcript.session_id')
-                                    ->where([
-                                        ['student_ic', $request->ic],
-                                        ['semester', $sm]
-                                    ])
-                                    ->select('student_transcript.*', 'sessions.SessionName AS session')
-                                    ->first();
-
+                ->leftJoin('sessions', 'sessions.SessionID', 'student_transcript.session_id')
+                ->where([
+                    ['student_ic', $request->ic],
+                    ['semester', $sm]
+                ])
+                ->select('student_transcript.*', 'sessions.SessionName AS session')
+                ->first();
         }
 
         $lastDetail = end($data['detail']); // Get the last element of the $data['detail'] array
         $data['lastCGPA'] = $lastDetail->cgpa ?? null; // Access the `cgpa` value
 
         return view('pendaftar_akademik.student.transcript.printTranscript', compact('data'));
-
     }
 
     public function miniTranscript()
     {
 
         return view('pendaftar_akademik.student.mini_transcript.miniTranscript');
-
     }
 
     public function printStudentMiniTranscript(Request $request)
@@ -5772,52 +5985,49 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
         $data['date'] = $classdateParsed->isoFormat('D MMMM Y');
 
         $data['student'] = DB::table('students')
-                           ->join('tblprogramme', 'students.program', 'tblprogramme.id')
-                           ->join('sessions AS a', 'students.intake', 'a.SessionID')
-                           ->join('sessions AS b', 'students.session', 'b.SessionID')
-                           ->join('tblfaculty', 'tblprogramme.facultyid', 'tblfaculty.id')
-                           ->select('students.*', 'tblprogramme.progname AS program', 'tblprogramme.mqa_code AS mqa', 'a.SessionName AS intake', 'b.SessionName AS session', 'tblfaculty.facultyname AS faculty')
-                           ->where('students.ic', $request->ic)
-                           ->first();
+            ->join('tblprogramme', 'students.program', 'tblprogramme.id')
+            ->join('sessions AS a', 'students.intake', 'a.SessionID')
+            ->join('sessions AS b', 'students.session', 'b.SessionID')
+            ->join('tblfaculty', 'tblprogramme.facultyid', 'tblfaculty.id')
+            ->select('students.*', 'tblprogramme.progname AS program', 'tblprogramme.mqa_code AS mqa', 'a.SessionName AS intake', 'b.SessionName AS session', 'tblfaculty.facultyname AS faculty')
+            ->where('students.ic', $request->ic)
+            ->first();
 
         $data['semesters'] = DB::table('student_subjek')
-                             ->groupBy('semesterid')
-                             ->where([
-                                ['student_ic', $request->ic],
-                                ['group_id','!=', null],
-                                ['grade', '!=', null]
-                                ])
-                             ->pluck('semesterid');
+            ->groupBy('semesterid')
+            ->where([
+                ['student_ic', $request->ic],
+                ['group_id', '!=', null],
+                ['grade', '!=', null]
+            ])
+            ->pluck('semesterid');
 
-        foreach($data['semesters'] as $key => $sm)
-        {
+        foreach ($data['semesters'] as $key => $sm) {
 
             $data['course'][$key] = DB::table('student_subjek')
-                                    ->leftJoin('subjek', 'student_subjek.courseid', 'subjek.sub_id')
-                                    ->where([
-                                        ['student_subjek.student_ic', $request->ic],
-                                        ['student_subjek.semesterid', $sm]
-                                    ])
-                                    ->groupBy('student_subjek.id')
-                                    ->select('student_subjek.*','subjek.course_name', 'subjek.course_code')
-                                    ->get();
+                ->leftJoin('subjek', 'student_subjek.courseid', 'subjek.sub_id')
+                ->where([
+                    ['student_subjek.student_ic', $request->ic],
+                    ['student_subjek.semesterid', $sm]
+                ])
+                ->groupBy('student_subjek.id')
+                ->select('student_subjek.*', 'subjek.course_name', 'subjek.course_code')
+                ->get();
 
             $data['detail'][$key] = DB::table('student_transcript')
-                                    ->leftJoin('sessions', 'sessions.SessionID', 'student_transcript.session_id')
-                                    ->where([
-                                        ['student_ic', $request->ic],
-                                        ['semester', $sm]
-                                    ])
-                                    ->select('student_transcript.*', 'sessions.SessionName AS session')
-                                    ->first();
-
+                ->leftJoin('sessions', 'sessions.SessionID', 'student_transcript.session_id')
+                ->where([
+                    ['student_ic', $request->ic],
+                    ['semester', $sm]
+                ])
+                ->select('student_transcript.*', 'sessions.SessionName AS session')
+                ->first();
         }
 
         $lastDetail = end($data['detail']); // Get the last element of the $data['detail'] array
         $data['lastCGPA'] = $lastDetail->cgpa ?? null; // Access the `cgpa` value
 
         return view('pendaftar_akademik.student.mini_transcript.printMiniTranscript', compact('data'));
-
     }
 
     public function resultOverall()
@@ -5827,12 +6037,11 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
             'session' => DB::table('sessions')->get(),
             'semester' => DB::table('semester')->get(),
             'periods' => DB::table('tblresult_period')
-                        ->orderBy('created_at', 'desc')
-                        ->get()
+                ->orderBy('created_at', 'desc')
+                ->get()
         ];
 
         return view('pendaftar_akademik.student.result_overall.resultOverall', compact('data'));
-
     }
 
     public function resultOverallSubmit(Request $request)
@@ -5851,7 +6060,6 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
         ]);
 
         return response()->json(['success' => 'Data has been saved successfully!']);
-
     }
 
     public function resultOverallEdit(Request $request, $id)
@@ -5884,8 +6092,8 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
     public function resultOverallGet(Request $request, $id)
     {
         $period = DB::table('tblresult_period')
-                    ->where('id', $id)
-                    ->first();
+            ->where('id', $id)
+            ->first();
 
         if ($period) {
             // Decode JSON data for frontend
@@ -5904,12 +6112,11 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
             'session' => DB::table('sessions')->get(),
             'semester' => DB::table('semester')->get(),
             'periods' => DB::table('tblslip_period')
-                        ->orderBy('created_at', 'desc')
-                        ->get()
+                ->orderBy('created_at', 'desc')
+                ->get()
         ];
 
         return view('pendaftar_akademik.student.slip_filter.slipFilter', compact('data'));
-
     }
 
     public function slipFilterSubmit(Request $request)
@@ -5928,7 +6135,6 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
         ]);
 
         return response()->json(['success' => 'Data has been saved successfully!']);
-
     }
 
     public function slipFilterEdit(Request $request, $id)
@@ -5961,8 +6167,8 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
     public function slipFilterGet(Request $request, $id)
     {
         $period = DB::table('tblslip_period')
-                    ->where('id', $id)
-                    ->first();
+            ->where('id', $id)
+            ->first();
 
         if ($period) {
             // Decode JSON data for frontend
@@ -5995,10 +6201,9 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
             'END' => $data->to,
             'session' => json_encode($data->session),
             'user_ic' => json_encode($data->lecturer)
-        ],['id']);
+        ], ['id']);
 
         return response()->json(['success' => 'Data has been updated successfully!']);
-
     }
 
     public function studentCertificate()
@@ -6009,7 +6214,7 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
     public function searchStudentForCertificate(Request $request)
     {
         $search = $request->search;
-        
+
         $students = DB::table('students')
             ->join('tblprogramme', 'students.program', 'tblprogramme.id')
             ->select('students.*', 'tblprogramme.progname AS program')
@@ -6116,7 +6321,6 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
                 'serial_no' => $serialNo,
                 'status' => $status
             ]);
-
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
@@ -6129,12 +6333,12 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
     public function getCertificateHistory(Request $request)
     {
         $studentIc = $request->student_ic;
-        
+
         $certificates = DB::table('student_certificate')
             ->where('student_ic', $studentIc)
             ->orderBy('created_at', 'desc')
             ->get();
-        
+
         return response()->json($certificates);
     }
 
@@ -6156,7 +6360,7 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
 
             // Get current certificate
             $certificate = DB::table('student_certificate')->where('id', $certificateId)->first();
-            
+
             if (!$certificate) {
                 return response()->json([
                     'success' => false,
@@ -6188,7 +6392,6 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
                 'success' => true,
                 'message' => 'Certificate status updated successfully to ' . $newStatus
             ]);
-
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
@@ -6223,7 +6426,6 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
                 'success' => true,
                 'data' => $certificates
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -6238,7 +6440,7 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
             DB::beginTransaction();
 
             $certificateIds = $request->certificate_ids;
-            
+
             if (empty($certificateIds)) {
                 return response()->json([
                     'success' => false,
@@ -6277,7 +6479,6 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
                 'success' => true,
                 'message' => $updatedCount . ' certificates have been marked as CLAIMED successfully'
             ]);
-
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json([
@@ -6286,5 +6487,4 @@ private function applyTimeOverlapConditions($query, $startTimeOnly, $endTimeOnly
             ]);
         }
     }
-
 }
