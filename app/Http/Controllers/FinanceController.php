@@ -11170,9 +11170,10 @@ class FinanceController extends Controller
                                 ->join('tblclaimdtl', 'tblclaim.id', '=', 'tblclaimdtl.claim_id')
                                 ->join('tblstudentclaim', 'tblclaimdtl.claim_package_id', '=', 'tblstudentclaim.id')
                                 ->where([
-                                    ['tblclaim.process_status_id', '=', 2],
-                                    ['tblstudentclaim.groupid', '=', 1]
+                                    ['tblclaim.process_status_id', '=', 2]
                                 ])
+                                ->whereIn('tblstudentclaim.groupid', [1, 4, 5])
+                                ->whereIn('tblclaim.process_type_id', [2, 4, 5])
                                 ->where('students.status', $sts)
                                 ->whereBetween('tblclaim.add_date', [$filter->from, $endYear2])
                                 ->select(DB::raw("IFNULL(SUM(tblclaimdtl.amount), 0) AS claim"), DB::raw('0 as payment'));
@@ -11183,9 +11184,10 @@ class FinanceController extends Controller
                                 ->join('tblpaymentdtl', 'tblpayment.id', '=', 'tblpaymentdtl.payment_id')
                                 ->join('tblstudentclaim', 'tblpaymentdtl.claim_type_id', '=', 'tblstudentclaim.id')
                                 ->where([
-                                    ['tblpayment.process_status_id', '=', 2],
-                                    ['tblstudentclaim.groupid', '=', 1]
+                                    ['tblpayment.process_status_id', '=', 2]
                                 ])
+                                ->whereIn('tblstudentclaim.groupid', [1, 4, 5])
+                                ->whereIn('tblpayment.process_type_id', [1, 5, 6, 7, 8])
                                 ->where('students.status', $sts)
                                 ->whereBetween('tblpayment.add_date', [$filter->from, $endYear2])
                                 ->select(DB::raw('0 as claim'), DB::raw("IFNULL(SUM(tblpaymentdtl.amount), 0) AS payment"))
@@ -11226,7 +11228,7 @@ class FinanceController extends Controller
                                         status
                                     </th>
                                     <th colspan="' . count($data['arrayYears']) . '" style="text-align: center">
-                                        AGING REPORT BY STATUS AND YEAR from ' . $startYear . ' UNTIL ' . $currentYear;
+                                        AGING REPORT BY STATUS AND YEAR FROM ' . $startYear . ' - ' . $currentYear;
                 $content .= '</th>
                                 </tr>
                                 <tr>';
@@ -11271,14 +11273,14 @@ class FinanceController extends Controller
                 }
 
                 $content .= '</tbody>';
-                $content .= '<tfoot>
+                $content .= '<tfoot class="text-bold">
                         <tr>
                             <td>
                                 TOTAL
                             </td>';
                 // Display totals in the footer
                 foreach ($totals as $yearTotal) {
-                    $content .= '<td>' . number_format($yearTotal, 2) . '</td>';
+                    $content .= '<td>' . number_format($yearTotal, 2, '.', '') . '</td>';
                 }
                 $content .= '</tr>
                     </tfoot>';
