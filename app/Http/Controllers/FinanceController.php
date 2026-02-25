@@ -8792,76 +8792,76 @@ class FinanceController extends Controller
                         ' . $prg->progcode . '
                         </td>
                         <td>
-                        ' . $data['debt'][$key] . '
+                        ' . number_format($data['debt'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['debtND'][$key] . '
+                        ' . number_format($data['debtND'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['debtNK'][$key] . '
+                        ' . number_format($data['debtNK'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['insentif'][$key] . '
+                        ' . number_format($data['insentif'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['iNED'][$key] . '
+                        ' . number_format($data['iNED'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['unitiFund'][$key] . '
+                        ' . number_format($data['unitiFund'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['biasiswa'][$key] . '
+                        ' . number_format($data['biasiswa'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['uef'][$key] . '
+                        ' . number_format($data['uef'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['dc19'][$key] . '
+                        ' . number_format($data['dc19'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['iMCO'][$key] . '
+                        ' . number_format($data['iMCO'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['iKKU'][$key] . '
+                        ' . number_format($data['iKKU'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['tkB40'][$key] . '
+                        ' . number_format($data['tkB40'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['tkM40'][$key] . '
+                        ' . number_format($data['tkM40'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['tkT20'][$key] . '
+                        ' . number_format($data['tkT20'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['tk'][$key] . '
+                        ' . number_format($data['tk'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['trB40'][$key] . '
+                        ' . number_format($data['trB40'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['trM40'][$key] . '
+                        ' . number_format($data['trM40'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['trT20'][$key] . '
+                        ' . number_format($data['trT20'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['tr'][$key] . '
+                        ' . number_format($data['tr'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['paymentNK'][$key] . '
+                        ' . number_format($data['paymentNK'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['dailyPayment'][$key] . '
+                        ' . number_format($data['dailyPayment'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['sponsor'][$key] . '
+                        ' . number_format($data['sponsor'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['refund'][$key] . '
+                        ' . number_format($data['refund'][$key], 2, '.', '') . '
                         </td>
                         <td>
-                        ' . $data['balance'][$key] . '
+                        ' . number_format($data['balance'][$key], 2, '.', '') . '
                         </td>
                     </tr>
                     ';
@@ -8871,82 +8871,82 @@ class FinanceController extends Controller
 
                 $content .= '</tbody>';
 
-                $content .= '<tfoot>
+                $content .= '<tfoot class="text-bold">
                                 <tr>
                                     <td>
                                         Total :
                                     </td>
                                     <td>
-                                        ' . $debtTotal .
+                                        ' . number_format($debtTotal, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $debtNDTotal .
+                                        ' . number_format($debtNDTotal, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $debtNKTotal .
+                                        ' . number_format($debtNKTotal, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $insentifTotal .
+                                        ' . number_format($insentifTotal, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $iNEDTotal .
+                                        ' . number_format($iNEDTotal, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $unitiFundTotal .
+                                        ' . number_format($unitiFundTotal, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $biasiswaTotal .
+                                        ' . number_format($biasiswaTotal, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $uefTotal .
+                                        ' . number_format($uefTotal, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $dc19Total .
+                                        ' . number_format($dc19Total, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $iMCOTotal .
+                                        ' . number_format($iMCOTotal, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $iKKUTotal .
+                                        ' . number_format($iKKUTotal, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $tkB40Total .
+                                        ' . number_format($tkB40Total, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $tkM40Total .
+                                        ' . number_format($tkM40Total, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $tkT20Total .
+                                        ' . number_format($tkT20Total, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $tkTotal .
+                                        ' . number_format($tkTotal, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $trB40Total .
+                                        ' . number_format($trB40Total, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $trM40Total .
+                                        ' . number_format($trM40Total, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $trT20Total .
+                                        ' . number_format($trT20Total, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $trTotal .
+                                        ' . number_format($trTotal, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $paymentNKTotal .
+                                        ' . number_format($paymentNKTotal, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $dailyPaymentTotal .
+                                        ' . number_format($dailyPaymentTotal, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $sponsorTotal .
+                                        ' . number_format($sponsorTotal, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $refundTotal .
+                                        ' . number_format($refundTotal, 2, '.', '') .
                     '</td>
                                     <td>
-                                        ' . $balanceTotal .
+                                        ' . number_format($balanceTotal, 2, '.', '') .
                     '</td>
                                 </tr>
                             </tfoot>';
@@ -10741,9 +10741,10 @@ class FinanceController extends Controller
                                 ->leftjoin('tblstudentclaim', 'tblclaimdtl.claim_package_id', '=', 'tblstudentclaim.id')
                                 ->where([
                                     ['tblclaim.process_status_id', '=', 2],
-                                    ['tblstudentclaim.groupid', '=', 1],
                                     ['tblclaim.student_ic', '=', $std->ic]
                                 ])
+                                ->whereIn('tblstudentclaim.groupid', [1, 4, 5])
+                                ->whereIn('tblclaim.process_type_id', [2, 4, 5])
                                 ->whereBetween('tblclaim.add_date', [$filter->from, $endYear2])
                                 ->select(DB::raw("IFNULL(SUM(tblclaimdtl.amount), 0) AS claim"), DB::raw('0 as payment'));
 
@@ -10753,9 +10754,10 @@ class FinanceController extends Controller
                                 ->leftjoin('tblstudentclaim', 'tblpaymentdtl.claim_type_id', '=', 'tblstudentclaim.id')
                                 ->where([
                                     ['tblpayment.process_status_id', '=', 2],
-                                    ['tblstudentclaim.groupid', '=', 1],
                                     ['tblpayment.student_ic', '=', $std->ic]
                                 ])
+                                ->whereIn('tblstudentclaim.groupid', [1, 4, 5])
+                                ->whereIn('tblpayment.process_type_id', [1, 5, 6, 7, 8])
                                 ->whereBetween('tblpayment.add_date', [$filter->from, $endYear2])
                                 ->select(DB::raw('0 as claim'), DB::raw("IFNULL(SUM(tblpaymentdtl.amount), 0) AS payment"))
                                 ->unionAll($query); // Here, use the Query Builder instance directly
@@ -10989,7 +10991,8 @@ class FinanceController extends Controller
                         LEFT JOIN tblclaimdtl ON tblclaim.id = tblclaimdtl.claim_id
                         LEFT JOIN tblstudentclaim ON tblclaimdtl.claim_package_id = tblstudentclaim.id
                         WHERE tblclaim.process_status_id = 2
-                        AND tblstudentclaim.groupid = 1
+                        AND tblstudentclaim.groupid IN (1, 4, 5)
+                        AND tblclaim.process_type_id IN (2, 4, 5)
                         AND tblclaim.program_id = ?
                         AND tblclaim.add_date BETWEEN ? AND ?
                         GROUP BY YEAR(tblclaim.add_date)
@@ -11005,7 +11008,8 @@ class FinanceController extends Controller
                         LEFT JOIN tblpaymentdtl ON tblpayment.id = tblpaymentdtl.payment_id
                         LEFT JOIN tblstudentclaim ON tblpaymentdtl.claim_type_id = tblstudentclaim.id
                         WHERE tblpayment.process_status_id = 2
-                        AND tblstudentclaim.groupid = 1
+                        AND tblstudentclaim.groupid IN (1, 4, 5)
+                        AND tblpayment.process_type_id IN (1, 5, 6, 7, 8)
                         AND tblpayment.program_id = ?
                         AND tblpayment.add_date BETWEEN ? AND ?
                         GROUP BY YEAR(tblpayment.add_date)
@@ -11049,7 +11053,7 @@ class FinanceController extends Controller
                                     Program
                                 </th>
                                 <th colspan="' . count($arrayYears) . '" style="text-align: center">
-                                    AGING REPORT BY PROGRAM AND YEAR from ' . $startYear . ' UNTIL ' . $currentYear;
+                                    AGING REPORT BY PROGRAM AND YEAR FROM ' . $startYear . ' - ' . $currentYear;
             $content .= '</th>
                             </tr>
                             <tr>';
@@ -11068,19 +11072,19 @@ class FinanceController extends Controller
                                 <td>' . $program->progcode . ' - ' . $program->progname . '</td>';
 
                 foreach ($arrayYears as $year) {
-                    $content .= '<td>' . $balances[$year] . '</td>';
+                    $content .= '<td>' . number_format($balances[$year], 2, '.', '') . '</td>';
                 }
 
                 $content .= '</tr>';
             }
 
             $content .= '</tbody>';
-            $content .= '<tfoot>
+            $content .= '<tfoot class="text-bold">
                             <tr>
                                 <td>TOTAL</td>';
 
             foreach ($totals as $yearTotal) {
-                $content .= '<td>' . number_format($yearTotal, 2) . '</td>';
+                $content .= '<td>' . number_format($yearTotal, 2, '.', '') . '</td>';
             }
 
             $content .= '</tr>
@@ -12135,9 +12139,9 @@ class FinanceController extends Controller
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td><strong>' . number_format($totalFee, 2) . '</strong></td>
-                    <td><strong>' . number_format($totalPayment, 2) . '</strong></td>
-                    <td><strong>' . number_format($totalBalance, 2) . '</strong></td>
+                    <td><strong>' . number_format($totalFee, 2, '.', '') . '</strong></td>
+                    <td><strong>' . number_format($totalPayment, 2, '.', '') . '</strong></td>
+                    <td><strong>' . number_format($totalBalance, 2, '.', '') . '</strong></td>
                 </tr>';
 
                 $content .= '</tbody>';
