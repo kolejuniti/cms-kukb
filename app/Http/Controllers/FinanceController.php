@@ -737,6 +737,40 @@ class FinanceController extends Controller
             return ['message' => 'Please add payment charge details first!'];
         }
 
+        
+
+        if (DB::connection('mysql2')->table('students')->where('ic', $student->ic)->exists()) {
+
+            // Get the advisor's IC from the first database
+            $advisorIcFromDb1 = DB::table('tblstudent_personal')
+                ->where('student_ic', $student->ic)
+                ->join('tbledu_advisor', 'tblstudent_personal.advisor_id', 'tbledu_advisor.id')
+                ->value('tbledu_advisor.ic');
+
+            // Get the advisor's IC from the second database
+            $advisorIcFromDb2 = DB::connection('mysql2')
+                ->table('students')
+                ->where('students.ic', $student->ic)
+                ->join('users', 'students.user_id', 'users.id')
+                ->value('users.ic');
+
+            // Normalize ICs by removing dashes and trimming spaces
+            $normalizedIc1 = $advisorIcFromDb1 ? trim(str_replace('-', '', $advisorIcFromDb1)) : null;
+            $normalizedIc2 = $advisorIcFromDb2 ? trim(str_replace('-', '', $advisorIcFromDb2)) : null;
+
+            // Prepare the base update data
+            $updateData = [
+                'status_id' => ($normalizedIc1 == $normalizedIc2) ? 19 : 18,
+                'reason' => ($normalizedIc1 == $normalizedIc2) ? 'R - KUKB' : null
+            ];
+
+            // Perform the update
+            DB::connection('mysql2')
+                ->table('students')
+                ->where('ic', $student->ic)
+                ->update($updateData);
+        }
+
         return ['message' => 'Success', 'id' => $request->id, 'alert' => $alert];
     }
 
@@ -1631,8 +1665,9 @@ class FinanceController extends Controller
                     // Prepare the base update data
                     $updateData = [
                         'register_at' => now(),
-                        'status_id' => ($normalizedIc1 == $normalizedIc2) ? 20 : 22,
-                        'commission' => ($normalizedIc1 == $normalizedIc2) ? 500 : 0
+                        'status_id' => ($normalizedIc1 == $normalizedIc2) ? 21 : 22,
+                        'commission' => ($normalizedIc1 == $normalizedIc2) ? 500 : 0,
+                        'reason' => ($normalizedIc1 == $normalizedIc2) ? 'R2 - KUKB' : null
                     ];
 
                     // Perform the update
