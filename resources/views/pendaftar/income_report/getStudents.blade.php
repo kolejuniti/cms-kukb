@@ -34,15 +34,6 @@
         {{ $student->full_address }}
     </td>
     <td>
-        {{ $student->state_name }}
-    </td>
-    <td>
-        {{ $student->parlimen_name }}
-    </td>
-    <td>
-        {{ $student->dun_name }}
-    </td>
-    <td>
         {{ $student->dependent_no }}
     </td>
     @php
