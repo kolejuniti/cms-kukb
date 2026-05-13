@@ -6199,16 +6199,19 @@ class PendaftarController extends Controller
         ])
         ->whereIn('students.student_status', [1, 2, 4])
         ->select(
-            'students.*',
-            'tblsex.code',
-            'tblprogramme.progcode',
-            'sessions.SessionName',
-            'tblstudent_status.name AS status',
-            'tblstudent_personal.no_tel',
-            DB::raw('CONCAT_WS(", ", tblstudent_address.address1, tblstudent_address.address2, tblstudent_address.address3, tblstudent_address.city, tblstudent_address.postcode, tblstate.state_name) AS full_address'),
-            'waris_summary.total_dependent as dependent_no',
-            'waris_summary.total_kasar as gajikasar'
-        )
+                'students.*',
+                'tblsex.code',
+                'tblprogramme.progcode',
+                'sessions.SessionName',
+                'tblstudent_status.name AS status',
+                'tblstudent_personal.no_tel',
+                DB::raw('CONCAT_WS(", ", tblstudent_address.address1, tblstudent_address.address2, tblstudent_address.address3, tblstudent_address.city, tblstudent_address.postcode, tblstate.state_name) AS full_address'),
+                'tbldun.name as dun_name',
+                'tblparlimen.name as parlimen_name',
+                'tblstate.state_name',
+                'waris_summary.total_dependent as dependent_no',
+                'waris_summary.total_kasar as gajikasar'
+            )
         ->orderBy('students.name');
 
 
