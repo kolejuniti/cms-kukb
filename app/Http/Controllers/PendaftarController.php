@@ -6161,8 +6161,7 @@ class PendaftarController extends Controller
         $data['value'] = [];
         $data['b40'] = [];
 
-        if($request->val)
-        {
+        if ($request->val) {
             foreach ($request->val as $value) {
                 if (is_numeric($value)) {
                     $data['value'][] = $value;
@@ -6171,61 +6170,61 @@ class PendaftarController extends Controller
                 }
             }
         }
-            
+
 
         $query = DB::table('students')
-        ->leftjoin('tblstudent_personal', 'students.ic', 'tblstudent_personal.student_ic')
-        ->leftjoin('tblsex', 'tblstudent_personal.sex_id', 'tblsex.id')
-        ->leftjoin('tblprogramme', 'students.program', 'tblprogramme.id')
-        ->leftjoin('sessions', 'students.session', 'sessions.SessionID')
-        ->leftjoin('tblstudent_status', 'students.status', 'tblstudent_status.id')
-        ->leftjoin('tblstudent_address', 'students.ic', 'tblstudent_address.student_ic')
-        ->leftjoin('tblstate', 'tblstudent_address.state_id', 'tblstate.id')
-        ->leftJoinSub(
-            DB::table('tblstudent_waris')
-                ->select('student_ic')
-                ->selectRaw('SUM(dependent_no) as total_dependent')
-                ->selectRaw('SUM(kasar) as total_kasar')
-                ->where('status', '!=', 2)
-                ->groupBy('student_ic'),
-            'waris_summary',
-            function($join) {
-                $join->on('students.ic', '=', 'waris_summary.student_ic');
-            }
-        )
-        ->where([
-            ['students.status', 2],
-            ['students.campus_id', 1],
-        ])
-        ->whereIn('students.student_status', [1, 2, 4])
-        ->select(
-            'students.*',
-            'tblsex.code',
-            'tblprogramme.progcode',
-            'sessions.SessionName',
-            'tblstudent_status.name AS status',
-            'tblstudent_personal.no_tel',
-            DB::raw('CONCAT_WS(", ", tblstudent_address.address1, tblstudent_address.address2, tblstudent_address.address3, tblstudent_address.city, tblstudent_address.postcode, tblstate.state_name) AS full_address'),
-            'waris_summary.total_dependent as dependent_no',
-            'waris_summary.total_kasar as gajikasar'
-        )
-        ->orderBy('students.name');
+            ->leftjoin('tblstudent_personal', 'students.ic', 'tblstudent_personal.student_ic')
+            ->leftjoin('tblsex', 'tblstudent_personal.sex_id', 'tblsex.id')
+            ->leftjoin('tblprogramme', 'students.program', 'tblprogramme.id')
+            ->leftjoin('sessions', 'students.session', 'sessions.SessionID')
+            ->leftjoin('tblstudent_status', 'students.status', 'tblstudent_status.id')
+            ->leftjoin('tblstudent_address', 'students.ic', 'tblstudent_address.student_ic')
+            ->leftjoin('tblstate', 'tblstudent_address.state_id', 'tblstate.id')
+            ->leftJoin('tbldun', 'tblstudent_personal.dun', 'tbldun.id')
+            ->leftJoin('tblparlimen', 'tblstudent_personal.parlimen', 'tblparlimen.id')
+            ->leftJoinSub(
+                DB::table('tblstudent_waris')
+                    ->select('student_ic')
+                    ->selectRaw('SUM(dependent_no) as total_dependent')
+                    ->selectRaw('SUM(kasar) as total_kasar')
+                    ->where('status', '!=', 2)
+                    ->groupBy('student_ic'),
+                'waris_summary',
+                function ($join) {
+                    $join->on('students.ic', '=', 'waris_summary.student_ic');
+                }
+            )
+            ->whereIn('students.status', [2, 6])
+            ->whereIn('students.campus_id', [0, 1])
+            ->whereIn('students.student_status', [1, 2, 4])
+            ->select(
+                'students.*',
+                'tblsex.code',
+                'tblprogramme.progcode',
+                'sessions.SessionName',
+                'tblstudent_status.name AS status',
+                'tblstudent_personal.no_tel',
+                DB::raw('CONCAT_WS(", ", tblstudent_address.address1, tblstudent_address.address2, tblstudent_address.address3, tblstudent_address.city, tblstudent_address.postcode, tblstate.state_name) AS full_address'),
+                'tbldun.name as dun_name',
+                'tblparlimen.name as parlimen_name',
+                'tblstate.state_name',
+                'waris_summary.total_dependent as dependent_no',
+                'waris_summary.total_kasar as gajikasar'
+            )
+            ->orderBy('students.name');
 
 
-        if($data['b40'])
-        {
+        if ($data['b40']) {
             $query = $query->where('waris_summary.total_kasar', '<=', 4850);
         }
 
-        if($data['value'])
-        {
+        if ($data['value']) {
             $query = $query->whereIn('tblstudent_address.state_id', $data['value']);
         }
 
         $data['students'] = $query->get();
 
-        foreach($data['students'] as $key => $student)
-        {
+        foreach ($data['students'] as $key => $student) {
             $data['waris'][$key] = DB::table('tblstudent_waris')
                 ->join('tblwaris_status', 'tblstudent_waris.status', 'tblwaris_status.id')
                 ->where('student_ic', $student->ic)
@@ -6240,7 +6239,6 @@ class PendaftarController extends Controller
         // ]);
 
         return view('pendaftar.income_report.getStudents', compact('data'));
-
     }
 
     public function internationalReport()
