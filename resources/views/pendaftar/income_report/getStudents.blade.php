@@ -34,8 +34,31 @@
         {{ $student->full_address }}
     </td>
     <td>
+        {{ $student->state_name }}
+    </td>
+    <td>
+        {{ $student->parlimen_name }}
+    </td>
+    <td>
+        {{ $student->dun_name }}
+    </td>
+    <td>
         {{ $student->dependent_no }}
     </td>
+    @php
+        $count = count($data['waris'][$key]);
+    @endphp
+    @for($i = 0; $i < 2; $i++)
+    <td>
+        {{ $i < $count ? $data['waris'][$key][$i]->name : null }}
+    </td>
+    <td>
+        {{ $i < $count ? $data['waris'][$key][$i]->ic : null }}
+    </td>
+    <td>
+        {{ $i < $count ? $data['waris'][$key][$i]->status : null }}
+    </td>
+    @endfor
     <td>
         {{ $student->gajikasar }}
     </td>
