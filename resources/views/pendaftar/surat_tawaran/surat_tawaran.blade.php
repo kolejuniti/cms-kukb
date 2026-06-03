@@ -76,7 +76,8 @@ use Carbon\Carbon;
             $twoWeeksBefore = Carbon::parse($data['student']->date_offer)->subWeeks(2);
 
             // Convert the date format
-            $formattedDate = $twoWeeksBefore->format('d/m/Y');
+            // $formattedDate = $twoWeeksBefore->format('d/m/Y');
+            $formattedDate = Carbon::now()->format('d/m/Y');
 
         @endphp
         <br>
