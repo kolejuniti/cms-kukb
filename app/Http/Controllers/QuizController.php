@@ -16,6 +16,19 @@ use Carbon\Carbon;
 
 class QuizController extends Controller
 {
+    private function getFormLabel($field, $default = '')
+    {
+        return is_object($field) && property_exists($field, 'label') ? $field->label : $default;
+    }
+
+    private function getCorrectAnswers($formData, $index)
+    {
+        $answerField = $formData[$index + 1] ?? null;
+        $correctAnswer = preg_replace('/\s+/', '', $this->getFormLabel($answerField));
+
+        return $correctAnswer === '' ? [] : explode(",", $correctAnswer);
+    }
+
     
     public function quizlist()
     {
@@ -683,16 +696,15 @@ class QuizController extends Controller
 
                 if($original_quizformdata[$index]->name == "radio-question".$count){
                     $i =0;
-                    $correct_answer = $original_quizformdata[$index + 1]->label;
-                    $correct_answer = preg_replace('/\s+/', '', $correct_answer );
-                    $correct_answer = explode(",", $correct_answer);
+                    $correct_answer = $this->getCorrectAnswers($original_quizformdata, $index);
                     
                     foreach($quizformdata[$index]->values as $v){
+                        $answer_label = $this->getFormLabel($original_quizformdata[$index]->values[$i] ?? null);
                         
                         if(in_array($v->value, $correct_answer)){
-                            $quizformdata[$index]->values[$i]->label = $original_quizformdata[$index]->values[$i]->label . $correct_label;
+                            $quizformdata[$index]->values[$i]->label = $answer_label . $correct_label;
                         }else{
-                            $quizformdata[$index]->values[$i]->label = $original_quizformdata[$index]->values[$i]->label . $incorrect_label;
+                            $quizformdata[$index]->values[$i]->label = $answer_label . $incorrect_label;
                         }
                         $i++;
                     }
@@ -708,20 +720,20 @@ class QuizController extends Controller
                 
                 if($original_quizformdata[$index]->name == "checkbox-question".$count){
                     $i =0;
-                    $correct_answer = $original_quizformdata[$index + 1]->label;
-                    $correct_answer = preg_replace('/\s+/', '', $correct_answer );
-                    $correct_answer = explode(",", $correct_answer);
+                    $correct_answer = $this->getCorrectAnswers($original_quizformdata, $index);
                     
                     foreach($quizformdata[$index]->values as $v){
+                        $answer_label = $this->getFormLabel($original_quizformdata[$index]->values[$i] ?? null);
+
                         if(in_array($v->value, $correct_answer)){
-                            $quizformdata[$index]->values[$i]->label = $original_quizformdata[$index]->values[$i]->label . $correct_label;
+                            $quizformdata[$index]->values[$i]->label = $answer_label . $correct_label;
                         }else{
-                            $quizformdata[$index]->values[$i]->label = $original_quizformdata[$index]->values[$i]->label . $incorrect_label;
+                            $quizformdata[$index]->values[$i]->label = $answer_label . $incorrect_label;
                         }
                         $i++;
                     }
                     
-                    $userData = !empty($quizformdata[$index]->userData) ? $quizformdata[$index]->userData : null;
+                    $userData = !empty($quizformdata[$index]->userData) ? $quizformdata[$index]->userData : [];
 
                     if( count( array_diff_assoc($correct_answer, $userData) )  == 0){
                         $gain_mark = true;
@@ -760,7 +772,6 @@ class QuizController extends Controller
 
                 if(str_contains($original_quizformdata[$index]->className, "collected-marks")){
 
-                    $mark_label           = $original_quizformdata[$index]->values[0]->label;
                     $mark                 = $original_quizformdata[$index]->values[0]->value;
                     
                     //if result is published then use graded data
@@ -1175,16 +1186,15 @@ class QuizController extends Controller
 
                 if($original_quizformdata[$index]->name == "radio-question".$count){
                     $i =0;
-                    $correct_answer = $original_quizformdata[$index + 1]->label;
-                    $correct_answer = preg_replace('/\s+/', '', $correct_answer );
-                    $correct_answer = explode(",", $correct_answer);
+                    $correct_answer = $this->getCorrectAnswers($original_quizformdata, $index);
                     
                     foreach($quizformdata[$index]->values as $v){
+                        $answer_label = $this->getFormLabel($original_quizformdata[$index]->values[$i] ?? null);
                         
                         if(in_array($v->value, $correct_answer)){
-                            $quizformdata[$index]->values[$i]->label = $original_quizformdata[$index]->values[$i]->label . $correct_label;
+                            $quizformdata[$index]->values[$i]->label = $answer_label . $correct_label;
                         }else{
-                            $quizformdata[$index]->values[$i]->label = $original_quizformdata[$index]->values[$i]->label . $incorrect_label;
+                            $quizformdata[$index]->values[$i]->label = $answer_label . $incorrect_label;
                         }
                         $i++;
                     }
@@ -1200,20 +1210,20 @@ class QuizController extends Controller
                 
                 if($original_quizformdata[$index]->name == "checkbox-question".$count){
                     $i =0;
-                    $correct_answer = $original_quizformdata[$index + 1]->label;
-                    $correct_answer = preg_replace('/\s+/', '', $correct_answer );
-                    $correct_answer = explode(",", $correct_answer);
+                    $correct_answer = $this->getCorrectAnswers($original_quizformdata, $index);
                     
                     foreach($quizformdata[$index]->values as $v){
+                        $answer_label = $this->getFormLabel($original_quizformdata[$index]->values[$i] ?? null);
+
                         if(in_array($v->value, $correct_answer)){
-                            $quizformdata[$index]->values[$i]->label = $original_quizformdata[$index]->values[$i]->label . $correct_label;
+                            $quizformdata[$index]->values[$i]->label = $answer_label . $correct_label;
                         }else{
-                            $quizformdata[$index]->values[$i]->label = $original_quizformdata[$index]->values[$i]->label . $incorrect_label;
+                            $quizformdata[$index]->values[$i]->label = $answer_label . $incorrect_label;
                         }
                         $i++;
                     }
                     
-                    $userData = !empty($quizformdata[$index]->userData) ? $quizformdata[$index]->userData : null;
+                    $userData = !empty($quizformdata[$index]->userData) ? $quizformdata[$index]->userData : [];
 
                     if( count( array_diff_assoc($correct_answer, $userData) )  == 0){
                         $gain_mark = true;
@@ -1253,7 +1263,6 @@ class QuizController extends Controller
 
                 if(str_contains($original_quizformdata[$index]->className, "collected-marks")){
 
-                    $mark_label           = $original_quizformdata[$index]->values[0]->label;
                     $mark                 = $original_quizformdata[$index]->values[0]->value;
                     
                     //if result is published then use graded data
