@@ -2748,12 +2748,13 @@ $content .= '</tr>
         $data['lectInfo'] = DB::table('user_subjek')
                             ->join('subjek', 'user_subjek.course_id', 'subjek.sub_id')
                             ->join('sessions', 'user_subjek.session_id', 'sessions.SessionID')
+                            ->join('users', 'user_subjek.user_ic', 'users.ic')
                             ->where([
                                 ['user_subjek.user_ic', $user->ic],
                                 ['user_subjek.session_id', Session::get('SessionID')],
                                 ['subjek.id', request()->id]
                              ])
-                            ->select('subjek.*', 'sessions.SessionName AS session')
+                            ->select('subjek.*', 'sessions.SessionName AS session', 'users.name AS lecturer_name')
                             ->first();
 
         // Grade scale selection:

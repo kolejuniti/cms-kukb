@@ -68,7 +68,7 @@
                   <div class="flex-grow-1 p-30 flex-grow-1 bg-img bg-none-md" style="background-position: right bottom; background-size: auto 100%; background-image: url(images/svg-icon/color-svg/custom-30.svg)">
                       <div class="row">
                           <div class="col-12 col-xl-12">
-                              <h1 class="mb-0 fw-600">{{ Auth::user()->name }}</h1>
+                              <h1 class="mb-0 fw-600">{{ $data['lectInfo']->lecturer_name ?? Auth::user()->name }}</h1>
                               <p class="my-10 fs-16"><strong>Subject : {{ $data['lectInfo']->course_name }}</strong> </p>
                               <p class="my-10 fs-16"><strong>Code : {{ $data['lectInfo']->course_code }}</strong> </p>
                               <p class="my-10 fs-16"><strong>Session : {{ $data['lectInfo']->session }}</strong> </p>
@@ -1638,7 +1638,7 @@
                             {
                                 extend: 'excelHtml5',
                                 title: function () {
-                                    return `{{ Auth::user()->name }} - {{ $data['lectInfo']->course_name }} - {{ $data['lectInfo']->course_code }} - {{ $data['lectInfo']->session }}`;
+                                    return `{{ $data['lectInfo']->lecturer_name ?? Auth::user()->name }} - {{ $data['lectInfo']->course_name }} - {{ $data['lectInfo']->course_code }} - {{ $data['lectInfo']->session }}`;
                                 }
                             }
                         ]
