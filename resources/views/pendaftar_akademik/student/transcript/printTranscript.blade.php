@@ -271,10 +271,9 @@
         <br>
 
         <p style="text-align: right;"><b>......................................<br>
-        AZHAR BIN ZUNAIDAK<br>
-        PENOLONG PENDAFTAR<br>
-        HAL EHWAL AKADEMIK<br>
-        BP: KETUA EKSEKUTIF</b></p><br>
+        SALINE BINTI ISMAIL<br>
+        PENGURUS HEA<br>
+        KOLEJ UNITI, KOTA BHARU</p><br>
 
         <p style="text-align: right;"><b>TARIKH: {{ $data['date'] }}</b><br>
         
