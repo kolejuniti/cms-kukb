@@ -119,14 +119,14 @@
         @if(Session::get('StudInfo'))
         
         @else
-        <style>
+        {{-- <style>
             body {
                 background-image: url('{{ asset("assets/images/letter_head/letter_head.jpg") }}');
                 background-size: cover;
                 background-position: center;
                 background-repeat: no-repeat;
             }
-        </style>
+        </style> --}}
         @endif
     </head>
     <body>
