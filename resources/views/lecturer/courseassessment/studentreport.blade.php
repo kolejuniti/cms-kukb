@@ -1,5 +1,21 @@
+@php
+    $layout = match (Auth::user()->usrtype) {
+        'LCT' => isset(request()->id) ? 'layouts.lecturer.lecturer' : 'layouts.lecturer',
+        'PL', 'AO' => isset(request()->id) ? 'layouts.lecturer.lecturer' : 'layouts.ketua_program',
+        'ADM' => 'layouts.admin',
+        'DN' => 'layouts.dekan',
+        'RGS' => 'layouts.pendaftar',
+        'AR' => 'layouts.pendaftar_akademik',
+        'FN' => 'layouts.finance',
+        'TS' => 'layouts.treasurer',
+        'UR' => 'layouts.ur',
+        'OTR' => 'layouts.other_user',
+        'COOP' => 'layouts.coop',
+        default => 'layouts.ketua_program',
+    };
+@endphp
 
-@extends((Auth::user()->usrtype == "LCT" && isset(request()->id)) ? 'layouts.lecturer.lecturer' : (Auth::user()->usrtype == "LCT" ? 'layouts.lecturer' : (Auth::user()->usrtype == "PL" && isset(request()->id) ? 'layouts.lecturer.lecturer' : (Auth::user()->usrtype == "PL" ? 'layouts.ketua_program' : (Auth::user()->usrtype == "AO" && isset(request()->id) ? 'layouts.lecturer.lecturer' : (Auth::user()->usrtype == "AO" ? 'layouts.ketua_program' : (Auth::user()->usrtype == "ADM" ? 'layouts.admin' : (Auth::user()->usrtype == "DN" ? 'layouts.dekan' : (Auth::user()->usrtype == "RGS" ? 'layouts.pendaftar' : '')))))))))
+@extends($layout)
 
 
 @section('main')
