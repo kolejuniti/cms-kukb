@@ -4379,6 +4379,15 @@ $content .= '</tr>
         $testmin = [];
         $testavgoverall = [];
 
+        $test2 = [];
+        $test2collection = [];
+        $overalltest2 = [];
+        $test2answer = [];
+        $test2avg = [];
+        $test2max = [];
+        $test2min = [];
+        $test2avgoverall = [];
+
         $assign = [];
         $assigncollection = [];
         $overallassign = [];
