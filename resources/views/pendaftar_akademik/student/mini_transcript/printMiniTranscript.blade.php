@@ -133,10 +133,7 @@
         <div class="row">
             <div class="col-12 d-flex justify-content-center align-items-center">
                 <div class="me-2">
-                    <img src="{{ asset('assets/images/logo/kukb_logo.png')}}" alt="Kolej Uniti Logo" height="35">
-                </div>
-                <div>
-                    <h1 class="mb-0">KOLEJ UNITI</h1>
+                    <img src="{{ asset('assets/images/logo/kukb_logo.png')}}" alt="Kolej Uniti Logo" height="80">
                 </div>
             </div>
             <div>
