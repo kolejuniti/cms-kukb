@@ -117,7 +117,7 @@
                      <img src="{{ asset('assets/images/logo/kukb_logo.png')}}" alt="" height="50">
                      <address>
                         <div class="b3">
-                        <strong>KOLEJ UNITI</strong><br>
+                        <strong>KOLEJ UNITI KOTA BHARU</strong><br>
                         KAMPUS KIJANG, LOT 1911<br>
 JALAN PANTAI, CAHAYA BULAN<br>
                         KELANTAN, 15350, KOTA BHARU.<br>
