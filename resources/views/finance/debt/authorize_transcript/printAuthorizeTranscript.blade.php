@@ -108,7 +108,7 @@ use Carbon\Carbon;
         @endphp --}}
         <div class="row">
             <div class="col-12 d-flex">
-                <img src="{{ asset('assets/images/logo/kukb_logo.png')}}" alt="" height="50">
+                <img src="{{ asset('assets/images/logo/kukb_logo.png')}}" alt="" height="80">
                 <address>
                     <strong>KOLEJ UNITI KOTA BHARU</strong><br>
                     KAMPUS KIJANG, LOT 1911<br>
