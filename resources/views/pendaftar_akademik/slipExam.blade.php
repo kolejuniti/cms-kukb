@@ -103,9 +103,9 @@
             <div class="invoice-title">
                <div class="row mb-2">
                   <div class="col-12 d-flex">
-                     <img src="{{ asset('assets/images/logo/Kolej-UNITI.png')}}" alt="" height="50">
+                     <img src="{{ asset('assets/images/logo/kukb_logo.png')}}" alt="" height="50">
                      <address>
-                        <strong>KOLEJ UNITI</strong><br>
+                        <strong>KOLEJ UNITI KOTA BHARU</strong><br>
                         KAMPUS KIJANG, LOT 1911<br>
 JALAN PANTAI, CAHAYA BULAN<br>
                         KELANTAN, 15350, KOTA BHARU.<br>
