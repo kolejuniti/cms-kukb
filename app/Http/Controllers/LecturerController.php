@@ -2906,6 +2906,7 @@ class LecturerController extends Controller
         $extraavgoverall = [];
 
         $overallall = [];
+        $overallall2 = [];
         $avgoverall = [];
         $valGrade = [];
         $pointerGrade = [];
