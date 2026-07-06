@@ -3403,6 +3403,7 @@ class AR_Controller extends Controller
                 $events->group_id = $ev->group_id;
                 $events->group_name = $ev->group_name;
                 $events->session_id = $ev->session_id;
+                $events->title = $ev->title;
                 $events->start = $ev->start;
                 $events->end = $ev->end;
                 $events->save();

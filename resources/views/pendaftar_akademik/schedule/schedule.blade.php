@@ -694,6 +694,10 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Enhanced tooltips for better user guidance
         const addTooltip = (element, message) => {
+            if (!element) {
+                return;
+            }
+
             element.addEventListener('mouseenter', (e) => {
                 const tooltip = document.createElement('div');
                 tooltip.className = 'custom-tooltip';
@@ -1538,7 +1542,7 @@ document.getElementById('add-event').addEventListener('click', async function ()
     }
 });
     // Publish schedule button
-    document.getElementById('publish-schedule').addEventListener('click', async function () {
+    $('#publish-schedule').on('click', async function () {
         var ic = '{{ $data['lecturerInfo']->ic }}';
         var eventData = { ic: ic };
 
@@ -1584,7 +1588,7 @@ document.getElementById('add-event').addEventListener('click', async function ()
     });
 
     // Reset schedule button
-    document.getElementById('reset-schedule').addEventListener('click', async function () {
+    $('#reset-schedule').on('click', async function () {
         var ic = '{{ $data['lecturerInfo']->ic }}';
         var eventData = { ic: ic };
 
@@ -1653,7 +1657,7 @@ document.getElementById('add-event').addEventListener('click', async function ()
     });
 
     // Log schedule button
-    document.getElementById('log-schedule').addEventListener('click', async function () {
+    $('#log-schedule').on('click', async function () {
         var ic = '{{ $data['lecturerInfo']->ic }}';
         var eventData = { ic: ic };
 
