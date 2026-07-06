@@ -1639,7 +1639,8 @@ document.getElementById('add-event').addEventListener('click', async function ()
                                 text: data.success
                             });
                             
-                            // Refresh calendar
+                            // Clear local/manual events before reloading the emptied schedule.
+                            calendar.removeAllEvents();
                             calendar.refetchEvents();
                         }
                     } else {

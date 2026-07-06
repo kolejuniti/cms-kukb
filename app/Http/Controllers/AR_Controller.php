@@ -3393,23 +3393,7 @@ class AR_Controller extends Controller
 
             DB::table('tblevents')->where('user_ic', $request->id)->delete();
 
-            $event = Tblevent2::where('user_ic', $request->id)->get();
-
-            foreach ($event as $ev) {
-
-                $events = new Tblevent;
-                $events->lecture_id = $ev->lecture_id;
-                $events->user_ic = $ev->user_ic;
-                $events->group_id = $ev->group_id;
-                $events->group_name = $ev->group_name;
-                $events->session_id = $ev->session_id;
-                $events->title = $ev->title;
-                $events->start = $ev->start;
-                $events->end = $ev->end;
-                $events->save();
-            }
-
-            return response()->json(['success' => 'Event has been resetted successfully!']);
+            return response()->json(['success' => 'Timetable has been reset successfully!']);
         } catch (Exception $e) {
 
             return response()->json(['error' => 'Error: ' . $e->getMessage()]);
