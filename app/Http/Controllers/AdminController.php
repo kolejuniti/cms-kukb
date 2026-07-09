@@ -1202,10 +1202,10 @@ class AdminController extends Controller
                     $sumquiz[$ky][$keys] = DB::table('tblclassstudentquiz')->where('userid', $std->ic)->whereIn('quizid', $quizid)->sum('final_mark');
 
                     $percentquiz = DB::table('tblclassmarks')
-                                ->join('subjek', 'tblclassmarks.course_id', 'subjek.id')->where([
+                                ->join('subjek', 'tblclassmarks.course_id', 'subjek.sub_id')->where([
                                 ['subjek.id',$id],
                                 ['assessment', 'quiz']
-                                ])->first();
+                                ])->orderBy('tblclassmarks.id', 'desc')->first();
 
                     if($quizs = DB::table('tblclassquiz')
                     ->join('tblclassquiz_group', 'tblclassquiz.id', 'tblclassquiz_group.quizid')
@@ -1256,10 +1256,10 @@ class AdminController extends Controller
                     $sumtest[$ky][$keys] = DB::table('tblclassstudenttest')->where('userid', $std->ic)->whereIn('testid', $testid)->sum('final_mark');
 
                     $percenttest = DB::table('tblclassmarks')
-                                ->join('subjek', 'tblclassmarks.course_id', 'subjek.id')->where([
+                                ->join('subjek', 'tblclassmarks.course_id', 'subjek.sub_id')->where([
                                 ['subjek.id',$id],
                                 ['assessment', 'test']
-                                ])->first();
+                                ])->orderBy('tblclassmarks.id', 'desc')->first();
 
                     if($tests = DB::table('tblclasstest')
                     ->join('tblclasstest_group', 'tblclasstest.id', 'tblclasstest_group.testid')
@@ -1362,7 +1362,7 @@ class AdminController extends Controller
                     $sumassign[$ky][$keys] = DB::table('tblclassstudentassign')->where('userid', $std->ic)->whereIn('assignid', $assignid)->sum('final_mark');
 
                     $percentassign = DB::table('tblclassmarks')
-                                ->join('subjek', 'tblclassmarks.course_id', 'subjek.id')->where([
+                                ->join('subjek', 'tblclassmarks.course_id', 'subjek.sub_id')->where([
                                 ['subjek.id',$id],
                                 ['assessment', 'assignment']
                                 ])->first();
@@ -1415,7 +1415,7 @@ class AdminController extends Controller
                     $sumextra[$ky][$keys] = DB::table('tblclassstudentextra')->where('userid', $std->ic)->whereIn('extraid', $extraid)->sum('total_mark');
 
                     $percentextra = DB::table('tblclassmarks')
-                                ->join('subjek', 'tblclassmarks.course_id', 'subjek.id')->where([
+                                ->join('subjek', 'tblclassmarks.course_id', 'subjek.sub_id')->where([
                                 ['subjek.id',$id],
                                 ['assessment', 'extra']
                                 ])->first();
@@ -1468,9 +1468,9 @@ class AdminController extends Controller
                     $sumother[$ky][$keys] = DB::table('tblclassstudentother')->where('userid', $std->ic)->whereIn('otherid', $otherid)->sum('total_mark');
 
                     $percentother = DB::table('tblclassmarks')
-                                ->join('subjek', 'tblclassmarks.course_id', 'subjek.id')->where([
+                                ->join('subjek', 'tblclassmarks.course_id', 'subjek.sub_id')->where([
                                 ['subjek.id',$id],
-                                ['assessment', 'other']
+                                ['assessment', 'lain-lain']
                                 ])->first();
 
                     if($others = DB::table('tblclassother')
@@ -1521,7 +1521,7 @@ class AdminController extends Controller
                     $summidterm[$ky][$keys] = DB::table('tblclassstudentmidterm')->where('userid', $std->ic)->whereIn('midtermid', $midtermid)->sum('final_mark');
 
                     $percentmidterm = DB::table('tblclassmarks')
-                                ->join('subjek', 'tblclassmarks.course_id', 'subjek.id')->where([
+                                ->join('subjek', 'tblclassmarks.course_id', 'subjek.sub_id')->where([
                                 ['subjek.id',$id],
                                 ['assessment', 'midterm']
                                 ])->first();
@@ -1574,7 +1574,7 @@ class AdminController extends Controller
                     $sumfinal[$ky][$keys] = DB::table('tblclassstudentfinal')->where('userid', $std->ic)->whereIn('finalid', $finalid)->sum('final_mark');
 
                     $percentfinal = DB::table('tblclassmarks')
-                                ->join('subjek', 'tblclassmarks.course_id', 'subjek.id')->where([
+                                ->join('subjek', 'tblclassmarks.course_id', 'subjek.sub_id')->where([
                                 ['subjek.id',$id],
                                 ['assessment', 'final']
                                 ])->first();
