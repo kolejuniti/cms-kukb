@@ -874,6 +874,7 @@ class AdminController extends Controller
         $extraavgoverall = [];
 
         $overallall = [];
+        $overallall2 = [];
         $avgoverall = [];
         $valGrade = [];
         $user = User::where('ic', Session::get('LectIC'))->first();
