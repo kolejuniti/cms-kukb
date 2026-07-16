@@ -2713,6 +2713,7 @@ class PendaftarController extends Controller
                         ['group_id', '!=', null]
                     ])
                     ->whereIn('course_status_id', [1,2,12,15])
+                    ->whereNotIn('grade', ['LULUS','GAGAL'])
                     ->selectRaw('SUM(credit * pointer) / SUM(credit) as total')
                     ->value('total');
 
@@ -2885,6 +2886,7 @@ class PendaftarController extends Controller
                     $cgpa = DB::table('student_subjek')
                         ->whereNotNull('group_id')
                         ->whereIn('id', $cgpa_old->pluck('max_id'))
+                        ->whereNotIn('grade', ['LULUS','GAGAL'])
                         ->selectRaw('ROUND(SUM(credit * pointer) / SUM(credit), 2) as total')
                         ->value('total');
 
