@@ -525,13 +525,22 @@ class PendaftarController extends Controller
 
             Log::info('Student Export Data Prepared', ['rows' => count($exportData)]);
 
-            // Create Excel export and stream directly (no disk write)
+            // Create Excel export with error handling
             try {
                 $filename = 'student_export_' . date('YmdHis') . '.xlsx';
+                $filePath = 'exports/' . $filename;
 
-                Log::info('Generating Excel download', ['filename' => $filename]);
+                // Ensure exports directory exists
+                $exportDir = storage_path('app/public/exports');
+                if (!file_exists($exportDir)) {
+                    mkdir($exportDir, 0755, true);
+                }
 
-                return Excel::download(new class($exportData) implements \Maatwebsite\Excel\Concerns\FromArray {
+                // Clean up old export files (older than 1 hour)
+                $this->cleanupOldExports($exportDir);
+
+                // Store the file temporarily
+                Excel::store(new class($exportData) implements \Maatwebsite\Excel\Concerns\FromArray {
                     protected $data;
 
                     public function __construct($data)
@@ -543,8 +552,32 @@ class PendaftarController extends Controller
                     {
                         return $this->data;
                     }
-                }, $filename);
+                }, $filePath, 'public');
 
+                Log::info('Export file created successfully', ['file' => $filePath]);
+
+                // Return file as download using the most basic method (avoids all disabled functions on live server)
+                $fullPath = storage_path('app/public/' . $filePath);
+
+                if (file_exists($fullPath)) {
+                    // Read file contents - most basic approach that works even on locked-down servers
+                    $fileContents = file_get_contents($fullPath);
+
+                    // Delete the temporary file
+                    @unlink($fullPath);
+
+                    // Return response with file contents
+                    return response($fileContents, 200)
+                        ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                        ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                        ->header('Content-Length', strlen($fileContents))
+                        ->header('Cache-Control', 'must-revalidate, post-check=0, pre-check=0')
+                        ->header('Pragma', 'public')
+                        ->header('Expires', '0');
+                } else {
+                    Log::error('Export file not found after creation', ['path' => $fullPath]);
+                    return response()->json(['message' => 'Failed to create export file.'], 500);
+                }
             } catch (\Exception $e) {
                 Log::error('Excel generation failed', [
                     'error' => $e->getMessage(),
