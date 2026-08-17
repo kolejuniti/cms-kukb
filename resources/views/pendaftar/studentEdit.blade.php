@@ -1,4 +1,4 @@
-@extends((Auth::user()->usrtype == "ADM") ? 'layouts.admin' : (Auth::user()->usrtype == "RGS" ? 'layouts.pendaftar' : (Auth::user()->usrtype == "AR" ? 'layouts.pendaftar_akademik' : (Auth::user()->usrtype == "FN" ? 'layouts.finance' : (Auth::user()->usrtype == "TS" ? 'layouts.treasurer' : (Auth::user()->usrtype == "DN" ? 'layouts.deen' : (Auth::user()->usrtype == "OTR" ? 'layouts.other_user' : (Auth::user()->usrtype == "COOP" ? 'layouts.coop' : (Auth::user()->usrtype == "PL" || Auth::user()->usrtype == "AO" || Auth::user()->usrtype == "LCT" ? 'layouts.ketua_program' : (Auth::user()->usrtype == "UR" ? 'layouts.ur' : ''))))))))))
+@extends((Auth::user()->usrtype == "ADM") ? 'layouts.admin' : (Auth::user()->usrtype == "RGS" ? 'layouts.pendaftar' : (Auth::user()->usrtype == "AR" ? 'layouts.pendaftar_akademik' : (Auth::user()->usrtype == "FN" ? 'layouts.finance' : (Auth::user()->usrtype == "TS" ? 'layouts.treasurer' : (Auth::user()->usrtype == "DN" ? 'layouts.deen' : (Auth::user()->usrtype == "OTR" ? 'layouts.other_user' : (Auth::user()->usrtype == "COOP" ? 'layouts.coop' : (Auth::user()->usrtype == "PL" || Auth::user()->usrtype == "AO" || Auth::user()->usrtype == "LCT" ? 'layouts.ketua_program' : (Auth::user()->usrtype == "UR" ? 'layouts.ur' : (Auth::user()->usrtype == "HEA" ? 'layouts.hea' : (Auth::user()->usrtype == "HEP" ? 'layouts.hep' : ''))))))))))))
 
 @section('main')
 <!-- Content Header (Page header) -->
@@ -24,6 +24,22 @@
 
     <!-- Main content -->
     <section class="content">
+      @if(session('error'))
+      <div class="alert alert-danger alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <h5><i class="icon fa fa-ban"></i> Error!</h5>
+        {{ session('error') }}
+      </div>
+      @endif
+
+      @if(session('success'))
+      <div class="alert alert-success alert-dismissible">
+        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+        <h5><i class="icon fa fa-check"></i> Success!</h5>
+        {{ session('success') }}
+      </div>
+      @endif
+
       <!-- Default box -->
       <div class="card">
         <div class="card-header">
@@ -35,27 +51,70 @@
           </div>
         </div>
         <div class="card-body">
-          <div class="row mt-3 ">
-            <div class="row col-md-12">
-              <div class="col-md-3">
-                <div class="form-group">
-                  <label class="form-label" for="name">Name / No. IC / No. Matric</label>
-                  <input type="text" class="form-control" id="search" placeholder="Search..." name="search">
-                </div>
+          <!-- Search by text input -->
+          <div class="row mt-3">
+            <div class="col-md-12">
+              <h5 class="mb-3">Search by Name / IC / Matric</h5>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label class="form-label" for="name">Name / No. IC / No. Matric</label>
+                <input type="text" class="form-control" id="search" placeholder="Search..." name="search">
               </div>
             </div>
           </div>
-          <div class="row mt-3 " id="group-card" hidden>
-            <div class="col-md-6 ml-3">
+
+          <hr class="my-4">
+
+          <!-- Search by filters -->
+          <div class="row mt-3">
+            <div class="col-md-12">
+              <h5 class="mb-3">Search by Filters</h5>
+            </div>
+            <div class="col-md-4">
               <div class="form-group">
-                  <label class="form-label" for="group">Group</label>
-                  <select class="form-select" id="group" name="group">
-                  </select>
+                <label class="form-label" for="program">Program</label>
+                <select class="form-select" id="program" name="program">
+                  <option value="" selected>- All Programs -</option>
+                  @foreach ($program as $prg)
+                  <option value="{{ $prg->id }}">{{ $prg->progcode }} - {{ $prg->progname }}</option> 
+                  @endforeach
+                </select>
               </div>
-            </div>        
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="form-label" for="session">Session</label>
+                <select class="form-select" id="session" name="session">
+                  <option value="" selected>- All Sessions -</option>
+                  @foreach ($session as $ses)
+                  <option value="{{ $ses->SessionID }}">{{ $ses->SessionName }}</option> 
+                  @endforeach
+                </select>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="form-label" for="semester">Semester</label>
+                <select class="form-select" id="semester" name="semester">
+                  <option value="" selected>- All Semesters -</option>
+                  @foreach ($semester as $sem)
+                  <option value="{{ $sem->id }}">{{ $sem->semester_name }}</option> 
+                  @endforeach
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="row mt-2">
+            <div class="col-md-12">
+              <button type="submit" class="btn btn-primary pull-right" onclick="searchByFilters()">Search by Filters</button>
+              <button type="button" class="btn btn-success pull-right mr-2" onclick="exportToExcel()">
+                <i class="fa fa-file-excel-o"></i> Export to Excel
+              </button>
+            </div>
           </div>
         </div>
-        <div class="card-body p-0">
+        <div class="card-body p-0 table-responsive">
           <table id="complex_header" class="table table-striped projects display dataTable">
             <thead>
                 <tr>
@@ -73,6 +132,12 @@
                     </th>
                     <th style="width: 10%">
                         Program
+                    </th>
+                    <th style="width: 10%">
+                        Last Updated
+                    </th>
+                    <th style="width: 10%">
+                        Updated By
                     </th>
                     <th style="width: 20%">
                     </th>
@@ -195,14 +260,16 @@
   $('#search').keyup(function(event){
     if (event.keyCode === 13) { // 13 is the code for the "Enter" key
         var searchTerm = $(this).val();
-        getStudent(searchTerm);
+        getStudent(searchTerm, null, null, null);
     }
   });
 
-  function getStudent(search)
+  function getStudent(search, program, session, semester)
   {
-
-    $('#complex_header').DataTable().destroy();
+    // Check if DataTable exists before destroying
+    if ($.fn.DataTable.isDataTable('#complex_header')) {
+        $('#complex_header').DataTable().destroy();
+    }
 
     var edit = true;
 
@@ -210,7 +277,12 @@
         headers: {'X-CSRF-TOKEN':  $('meta[name="csrf-token"]').attr('content')},
         url      : "{{ url('pendaftar/group/getStudentTableIndex2') }}",
         method   : 'POST',
-        data 	 : {search: search},
+        data 	 : {
+            search: search,
+            program: program,
+            session: session,
+            semester: semester
+        },
         beforeSend:function(xhr){
           $("#complex_header").LoadingOverlay("show", {
             image: `<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="24px" height="30px" viewBox="0 0 24 30" style="enable-background:new 0 0 50 50;" xml:space="preserve">
@@ -256,6 +328,15 @@
       
   }
 
+  function searchByFilters()
+  {
+    var program = $('#program').val();
+    var session = $('#session').val();
+    var semester = $('#semester').val();
+
+    getStudent(null, program, session, semester);
+  }
+
   function getProgram(ic)
   {
     return $.ajax({
@@ -273,6 +354,137 @@
             }
         });
 
+  }
+
+  function exportToExcel()
+  {
+    // Show loading alert
+    Swal.fire({
+      title: 'Exporting...',
+      text: 'Please wait while we prepare your Excel file. This may take a few moments.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      willOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // Get current filter values
+    var search = $('#search').val();
+    var program = $('#program').val();
+    var session = $('#session').val();
+    var semester = $('#semester').val();
+
+    // Build URL with parameters
+    var url = "{{ url('pendaftar/student/export') }}";
+    var params = [];
+    
+    if(search) params.push('search=' + encodeURIComponent(search));
+    if(program) params.push('program=' + encodeURIComponent(program));
+    if(session) params.push('session=' + encodeURIComponent(session));
+    if(semester) params.push('semester=' + encodeURIComponent(semester));
+    
+    if(params.length > 0) {
+        url += '?' + params.join('&');
+    }
+
+    // Use AJAX to check for errors, then download
+    $.ajax({
+      url: url,
+      type: 'GET',
+      xhrFields: {
+        responseType: 'blob'
+      },
+      success: function(data, status, xhr) {
+        // Close loading alert
+        Swal.close();
+
+        // Check if response is actually an error (will be JSON)
+        var contentType = xhr.getResponseHeader('content-type');
+        if (contentType && contentType.indexOf('application/json') !== -1) {
+          // It's an error response
+          var reader = new FileReader();
+          reader.onload = function() {
+            try {
+              var response = JSON.parse(reader.result);
+              Swal.fire({
+                icon: 'error',
+                title: 'Export Failed',
+                text: response.message || 'An error occurred during export',
+                confirmButtonText: 'OK'
+              });
+            } catch(e) {
+              Swal.fire({
+                icon: 'error',
+                title: 'Export Failed',
+                text: 'An unexpected error occurred',
+                confirmButtonText: 'OK'
+              });
+            }
+          };
+          reader.readAsText(data);
+        } else {
+          // Success - trigger download
+          var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          var link = document.createElement('a');
+          link.href = window.URL.createObjectURL(blob);
+          
+          // Get filename from Content-Disposition header or use default
+          var filename = 'student_export_' + new Date().getTime() + '.xlsx';
+          var disposition = xhr.getResponseHeader('Content-Disposition');
+          if (disposition && disposition.indexOf('filename=') !== -1) {
+            var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+            var matches = filenameRegex.exec(disposition);
+            if (matches != null && matches[1]) {
+              filename = matches[1].replace(/['"]/g, '');
+            }
+          }
+          
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Export Complete',
+            text: 'Your file has been downloaded successfully!',
+            timer: 2000,
+            showConfirmButton: false
+          });
+        }
+      },
+      error: function(xhr, status, error) {
+        Swal.close();
+        
+        var errorMessage = 'An error occurred during export. ';
+        
+        if (xhr.status === 500) {
+          errorMessage += 'Server error - the data set might be too large or there may be a configuration issue on the server.';
+        } else if (xhr.status === 404) {
+          errorMessage += 'Export endpoint not found.';
+        } else if (xhr.status === 0) {
+          errorMessage += 'Network error - please check your connection.';
+        } else {
+          errorMessage += 'Error code: ' + xhr.status;
+        }
+
+        Swal.fire({
+          icon: 'error',
+          title: 'Export Failed',
+          html: errorMessage + '<br><br>Please contact your administrator if the problem persists.',
+          confirmButtonText: 'OK'
+        });
+
+        console.error('Export error:', {
+          status: xhr.status,
+          statusText: xhr.statusText,
+          error: error,
+          response: xhr.responseText
+        });
+      }
+    });
   }
   </script>
 @endsection

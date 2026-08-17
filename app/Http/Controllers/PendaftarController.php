@@ -292,6 +292,336 @@ class PendaftarController extends Controller
 
     }
 
+    public function exportStudentEdit(Request $request)
+    {
+        try {
+            // Increase memory limit and execution time for large exports (if not disabled)
+            if (function_exists('ini_set')) {
+                @ini_set('memory_limit', '512M');
+            }
+
+            if (function_exists('set_time_limit')) {
+                @set_time_limit(300); // 5 minutes
+            }
+
+            Log::info('Student Export Started', [
+                'user' => Auth::user()->name ?? 'Unknown',
+                'filters' => [
+                    'search' => $request->search,
+                    'program' => $request->program,
+                    'session' => $request->session,
+                    'semester' => $request->semester
+                ]
+            ]);
+
+            // Build the same query as getStudentTableIndex2
+            $studentQuery = DB::table('students')
+                ->join('tblprogramme', 'students.program', 'tblprogramme.id')
+                ->join('sessions AS a', 'students.intake', 'a.SessionID')
+                ->join('sessions AS b', 'students.session', 'b.SessionID')
+                ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
+                ->leftJoin('tblstudent_personal', 'students.ic', 'tblstudent_personal.student_ic')
+                ->leftJoin('descendants', 'tblstudent_personal.descendants_id', 'descendants.id')
+                ->leftJoin('muet', 'tblstudent_personal.muet_id', 'muet.id')
+                ->leftJoin('tblsex', 'tblstudent_personal.sex_id', 'tblsex.id')
+                ->leftJoin('tblnationality', 'tblstudent_personal.nationality_id', 'tblnationality.id')
+                ->leftJoin('tblstate AS state_birth', 'tblstudent_personal.state_id', 'state_birth.id')
+                ->leftJoin('tblreligion', 'tblstudent_personal.religion_id', 'tblreligion.id')
+                ->leftJoin('tblstudent_address', 'students.ic', 'tblstudent_address.student_ic')
+                ->leftJoin('tblcountry', 'tblstudent_address.country_id', 'tblcountry.id')
+                ->leftJoin('tblstate AS state_address', 'tblstudent_address.state_id', 'state_address.id')
+                ->leftJoin('tblpackage_sponsorship', 'students.ic', 'tblpackage_sponsorship.student_ic')
+                ->leftJoin('tblpackage', 'tblpackage_sponsorship.package_id', 'tblpackage.id')
+                ->leftJoin('tblpayment_type', 'tblpackage_sponsorship.payment_type_id', 'tblpayment_type.id')
+                ->leftJoin('tblspm_dtl AS spm_bm', function ($join) {
+                    $join->on('students.ic', '=', 'spm_bm.student_spm_ic')
+                        ->where('spm_bm.subject_spm_id', '=', 1);
+                })
+                ->leftJoin('tblgrade_spm AS grade_bm', 'spm_bm.grade_spm_id', '=', 'grade_bm.id')
+                ->leftJoin('tblspm_dtl AS spm_bi', function ($join) {
+                    $join->on('students.ic', '=', 'spm_bi.student_spm_ic')
+                        ->where('spm_bi.subject_spm_id', '=', 2);
+                })
+                ->leftJoin('tblgrade_spm AS grade_bi', 'spm_bi.grade_spm_id', '=', 'grade_bi.id')
+                ->leftJoin('student_tin_no', 'students.ic', 'student_tin_no.student_ic')
+                ->select(
+                    'students.ic',
+                    'student_tin_no.tin_number',
+                    'students.no_matric',
+                    'students.name',
+                    'students.email',
+                    'students.semester',
+                    'tblprogramme.progname',
+                    'tblprogramme.progcode',
+                    'tblprogramme.mqa_code',
+                    'tblprogramme.ifms_code',
+                    'a.SessionName AS intake',
+                    DB::raw("DATE_FORMAT(students.date, '%m') AS month"),
+                    DB::raw("DATE_FORMAT(students.date, '%Y') AS year"),
+                    'b.SessionName AS session',
+                    'tblstudent_status.name AS status',
+                    'tblstudent_personal.date_birth',
+                    'tblstudent_personal.no_tel AS phone_no',
+                    'descendants.descendants_name',
+                    'muet.muet_name',
+                    'tblsex.sex_name',
+                    'tblnationality.nationality_name',
+                    'state_birth.state_name AS birth_state',
+                    'tblreligion.religion_name',
+                    'tblstudent_address.address1',
+                    'tblstudent_address.address2',
+                    'tblstudent_address.address3',
+                    'tblstudent_address.postcode',
+                    'tblstudent_address.city',
+                    'state_address.state_name AS address_state',
+                    'tblcountry.name AS country_name',
+                    'tblpackage.name AS package',
+                    'tblpayment_type.name AS type',
+                    'grade_bm.name AS spm_bm',
+                    'grade_bi.name AS spm_bi'
+                );
+
+            // Apply same filters
+            if (!empty($request->search)) {
+                $studentQuery->where(function ($query) use ($request) {
+                    $query->where('students.name', 'LIKE', "%" . $request->search . "%")
+                        ->orWhere('students.ic', 'LIKE', "%" . $request->search . "%")
+                        ->orWhere('students.no_matric', 'LIKE', "%" . $request->search . "%");
+                });
+            }
+
+            if (!empty($request->program)) {
+                $studentQuery->where('students.program', $request->program);
+            }
+
+            if (!empty($request->session)) {
+                $studentQuery->where('students.session', $request->session);
+            }
+
+            if (!empty($request->semester)) {
+                $studentQuery->where('students.semester', $request->semester);
+            }
+
+            $students = $studentQuery->get();
+
+            Log::info('Student Export Query Complete', ['count' => $students->count()]);
+
+            // Check if there are any students to export
+            if ($students->isEmpty()) {
+                Log::warning('No students found for export with given filters');
+                return back()->with('error', 'No students found with the selected filters.');
+            }
+
+            // Prepare export data
+            $exportData = [];
+            $exportData[] = [
+                'No.',
+                'No Rujukan MQA',
+                'Kod Kursus',
+                'Ijazah yang Dianugerahkan',
+                'No. TIN',
+                'No. IC/Passport',
+                'No. Matrik',
+                'Nama Penuh',
+                'Jantina',
+                'Hari Lahir',
+                'Bulan Lahir',
+                'Tahun Lahir',
+                'Tempat Lahir',
+                'Warganegara',
+                'Agama',
+                'No. Telefon Bimbit',
+                'Emel',
+                'Keturunan',
+                'Muet',
+                'Alamat Tetap',
+                'Bandar',
+                'Poskod',
+                'Negeri',
+                'Negara',
+                'Intake',
+                'Bulan',
+                'Tahun',
+                'Intake',
+                'Session',
+                'Semester',
+                'Status',
+                'Package',
+                'Type',
+                'SPM BM',
+                'SPM BI'
+            ];
+
+            foreach ($students as $key => $student) {
+                // Parse date_birth into day, month, year
+                $day = '';
+                $month = '';
+                $year = '';
+                if (!empty($student->date_birth)) {
+                    try {
+                        $birthDate = Carbon::parse($student->date_birth);
+                        $day = $birthDate->format('d');
+                        $month = $birthDate->format('m');
+                        $year = $birthDate->format('Y');
+                    } catch (\Exception $e) {
+                        Log::warning('Invalid date format for student', ['ic' => $student->ic, 'date' => $student->date_birth]);
+                    }
+                }
+
+                // Build full address
+                $fullAddress = trim(implode(', ', array_filter([
+                    $student->address1 ?? '',
+                    $student->address2 ?? '',
+                    $student->address3 ?? '',
+                    $student->city ?? '',
+                    $student->postcode ?? '',
+                    $student->address_state ?? '',
+                    $student->country_name ?? ''
+                ])));
+
+                $exportData[] = [
+                    $key + 1, // No.
+                    $student->mqa_code ?? '', // No Rujukan MQA
+                    $student->ifms_code ?? '', // Kod Kursus
+                    $student->progname ?? '', // Ijazah yang Dianugerahkan
+                    $student->tin_number ?? '', // No. TIN
+                    $student->ic ?? '', // No. IC/Passport
+                    $student->no_matric ?? '', // No. Matrik
+                    $student->name ?? '', // Nama Penuh
+                    $student->sex_name ?? '', // Jantina
+                    $day, // Hari Lahir
+                    $month, // Bulan Lahir
+                    $year, // Tahun Lahir
+                    $student->birth_state ?? '', // Tempat Lahir
+                    $student->nationality_name ?? '', // Warganegara
+                    $student->religion_name ?? '', // Agama
+                    $student->phone_no ?? '', // No. Telefon Bimbit
+                    $student->email ?? '', // Emel
+                    $student->descendants_name ?? '', // Keturunan
+                    $student->muet_name ?? '', // Muet
+                    $fullAddress, // Alamat Tetap
+                    $student->city ?? '', // Bandar
+                    $student->postcode ?? '', // Poskod
+                    $student->address_state ?? '', // Negeri
+                    $student->country_name ?? '', // Negara
+                    $student->intake ?? '', // Intake
+                    $student->month ?? '', // Bulan
+                    $student->year ?? '', // Tahun
+                    $student->session ?? '', // Session
+                    $student->semester ?? '', // Semester
+                    $student->status ?? '', // Status
+                    $student->package ?? '', // Package
+                    $student->type ?? '', // Type
+                    $student->spm_bm ?? '', // SPM BM
+                    $student->spm_bi ?? '', // SPM BI
+                ];
+
+                // Clear memory periodically for large datasets
+                if ($key % 1000 == 0) {
+                    gc_collect_cycles();
+                }
+            }
+
+            Log::info('Student Export Data Prepared', ['rows' => count($exportData)]);
+
+            // Create Excel export with error handling
+            try {
+                $filename = 'student_export_' . date('YmdHis') . '.xlsx';
+                $filePath = 'exports/' . $filename;
+
+                // Ensure exports directory exists
+                $exportDir = storage_path('app/public/exports');
+                if (!file_exists($exportDir)) {
+                    mkdir($exportDir, 0755, true);
+                }
+
+                // Clean up old export files (older than 1 hour)
+                $this->cleanupOldExports($exportDir);
+
+                // Store the file temporarily
+                Excel::store(new class($exportData) implements \Maatwebsite\Excel\Concerns\FromArray {
+                    protected $data;
+
+                    public function __construct($data)
+                    {
+                        $this->data = $data;
+                    }
+
+                    public function array(): array
+                    {
+                        return $this->data;
+                    }
+                }, $filePath, 'public');
+
+                Log::info('Export file created successfully', ['file' => $filePath]);
+
+                // Return file as download using the most basic method (avoids all disabled functions)
+                $fullPath = storage_path('app/public/' . $filePath);
+
+                if (file_exists($fullPath)) {
+                    // Read file contents - most basic approach that works even on locked-down servers
+                    $fileContents = file_get_contents($fullPath);
+
+                    // Delete the temporary file
+                    @unlink($fullPath);
+
+                    // Return response with file contents
+                    return response($fileContents, 200)
+                        ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                        ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+                        ->header('Content-Length', strlen($fileContents))
+                        ->header('Cache-Control', 'must-revalidate, post-check=0, pre-check=0')
+                        ->header('Pragma', 'public')
+                        ->header('Expires', '0');
+                } else {
+                    Log::error('Export file not found after creation', ['path' => $fullPath]);
+                    return back()->with('error', 'Failed to create export file.');
+                }
+            } catch (\Exception $e) {
+                Log::error('Excel generation failed', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                return back()->with('error', 'Failed to generate Excel file: ' . $e->getMessage());
+            }
+        } catch (\Exception $e) {
+            Log::error('Student Export Failed', [
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->with('error', 'Export failed. Please try again or contact administrator. Error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Clean up old export files to prevent storage buildup
+     */
+    private function cleanupOldExports($directory, $maxAge = 3600)
+    {
+        try {
+            if (!is_dir($directory)) {
+                return;
+            }
+
+            $files = glob($directory . '/*.xlsx');
+            $now = time();
+
+            foreach ($files as $file) {
+                if (is_file($file)) {
+                    $fileAge = $now - filemtime($file);
+                    if ($fileAge > $maxAge) {
+                        @unlink($file);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to cleanup old exports', ['error' => $e->getMessage()]);
+        }
+    }
+
     public function getStudentTableIndex2(Request $request)
     {
         $students = DB::table('students')
