@@ -389,69 +389,102 @@
         url += '?' + params.join('&');
     }
 
-    // Use fetch API to handle binary blob correctly (jQuery $.ajax often corrupts blobs to '[object Blob]' strings)
-    fetch(url)
-      .then(response => {
-        // Check if the response is JSON (meaning an error occurred)
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          return response.json().then(data => {
-            throw new Error(data.message || 'An error occurred during export');
-          });
-        }
-        
-        // If it's not OK, throw standard error
-        if (!response.ok) {
-          throw new Error('Server error: ' + response.status);
-        }
-
-        // Get the filename from the Content-Disposition header if possible
-        let filename = 'student_export_' + new Date().getTime() + '.xlsx';
-        const disposition = response.headers.get('Content-Disposition');
-        if (disposition && disposition.indexOf('filename=') !== -1) {
-          const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
-          if (matches != null && matches[1]) {
-            filename = matches[1].replace(/['"]/g, '');
-          }
-        }
-
-        // Return the blob and filename
-        return response.blob().then(blob => ({ blob, filename }));
-      })
-      .then(({ blob, filename }) => {
+    // Use AJAX to check for errors, then download
+    $.ajax({
+      url: url,
+      type: 'GET',
+      xhrFields: {
+        responseType: 'blob'
+      },
+      success: function(data, status, xhr) {
         // Close loading alert
         Swal.close();
-        
-        // Create a download link and click it
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
 
-        Swal.fire({
-          icon: 'success',
-          title: 'Export Complete',
-          text: 'Your file has been downloaded successfully!',
-          timer: 2000,
-          showConfirmButton: false
-        });
-      })
-      .catch(error => {
-        // Handle any errors
+        // Check if response is actually an error (will be JSON)
+        var contentType = xhr.getResponseHeader('content-type');
+        if (contentType && contentType.indexOf('application/json') !== -1) {
+          // It's an error response
+          var reader = new FileReader();
+          reader.onload = function() {
+            try {
+              var response = JSON.parse(reader.result);
+              Swal.fire({
+                icon: 'error',
+                title: 'Export Failed',
+                text: response.message || 'An error occurred during export',
+                confirmButtonText: 'OK'
+              });
+            } catch(e) {
+              Swal.fire({
+                icon: 'error',
+                title: 'Export Failed',
+                text: 'An unexpected error occurred',
+                confirmButtonText: 'OK'
+              });
+            }
+          };
+          reader.readAsText(data);
+        } else {
+          // Success - trigger download
+          var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          var link = document.createElement('a');
+          link.href = window.URL.createObjectURL(blob);
+          
+          // Get filename from Content-Disposition header or use default
+          var filename = 'student_export_' + new Date().getTime() + '.xlsx';
+          var disposition = xhr.getResponseHeader('Content-Disposition');
+          if (disposition && disposition.indexOf('filename=') !== -1) {
+            var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+            var matches = filenameRegex.exec(disposition);
+            if (matches != null && matches[1]) {
+              filename = matches[1].replace(/['"]/g, '');
+            }
+          }
+          
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Export Complete',
+            text: 'Your file has been downloaded successfully!',
+            timer: 2000,
+            showConfirmButton: false
+          });
+        }
+      },
+      error: function(xhr, status, error) {
         Swal.close();
-        console.error('Export error:', error);
         
+        var errorMessage = 'An error occurred during export. ';
+        
+        if (xhr.status === 500) {
+          errorMessage += 'Server error - the data set might be too large or there may be a configuration issue on the server.';
+        } else if (xhr.status === 404) {
+          errorMessage += 'Export endpoint not found.';
+        } else if (xhr.status === 0) {
+          errorMessage += 'Network error - please check your connection.';
+        } else {
+          errorMessage += 'Error code: ' + xhr.status;
+        }
+
         Swal.fire({
           icon: 'error',
           title: 'Export Failed',
-          text: error.message || 'An unexpected error occurred during export.',
+          html: errorMessage + '<br><br>Please contact your administrator if the problem persists.',
           confirmButtonText: 'OK'
         });
-      });
+
+        console.error('Export error:', {
+          status: xhr.status,
+          statusText: xhr.statusText,
+          error: error,
+          response: xhr.responseText
+        });
+      }
+    });
   }
   </script>
 @endsection
