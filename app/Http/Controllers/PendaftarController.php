@@ -794,43 +794,48 @@ class PendaftarController extends Controller
 
     public function getStudentTableIndex2(Request $request)
     {
-        $students = DB::table('students')
+        $studentQuery = DB::table('students')
             ->join('tblprogramme', 'students.program', 'tblprogramme.id')
             ->join('sessions AS a', 'students.intake', 'a.SessionID')
             ->join('sessions AS b', 'students.session', 'b.SessionID')
             ->join('tblstudent_status', 'students.status', 'tblstudent_status.id')
             ->select('students.*', 'tblprogramme.progname', 'a.SessionName AS intake', 
-                     'b.SessionName AS session', 'tblstudent_status.name AS status')
-            ->where('students.name', 'LIKE', "%".$request->search."%")
-            ->orwhere('students.ic', 'LIKE', "%".$request->search."%")
-            ->orwhere('students.no_matric', 'LIKE', "%".$request->search."%")->get();
+                     'b.SessionName AS session', 'tblstudent_status.name AS status');
 
-        // if(!empty($request->program))
-        // {
-        //     $student->where('students.program', $request->program);
-        // }
+        if (!empty($request->search)) {
+            $studentQuery->where(function($query) use ($request) {
+                $query->where('students.name', 'LIKE', "%".$request->search."%")
+                      ->orWhere('students.ic', 'LIKE', "%".$request->search."%")
+                      ->orWhere('students.no_matric', 'LIKE', "%".$request->search."%");
+            });
+        }
+
+        if(!empty($request->program))
+        {
+            $studentQuery->where('students.program', $request->program);
+        }
         
-        // if(!empty($request->session))
-        // {
-        //     $student->where('students.session', $request->session);
-        // }
+        if(!empty($request->session))
+        {
+            $studentQuery->where('students.session', $request->session);
+        }
         
         // if(!empty($request->year))
         // {
-        //     $student->where('a.Year', $request->year);
+        //     $studentQuery->where('a.Year', $request->year);
         // }
         
-        // if(!empty($request->semester))
-        // {
-        //     $student->where('students.semester', $request->semester);
-        // }
+        if(!empty($request->semester))
+        {
+            $studentQuery->where('students.semester', $request->semester);
+        }
         
         // if(!empty($request->status))
         // {
-        //     $student->where('students.status', $request->status);
+        //     $studentQuery->where('students.status', $request->status);
         // }
 
-        // $students = $student->get();
+        $students = $studentQuery->get();
 
         foreach($students as $key => $std)
         {
