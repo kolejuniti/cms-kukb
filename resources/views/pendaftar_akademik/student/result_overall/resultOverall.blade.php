@@ -132,10 +132,12 @@
                     @php
                       $programs = json_decode($period->program, true);
                       $programNames = [];
-                      foreach($programs as $programId) {
-                        $program = $data['program']->where('id', $programId)->first();
-                        if($program) {
-                          $programNames[] = $program->progcode . ' - ' . $program->progname;
+                      if (is_array($programs)) {
+                        foreach($programs as $programId) {
+                          $program = $data['program']->where('id', $programId)->first();
+                          if($program) {
+                            $programNames[] = $program->progcode . ' - ' . $program->progname;
+                          }
                         }
                       }
                     @endphp
@@ -145,10 +147,12 @@
                     @php
                       $sessions = json_decode($period->session, true);
                       $sessionNames = [];
-                      foreach($sessions as $sessionId) {
-                        $sessionName = $data['session']->where('SessionID', $sessionId)->first();
-                        if($sessionName) {
-                          $sessionNames[] = $sessionName->SessionName;
+                      if (is_array($sessions)) {
+                        foreach($sessions as $sessionId) {
+                          $sessionName = $data['session']->where('SessionID', $sessionId)->first();
+                          if($sessionName) {
+                            $sessionNames[] = $sessionName->SessionName;
+                          }
                         }
                       }
                     @endphp
@@ -158,10 +162,12 @@
                     @php
                       $semesters = json_decode($period->semester, true);
                       $semesterNames = [];
-                      foreach($semesters as $semesterId) {
-                        $semester = $data['semester']->where('id', $semesterId)->first();
-                        if($semester) {
-                          $semesterNames[] = $semester->semester_name;
+                      if (is_array($semesters)) {
+                        foreach($semesters as $semesterId) {
+                          $semester = $data['semester']->where('id', $semesterId)->first();
+                          if($semester) {
+                            $semesterNames[] = $semester->semester_name;
+                          }
                         }
                       }
                     @endphp
