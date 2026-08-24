@@ -264,12 +264,17 @@
 						</span>
 					</a>
 					<ul class="treeview-menu treeview-menu-visible" id="treeview-menu-visible">
-						<li>
-							<a href="{{ route('student.affair.statement') }}" class="{{ (route('student.affair.statement') == Request::url()) ? 'active' : ''}}">Statement</a>
-						</li>
-						<li>
-							<a href="{{ route('student.affair.result') }}" class="{{ (route('student.affair.result') == Request::url()) ? 'active' : ''}}">Result</a>
-						</li>
+						<li><a href="{{ route('student.affair.statement') }}" class="{{ (route('student.affair.statement') == Request::url()) ? 'active' : ''}}">Statement</a></li>
+						@php
+						$range = DB::table('tblresult_period')->first();
+						$now = now();
+
+						$block_status = Auth::guard('student')->user()->block_status;
+						@endphp
+
+						@if(!$range || ($now >= $range->Start && $now <= $range->End))
+						<li><a href="{{ route('student.affair.result') }}" class="{{ (route('student.affair.result') == Request::url()) ? 'active' : ''}}">Result</a></li>
+						@endif
 						<!-- Link with JavaScript onclick handler -->
 						<li>
 							<a id="examSlipLink" href="#" target="_blank">Slip Exam</a>
