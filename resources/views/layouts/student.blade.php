@@ -268,7 +268,7 @@
 							<a href="{{ route('student.affair.statement') }}" class="{{ (route('student.affair.statement') == Request::url()) ? 'active' : ''}}">Statement</a>
 						</li>
 						@php
-						$now = now();
+						$now = now()->toDateString();
 						$block_status = Auth::guard('student')->user()->block_status;
 						$student = Session::get('User');
 
