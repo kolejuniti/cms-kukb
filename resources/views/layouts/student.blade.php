@@ -294,12 +294,15 @@
 						}
 						}
 						@endphp
+
+                      	@if($hasActiveSlipPeriod)
 						<li>
 							<a href="{{ route('student.affair.result') }}"
 								class="{{ (route('student.affair.result') == Request::url()) ? 'active' : ''}}">
 								Result
 							</a>
 						</li>
+						@endif
 						<!-- Link with JavaScript onclick handler -->
 						<li>
 							<a id="examSlipLink" href="#" target="_blank">Slip Exam</a>
