@@ -268,7 +268,7 @@
 							<a href="{{ route('student.affair.statement') }}" class="{{ (route('student.affair.statement') == Request::url()) ? 'active' : ''}}">Statement</a>
 						</li>
 						@php
-						$now = now()->toDateString();
+						$now = now();
 						$block_status = Auth::guard('student')->user()->block_status;
 						$student = Session::get('User');
 
@@ -298,7 +298,7 @@
 						@if($hasActiveResultPeriod && $block_status == 0)
 						<li>
 						<a href="{{ route('student.affair.result') }}"
-							class="{{ (route('student.affair.result') == Request::url()) ? 'active' : ''}}">
+							class="{{ (route('student.affair.result') == Request::url()) ? 'active' : ''}}" target="_blank">
 							Result
 						</a>
 						</li>
