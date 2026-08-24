@@ -264,17 +264,42 @@
 						</span>
 					</a>
 					<ul class="treeview-menu treeview-menu-visible" id="treeview-menu-visible">
-						<li><a href="{{ route('student.affair.statement') }}" class="{{ (route('student.affair.statement') == Request::url()) ? 'active' : ''}}">Statement</a></li>
+						<li>
+							<a href="{{ route('student.affair.statement') }}" class="{{ (route('student.affair.statement') == Request::url()) ? 'active' : ''}}">Statement</a>
+						</li>
 						@php
-						$range = DB::table('tblresult_period')->first();
 						$now = now();
-
 						$block_status = Auth::guard('student')->user()->block_status;
-						@endphp
+						$student = Session::get('User');
 
-						@if(!$range || ($now >= $range->Start && $now <= $range->End))
-						<li><a href="{{ route('student.affair.result') }}" class="{{ (route('student.affair.result') == Request::url()) ? 'active' : ''}}">Result</a></li>
-						@endif
+						// Check if there are any active result periods that match this student
+						$hasActiveResultPeriod = false;
+
+						if ($student) {
+						$activePeriods = DB::table('tblresult_period')
+						->where('Start', '<=', $now)
+						->where('End', '>=', $now)
+						->get();
+
+						foreach ($activePeriods as $period) {
+						$programs = json_decode($period->program, true) ?: [];
+						$sessions = json_decode($period->session, true) ?: [];
+						// $semesters = json_decode($period->semester, true) ?: [];
+
+						if (in_array($student->program, $programs) &&
+						in_array($student->session, $sessions)) {
+						$hasActiveResultPeriod = true;
+						break;
+						}
+						}
+						}
+						@endphp
+						<li>
+							<a href="{{ route('student.affair.result') }}"
+								class="{{ (route('student.affair.result') == Request::url()) ? 'active' : ''}}">
+								Result
+							</a>
+						</li>
 						<!-- Link with JavaScript onclick handler -->
 						<li>
 							<a id="examSlipLink" href="#" target="_blank">Slip Exam</a>
