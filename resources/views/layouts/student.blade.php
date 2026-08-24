@@ -295,7 +295,7 @@
 						}
 						@endphp
 
-                      	@if($hasActiveSlipPeriod)
+                      	@if($hasActiveSlipPeriod && $block_status == 0)
 						<li>
 							<a href="{{ route('student.affair.result') }}"
 								class="{{ (route('student.affair.result') == Request::url()) ? 'active' : ''}}">
