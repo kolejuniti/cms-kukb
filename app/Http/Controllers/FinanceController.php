@@ -6262,7 +6262,7 @@ class FinanceController extends Controller
                         ->join('tblstudentclaim', 'tblpaymentdtl.claim_type_id', 'tblstudentclaim.id')
                         ->where('tblpaymentdtl.payment_id', $pym->id)
                         ->where('tblpaymentdtl.amount', '!=', 0)
-                        ->where('tblpaymentdtl.claim_type_id', '!=', 47)
+                        ->where('tblpaymentdtl.claim_type_id', '!=', 32)
                         ->whereIn('tblstudentclaim.groupid', [5])->exists()
                     ) {
 
@@ -6274,7 +6274,7 @@ class FinanceController extends Controller
                             ->where('tblpaymentdtl.payment_id', $pym->id)
                             ->whereIn('tblstudentclaim.groupid', [5])
                             ->where('tblpaymentdtl.amount', '!=', 0)
-                            ->where('tblpaymentdtl.claim_type_id', '!=', 47)
+                            ->where('tblpaymentdtl.claim_type_id', '!=', 32)
                             ->select('tblpaymentdtl.*', 'tblstudentclaim.name AS type')
                             ->get();
 
