@@ -5660,7 +5660,7 @@ class FinanceController extends Controller
                     ->join('tblstudentclaim', 'tblpaymentdtl.claim_type_id', 'tblstudentclaim.id')
                     ->where('tblpaymentdtl.payment_id', $pym->id)
                     ->where('tblpaymentdtl.amount', '!=', 0)
-                    ->where('tblpaymentdtl.claim_type_id', '!=', 47)
+                    ->where('tblpaymentdtl.claim_type_id', '!=', 32)
                     ->whereIn('tblstudentclaim.groupid', [5])->exists()
                 ) {
 
@@ -5672,7 +5672,7 @@ class FinanceController extends Controller
                         ->where('tblpaymentdtl.payment_id', $pym->id)
                         ->whereIn('tblstudentclaim.groupid', [5])
                         ->where('tblpaymentdtl.amount', '!=', 0)
-                        ->where('tblpaymentdtl.claim_type_id', '!=', 47)
+                        ->where('tblpaymentdtl.claim_type_id', '!=', 32)
                         ->select('tblpaymentdtl.*', 'tblstudentclaim.name AS type')
                         ->get();
 
@@ -5946,7 +5946,7 @@ class FinanceController extends Controller
                     ->join('tblstudentclaim', 'tblpaymentdtl.claim_type_id', 'tblstudentclaim.id')
                     ->where('tblpaymentdtl.payment_id', $pym->id)
                     ->where('tblpaymentdtl.amount', '!=', 0)
-                    ->where('tblpaymentdtl.claim_type_id', '!=', 47)
+                    ->where('tblpaymentdtl.claim_type_id', '!=', 32)
                     ->whereIn('tblstudentclaim.groupid', [5])->exists()
                 ) {
 
@@ -5958,7 +5958,7 @@ class FinanceController extends Controller
                         ->where('tblpaymentdtl.payment_id', $pym->id)
                         ->whereIn('tblstudentclaim.groupid', [5])
                         ->where('tblpaymentdtl.amount', '!=', 0)
-                        ->where('tblpaymentdtl.claim_type_id', '!=', 47)
+                        ->where('tblpaymentdtl.claim_type_id', '!=', 32)
                         ->select('tblpaymentdtl.*', 'tblstudentclaim.name AS type')
                         ->get();
 
@@ -6461,7 +6461,7 @@ class FinanceController extends Controller
         foreach ($other as $ot) {
             if (array_intersect([8], (array) $ot->process_type_id) && array_intersect([2], (array) $ot->groupid) && $ot->amount != 0) {
                 $data['hostel'][] = $ot;
-            } elseif (array_intersect([8, 1], (array) $ot->process_type_id) && array_intersect([5], (array) $ot->groupid) && $ot->amount != 0 && $ot->claim_type_id == 47) {
+            } elseif (array_intersect([8, 1], (array) $ot->process_type_id) && array_intersect([5], (array) $ot->groupid) && $ot->amount != 0 && $ot->claim_type_id == 32) {
                 $data['convo'][] = $ot;
             } elseif (array_intersect([4], (array) $ot->groupid) && $ot->amount != 0) {
                 $data['fine'][] = $ot;
