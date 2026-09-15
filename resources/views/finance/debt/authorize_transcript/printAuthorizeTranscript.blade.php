@@ -150,9 +150,8 @@ JALAN PANTAI, CAHAYA BULAN<br>
         {{-- <p style="text-align: center;"><b>[THIS IS A COMPUTER GENERATED AND DOES NOT REQUIRE SIGNATURE]</b></p> --}}
         <p>Dikeluarkan oleh:</p>
         <br>
-        <p><b>EMI MARLIDA BINTI JABAR</b><br>
-        <p>Ketua Unit</p>
-        <p>Unit Penstrukturan Tunggakan Pelajar</p>
+        <p><b>MOHAMAD MUSLIHUDDIN BIN MUSTAPHA</b><br>
+        <p>Pegawai Operasi (Kewangan Pelajar)</p>
         <b>KOLEJ UNITI SDN BHD</b></p><br>
     </body>
 </html>

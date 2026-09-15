@@ -147,8 +147,8 @@ use Carbon\Carbon;
                 </tbody>
             </table>
         </div>
-        <p class="mt-2">4. &nbsp;&nbsp;&nbsp;&nbsp;Jika terdapat sebarang pertanyaan, masalah atau perlukan sebarang rayuan ansuran, tuan/puan boleh menghubungi Puan Emi Marlida Binti Jabar (Unit Penstrukturan Tunggakan Pelajar) di talian 06-6490350.</p>
-        <p class="mt-2">5. &nbsp;&nbsp;&nbsp;&nbsp;Bersama ini disertakan penyata kewangan dan salinan pakej kewangan untuk rujukan pihak tuan/puan. Pelajar juga boleh membuat semakan tunggakan di <b>Portal Pelajar Kolej Uniti</b> dan membuat bayaran menerusi pindahan bank ke akaun kolej (<b>KOLEJ UNITI SDN BHD : Bank Muamalat - 1402 0000 9187 15</b>). Bukti bayaran perlu di whatsapp ke nombor <b>016-9631663</b>. Sila lampirkan nama, nombor matrik dan nombor kad pengenalan pelajar sebagai rujukan pihak kolej.</p>
+        <p class="mt-2">4. &nbsp;&nbsp;&nbsp;&nbsp;Jika terdapat sebarang pertanyaan, masalah atau perlukan sebarang rayuan ansuran, tuan/puan boleh menghubungi Encik Mohamad Muslihuddin Bin Mustapha (Pegawai Operasi Kewangan Kolej) di talian 09-7747449.</p>
+        <p class="mt-2">5. &nbsp;&nbsp;&nbsp;&nbsp;Bersama ini disertakan penyata kewangan dan salinan pakej kewangan untuk rujukan pihak tuan/puan. Pelajar juga boleh membuat semakan tunggakan di <b>Portal Pelajar Kolej Uniti</b>.</p>
         <p class="mt-3">Sila sahkan penerimaan notis dan persetujuan ansuran ini. Kegagalan mengesahkan menerima notis ini akan menyebabkan pihak kami tiada pilihan selain menggunakan saluran yang dibenarkan perundangan.</p>
         <p class="mt-3">Segala kerjasama daripada pihak tuan/puan mengesahkan baki tersebut amatlah dihargai</p>
         <p class="mt-1 mb-1">Sekian, terima kasih.</p>
@@ -158,8 +158,8 @@ use Carbon\Carbon;
         <br>
         <p><b>_____________</b></p>
         <br>
-        <p><b>NORASIAH JAMHARI</b><br>
-        <p>Ketua Unit Kewangan Pelajar</p>
+        <p><b>MOHAMAD MUSLIHUDDIN BIN MUSTAPHA</b><br>
+        <p>Pegawai Operasi (Kewangan Pelajar)</p>
         <br>
         <b>KOLEJ UNITI SDN BHD</b></p><br>
 
