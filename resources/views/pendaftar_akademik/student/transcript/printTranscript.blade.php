@@ -129,7 +129,7 @@
                     position: relative;
                     z-index: 1;
                     /* Restore the original page margins for content with extra top margin */
-                    margin: 4.5cm 1cm 1cm 1cm !important;
+                    margin: 5cm 1.5cm 1cm 1.5cm !important;
                     padding: 0 !important;
                 }
                 
