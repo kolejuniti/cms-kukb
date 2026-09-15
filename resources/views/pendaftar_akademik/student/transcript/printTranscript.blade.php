@@ -129,7 +129,7 @@
                     position: relative;
                     z-index: 1;
                     /* Restore the original page margins for content with extra top margin */
-                    margin: 1in 1cm 1cm 1cm !important;
+                    margin: 4.5cm 1cm 1cm 1cm !important;
                     padding: 0 !important;
                 }
                 
@@ -252,7 +252,7 @@
             <div style="border: 1px solid white; padding: 10px;">
             <table style="float: right;">
                 <tr>
-                <td style="padding-right: 10px;"><b>PNGK KESELURUHAN</b></td>
+                <td style="padding-right: 10px;"><b>PURATA TIMBUNAN MATA NILAIAN</b></td>
                 <td><b>&nbsp;:&nbsp;</b></td>
                 <td style="padding-left: 10px;"><b>{{ $data['lastCGPA'] }}</b></td>
                 </tr>
