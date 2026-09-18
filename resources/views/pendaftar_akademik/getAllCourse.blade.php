@@ -238,7 +238,7 @@
                                             @endphp
 
                                             @if ($current_date >= $start_date && $current_date <= $end_date)
-                                                @if ($data['students']->session === 128)
+                                                @if ($data['students']->intake === 128)
                                                 <div class="float-right">
                                                     <button class="btn btn-danger btn-sm mr-2" onclick="unregister('{{ $crs->IDS }}','{{ $data['student']->ic }}')">
                                                         <i class="fa fa-user-times"></i> Un-Register
