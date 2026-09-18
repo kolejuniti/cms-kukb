@@ -230,9 +230,10 @@
                                 @elseif(Auth::user()->usrtype == 'PL')
                                     @if($data['students']->semester == $crs->semester && in_array($crs->sessionid, $data['atvSession']))
                                         <td style="text-align: center;">
+                                            <!-- Unregister button will only be available between set dates for Ketua Program. It will be hidden outside of the set dates. The dates are set in the code below. -->
                                             @php
-                                                $start_date = strtotime('2024-10-06');  // Format: YYYY-MM-DD
-                                                $end_date = strtotime('2024-10-18');    // Format: YYYY-MM-DD
+                                                $start_date = strtotime('2026-09-18');  // Format: YYYY-MM-DD
+                                                $end_date = strtotime('2026-10-09');    // Format: YYYY-MM-DD
                                                 $current_date = strtotime(date('Y-m-d'));  // Format: YYYY-MM-DD
                                             @endphp
 
